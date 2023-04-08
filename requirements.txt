@@ -1,0 +1,12 @@
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+ipympl
+torch
+albumentations
+seaborn-image
+geojson
+shapely
+tifffile
