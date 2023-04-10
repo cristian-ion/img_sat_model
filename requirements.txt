@@ -10,3 +10,6 @@ seaborn-image
 geojson
 shapely
 tifffile
+torchgeo
+pycocotools
+rarfile
