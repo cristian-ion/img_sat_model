@@ -13,6 +13,7 @@ from torchvision.transforms import Compose
 from torch import nn
 import torchvision
 from torchvision import datasets, models, transforms
+from torchvision.models import ResNet18_Weights
 import enum
 from pydantic import BaseModel
 import torch.optim as optim
@@ -107,9 +108,10 @@ def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
     input_size = 0
 
     if model_name == PretrainedModels.resnet:
-        """ Resnet18
+        """ Resnet18 with IMAGENET1K_V1 weights
         """
-        model_ft = models.resnet18(pretrained=use_pretrained)
+        # model_ft = models.resnet18(pretrained=use_pretrained)
+        model_ft = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
