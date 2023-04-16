@@ -16,3 +16,4 @@ torchvision
 torchaudio
 opencv-python
 ipympl
+pydantic
