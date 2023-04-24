@@ -218,17 +218,20 @@ class DatasetResisc45(Dataset):
     def __init__(self, dataset_config: DatasetConfig):
         val_fold = dataset_config.val_fold or None
         df = pd.read_csv(dataset_config.dataset_file)
+        
         if dataset_config.shuffle:
             df = df.sample(frac=1).reset_index(drop=True)
+        
         folds = list(df["fold"].unique())  # get all folds
         if val_fold:
             if val_fold not in folds:
                 raise Exception("Fold not found.")
             if dataset_config.dataset_type == DatasetTypes.train:
-                df.drop(index=df[df["fold"] == val_fold].index, inplace=True)  # drop the validation fold
+                df = df[df["fold"] != val_fold]  # keep train folds
             elif dataset_config.dataset_type == DatasetTypes.val:
-                df = df[df["fold"] == val_fold]  # keep only the validation fold in dataset
-        self.img_labels = df
+                df = df[df["fold"] == val_fold]  # keep validation folds
+
+        self.df = df
         self.transform = dataset_config.transform
         self.target_transform = dataset_config.target_transform
         self.labels = list(df['label'].unique())
@@ -237,11 +240,11 @@ class DatasetResisc45(Dataset):
         self.resx = dataset_config.resize_res_x
 
     def __len__(self):
-        return len(self.img_labels)
+        return len(self.df)
 
     def __getitem__(self, idx):
-        img_path = self.img_labels.iloc[idx, 0]
-        label_index = self.img_labels.iloc[idx, 2]
+        img_path = self.df.iloc[idx, 0]
+        label_index = self.df.iloc[idx, 2]
         # convert labels to one-hot.
         label = np.zeros(self.num_classes, dtype=np.float32)
         label[label_index] = 1.0
@@ -261,10 +264,12 @@ class DatasetResisc45(Dataset):
         return image, label
 
 
-def plot_validation_epochs(epochs, train_loss, val_loss, fold):
+def plot_validation_epochs(num_epochs, train_loss, val_loss, fold):
     """
     Show plot train and validation by epoch.
     """
+    epochs = np.arange(0, num_epochs, 1)
+
     fig, ax = plt.subplots()
     ax.plot(epochs, train_loss, label='train loss')
     ax.plot(epochs, val_loss, label='val loss')
@@ -344,14 +349,68 @@ def val_one_epoch(loss_fn, dataloader, model, device):
             correct += pred_vs_y.sum().item()
     test_loss /= num_batches
     correct /= size
+
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
     return test_loss
 
 
 class TrainConfig(BaseModel):
+    dataset_file: str
     num_epochs: int
     batch_size: int
     val_fold: int
+
+
+class EvaluateResult(BaseModel):
+    accuracy: float
+    mse: float
+
+
+class TrainResult(BaseModel):
+    train_losses: list[float]
+    val_losses: list[float]
+    evaluate: EvaluateResult
+
+
+def squared_error(preds, target):
+    return ((preds - target)**2).sum().item()
+
+
+def evaluate_classifier_multi(dataloader, model, device):
+    print("Started evaluation")
+    dataset_size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+
+    df = dataloader.dataset.df
+
+    print(df.head())
+
+    correct = 0
+    mse = 0
+    with torch.no_grad():
+        for X, y in dataloader:
+            X, y = X.to(device), y.to(device)
+            logits = model(X)
+
+            pred_softmax = nn.Softmax(dim=1)(logits)
+
+            pred_vs_y = (pred_softmax.argmax(1) == y.argmax(1)).type(torch.float)
+            correct += pred_vs_y.sum().item()
+            mse += squared_error(pred_softmax, y) / len(logits)
+
+    correct /= dataset_size
+    mse /= num_batches
+
+    print(f"Accuracy: {correct}")
+    print(f"MSE: {mse}")
+
+    # todo: 
+    # Positives, Negatives, FP, TP, FN, TN by class
+    # roc curve
+    # move evaluation in another script :) with classifier file as parameter and dataset file.
+    # this script will do only evaluation and plots for classification.
+
+    return EvaluateResult(accuracy=correct, mse=mse)
 
 
 def train_pretrained_resnet(train_config: TrainConfig):
@@ -361,7 +420,7 @@ def train_pretrained_resnet(train_config: TrainConfig):
     print_versions()
     device = get_device()
 
-    df = pd.read_csv("dataset_resisc45.csv")
+    df = pd.read_csv(train_config.dataset_file)
     num_classes = len(list(df['label'].unique()))  # take number of classes from datatset
 
     pretrained_model_config = PretrainedModelConfig(
@@ -370,33 +429,29 @@ def train_pretrained_resnet(train_config: TrainConfig):
         feature_extract=True,
         use_pretrained=True,
     )
-    
-    model_ft, input_size = initialize_pretrained_model(pretrained_model_config)
-    print(model_ft)
-    model_ft.to(device)
 
-    optimizer_ft = get_pretrained_optimizer(model_ft, pretrained_model_config.feature_extract)
-    print(optimizer_ft)
+    clf, input_size = initialize_pretrained_model(pretrained_model_config)
+    print(clf)
+    clf.to(device)
 
+    optimizer = get_pretrained_optimizer(clf, pretrained_model_config.feature_extract)
+    print(optimizer)
 
     print(f"Fold: {train_config.val_fold}\n------------------------------")
 
-    # train config
+    # train and val datasets and loaders
     dataset_train_config = DatasetConfig(
         dataset_file="dataset_resisc45.csv",
         transform=get_pretrained_transforms(input_size, DatasetTypes.train),
         dataset_type=DatasetTypes.train,
         val_fold=train_config.val_fold,
     )
-    # validation config
     dataset_val_config = DatasetConfig(
         dataset_file="dataset_resisc45.csv",
         transform=get_pretrained_transforms(input_size, DatasetTypes.val),
         dataset_type=DatasetTypes.val,
         val_fold=train_config.val_fold,
     )
-
-    # create train and val set
     train_set = DatasetResisc45(dataset_train_config)
     val_set = DatasetResisc45(dataset_val_config)
     train_dataloader = DataLoader(
@@ -410,37 +465,51 @@ def train_pretrained_resnet(train_config: TrainConfig):
         shuffle=False
     )
 
-    # loss
-    loss_fn = nn.CrossEntropyLoss()
-    # optimizer
-    optimizer_ft = get_pretrained_optimizer(model_ft, pretrained_model_config.feature_extract)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = get_pretrained_optimizer(clf, pretrained_model_config.feature_extract)
 
-    # Train and evaluate
     train_losses = []
-    val_losses = []
+    val_losses = []  
+    
     for t in range(train_config.num_epochs):
         print(f"Epoch {t+1}\n-------------------------------")
-        train_loss = train_one_epoch(loss_fn, optimizer_ft, train_dataloader, model_ft, device)
-        val_loss = val_one_epoch(loss_fn, val_dataloader, model_ft, device)
+        train_loss = train_one_epoch(criterion, optimizer, train_dataloader, clf, device)
+        val_loss = val_one_epoch(criterion, val_dataloader, clf, device)
         train_losses.append(train_loss)
         val_losses.append(val_loss)
     
-    plot_validation_epochs([i for i in range(train_config.num_epochs)], train_losses, val_losses, train_config.val_fold)
+    eval_result = evaluate_classifier_multi(val_dataloader, clf, device)
+    
+    return TrainResult(train_losses=train_losses, val_losses=val_losses, evaluate=eval_result)
 
 
 if __name__ == "__main__":
     # test utils
-    print_versions()
+    # print_versions()
 
-    # show plot train and validation by epoch
-    plot_validation_epochs(np.arange(0, 5, 1), np.exp([5, 4, 3, 2, 1]), np.exp([7, 6, 5, 4, 3]), 1)
-    dataset_config = DatasetConfig(
-        dataset_file="dataset_resisc45.csv",
-        resize_res_x=256,
-        resize_res_y=256,
+    # # show plot train and validation by epoch
+    # plot_validation_epochs(np.arange(0, 5, 1), np.exp([5, 4, 3, 2, 1]), np.exp([7, 6, 5, 4, 3]), 1)
+    # dataset_config = DatasetConfig(
+    #     dataset_file="dataset_resisc45.csv",
+    #     resize_res_x=256,
+    #     resize_res_y=256,
+    # )
+
+    # train_set = DatasetResisc45(dataset_config)
+    # val_dataloader = DataLoader(train_set, batch_size=64, shuffle=True)
+    # # print first sample
+    # print(train_set[0])
+
+    print("Start.")
+
+    results = train_pretrained_resnet(
+        TrainConfig(
+            dataset_file="dataset_resisc45.csv",
+            num_epochs=0,
+            batch_size=32,
+            val_fold=0,
+        )
     )
+    # plot_validation_epochs(15, results.train_losses, results.val_losses, fold=val_fold)
 
-    train_set = DatasetResisc45(dataset_config)
-    val_dataloader = DataLoader(train_set, batch_size=64, shuffle=True)
-    # print first sample
-    print(train_set[0])
+    print("Done.")
