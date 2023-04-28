@@ -44,7 +44,7 @@ def get_device():
     return device
 
 
-class DatasetTypes(enum.Enum):
+class DatasetTypeEnum(enum.Enum):
     train = "train"
     val = "val"
     test = "test"
@@ -77,8 +77,8 @@ def get_params_requires_grad(model_ft, feature_extract):
     return params_to_update
 
 
-class PretrainedModels(enum.Enum):
-    resnet = "resnet"
+class PretrainedModelsEnum(enum.Enum):
+    resnet18 = "resnet18"
     alexnet = "alexnet"
     vgg = "vgg"
     squeezenet = "squeezenet"
@@ -86,16 +86,18 @@ class PretrainedModels(enum.Enum):
     inception = "inception"
 
 
-class PretrainedModelConfig(BaseModel):
-    model_name: PretrainedModels
+class CNNHyperParams(BaseModel):
+    model_name: PretrainedModelsEnum
     num_classes: int
     # Flag for feature extracting. When False, we finetune the whole model,
     #   when True we only update the reshaped layer params
     feature_extract: bool
     use_pretrained: bool = True
+    batch_size: int
+    num_epochs: int
 
 
-def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
+def get_pretrained_model(pretrained_model_config: CNNHyperParams):
     # Initialize these variables which will be set in this if statement. Each of these
     #   variables is model specific.
     model_name = pretrained_model_config.model_name
@@ -106,7 +108,7 @@ def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
     model_ft = None
     input_size = 0
 
-    if model_name == PretrainedModels.resnet:
+    if model_name == PretrainedModelsEnum.resnet18:
         """ Resnet18 with IMAGENET1K_V1 weights
         """
         # model_ft = models.resnet18(pretrained=use_pretrained)
@@ -116,7 +118,7 @@ def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
-    elif model_name == PretrainedModels.alexnet:
+    elif model_name == PretrainedModelsEnum.alexnet:
         """ Alexnet
         """
         model_ft = models.alexnet(pretrained=use_pretrained)
@@ -125,7 +127,7 @@ def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
         model_ft.classifier[6] = nn.Linear(num_ftrs,num_classes)
         input_size = 224
 
-    elif model_name == PretrainedModels.vgg:
+    elif model_name == PretrainedModelsEnum.vgg:
         """ VGG11_bn
         """
         model_ft = models.vgg11_bn(pretrained=use_pretrained)
@@ -134,7 +136,7 @@ def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
         model_ft.classifier[6] = nn.Linear(num_ftrs,num_classes)
         input_size = 224
 
-    elif model_name == PretrainedModels.squeezenet:
+    elif model_name == PretrainedModelsEnum.squeezenet:
         """ Squeezenet
         """
         model_ft = models.squeezenet1_0(pretrained=use_pretrained)
@@ -143,7 +145,7 @@ def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
         model_ft.num_classes = num_classes
         input_size = 224
 
-    elif model_name == PretrainedModels.densenet:
+    elif model_name == PretrainedModelsEnum.densenet:
         """ Densenet
         """
         model_ft = models.densenet121(pretrained=use_pretrained)
@@ -152,7 +154,7 @@ def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
-    elif model_name == PretrainedModels.inception:
+    elif model_name == PretrainedModelsEnum.inception:
         """ Inception v3
         Be careful, expects (299,299) sized images and has auxiliary output
         """
@@ -171,20 +173,40 @@ def initialize_pretrained_model(pretrained_model_config: PretrainedModelConfig):
     return model_ft, input_size
 
 
-def get_pretrained_transforms(input_size: int, dataset_type: DatasetTypes):
+def resnet18_img_transforms_train():
+    img_transforms = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    return img_transforms
+
+
+def resnet18_img_transforms_validation():
+    img_transforms = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    return img_transforms
+
+
+def get_pretrained_transforms(input_size: int, dataset_type: DatasetTypeEnum):
     """
     Get transforms for train
 
     input_size: 224, 256, etc.
     """
-    if dataset_type == DatasetTypes.train:
+    if dataset_type == DatasetTypeEnum.train:
         data_transforms = transforms.Compose([
             transforms.RandomResizedCrop(input_size),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-    elif dataset_type == DatasetTypes.val:
+    elif dataset_type == DatasetTypeEnum.val:
         data_transforms = transforms.Compose([
             transforms.Resize(input_size),
             transforms.CenterCrop(input_size),
@@ -198,7 +220,7 @@ def get_pretrained_transforms(input_size: int, dataset_type: DatasetTypes):
 
 class DatasetConfig(BaseModel):
     dataset_file: str
-    dataset_type: Optional[DatasetTypes] = None
+    dataset_type: Optional[DatasetTypeEnum] = None
     val_fold: Optional[int] = None
     shuffle: bool = False
     transform: Optional[Any] = None
@@ -219,9 +241,9 @@ class DatasetResisc45(Dataset):
         if val_fold:
             if val_fold not in folds:
                 raise Exception("Fold not found.")
-            if dataset_config.dataset_type == DatasetTypes.train:
+            if dataset_config.dataset_type == DatasetTypeEnum.train:
                 df = df[df["fold"] != val_fold]  # keep train folds
-            elif dataset_config.dataset_type == DatasetTypes.val:
+            elif dataset_config.dataset_type == DatasetTypeEnum.val:
                 df = df[df["fold"] == val_fold]  # keep validation folds
 
         self.df = df
@@ -276,11 +298,11 @@ def plot_validation_epochs(num_epochs, train_loss, val_loss, fold):
 
 
 
-def train_one_epoch(loss_fn, optimizer, dataloader, model, device: str):
+def train_one_epoch(criterion, optimizer, dataloader, model, device: str):
     """
     Train for one epoch.
 
-    loss_fn: CrossEntropy, etc.
+    criterion: CrossEntropy, etc.
     optimizer: SGD, etc.
     dataloader: DataLOader
     model: neural network
@@ -299,7 +321,7 @@ def train_one_epoch(loss_fn, optimizer, dataloader, model, device: str):
         
         # Compute prediction error
         pred = model(X)
-        loss = loss_fn(pred, y)
+        loss = criterion(pred, y)
 
         # Backpropagation
         optimizer.zero_grad()
@@ -393,6 +415,15 @@ def evaluate_classifier_multi(dataloader, model, device) -> EvaluateResult:
     return EvaluateResult(accuracy=correct, mse=mse)
 
 
+def get_cross_entropy_loss():
+    return nn.CrossEntropyLoss
+
+def get_sgd_optimizer(model, feature_extract, lr=0.001, momentum=0.9):
+    params_to_update = get_params_requires_grad(model, feature_extract)
+    optimizer = optim.SGD(params_to_update, lr=lr, momentum=momentum)
+    return optimizer
+
+
 def resnet_pretrained_cross_validation(dataset_file, num_epochs, batch_size, num_folds=5):
     """
     Train pretrained resnet, with feature extract cross validation
@@ -403,28 +434,28 @@ def resnet_pretrained_cross_validation(dataset_file, num_epochs, batch_size, num
     df = pd.read_csv(dataset_file)
     num_classes = len(list(df['label'].unique()))  # take number of classes from datatset
 
-    pretrained_model_config = PretrainedModelConfig(
-        model_name=PretrainedModels.resnet,
+    pretrained_model_config = CNNHyperParams(
+        model_name=PretrainedModelsEnum.resnet,
         num_classes=num_classes,
         feature_extract=True,
         use_pretrained=True,
     )
 
-    clf, input_size = initialize_pretrained_model(pretrained_model_config)
+    clf, input_size = get_pretrained_model(pretrained_model_config)
     print(clf)
     clf.to(device)
 
 
     dataset_train_config = DatasetConfig(
         dataset_file="dataset_resisc45.csv",
-        transform=get_pretrained_transforms(input_size, DatasetTypes.train),
-        dataset_type=DatasetTypes.train,
+        transform=get_pretrained_transforms(input_size, DatasetTypeEnum.train),
+        dataset_type=DatasetTypeEnum.train,
         val_fold=val_fold,
     )
     dataset_val_config = DatasetConfig(
         dataset_file="dataset_resisc45.csv",
-        transform=get_pretrained_transforms(input_size, DatasetTypes.val),
-        dataset_type=DatasetTypes.val,
+        transform=get_pretrained_transforms(input_size, DatasetTypeEnum.val),
+        dataset_type=DatasetTypeEnum.val,
         val_fold=val_fold,
     )
 
