@@ -17,6 +17,87 @@ import enum
 from pydantic import BaseModel
 import torch.optim as optim
 import platform
+from torchvision.transforms.functional import InterpolationMode
+
+
+RESISC45_DIRPATH = "/Users/cristianion/Desktop/satimg_data/NWPU-RESISC45"
+
+RESISC45_LABELS = [
+    'forest',
+    'railway_station',
+    'tennis_court',
+    'basketball_court',
+    'river',
+    'storage_tank',
+    'harbor',
+    'terrace',
+    'thermal_power_station',
+    'golf_course',
+    'runway',
+    'roundabout',
+    'bridge',
+    'industrial_area',
+    'baseball_diamond',
+    'mobile_home_park',
+    'overpass',
+    'church',
+    'chaparral',
+    'railway',
+    'stadium',
+    'medium_residential',
+    'sea_ice',
+    'intersection',
+    'lake',
+    'palace',
+    'airplane',
+    'cloud',
+    'sparse_residential',
+    'airport',
+    'snowberg',
+    'parking_lot',
+    'commercial_area',
+    'rectangular_farmland',
+    'island',
+    'beach',
+    'circular_farmland',
+    'dense_residential',
+    'ship',
+    'mountain',
+    'desert',
+    'freeway',
+    'meadow',
+    'wetland',
+    'ground_track_field',
+]
+
+UCMERCED_LANDUSE_DIRPATH = "/Users/cristianion/Desktop/satimg_data/UCMerced_LandUse/Images"
+UCMERCED_LANDUSE_LABELS = [
+    "forest",
+    "buildings",
+    "river",
+    "mobilehomepark",
+    "harbor",
+    "golfcourse",
+    "agricultural",
+    "runway",
+    "baseballdiamond",
+    "overpass",
+    "chaparral",
+    "tenniscourt",
+    "intersection",
+    "airplane",
+    "parkinglot",
+    "sparseresidential",
+    "mediumresidential",
+    "denseresidential",
+    "beach",
+    "freeway",
+    "storagetanks",
+]
+
+
+RESISC45_DATASET_FILE = "resisc45_dataset.csv"
+UCMERCEDLU_DATASET_FILE = "ucmercedlu_dataset.csv"
 
 
 def print_versions():
@@ -87,14 +168,86 @@ class PretrainedModelsEnum(enum.Enum):
 
 
 class CNNHyperParams(BaseModel):
+    dataset_file: str
     model_name: PretrainedModelsEnum
     num_classes: int
     # Flag for feature extracting. When False, we finetune the whole model,
     #   when True we only update the reshaped layer params
     feature_extract: bool
-    use_pretrained: bool = True
     batch_size: int
     num_epochs: int
+    criterion_name: str
+    optimizer_name: str
+    train_transforms: Any
+    val_transforms: Any
+    use_pretrained: bool = True
+
+
+def get_cnn_hyper_params_1() -> CNNHyperParams:
+    cnn_hyper_params_1 = CNNHyperParams(
+        dataset_file=RESISC45_DATASET_FILE,
+        model_name=PretrainedModelsEnum.resnet18,
+        train_transforms=img_transforms_train_v1(),
+        val_transforms=img_trainsforms_val_v1(),
+        num_classes=45,
+        batch_size=32,
+        num_epochs=20,
+        criterion_name="cross_entropy",
+        optimizer_name="sgd",
+        feature_extract=True,
+        use_pretrained=True,
+    )
+    return cnn_hyper_params_1
+
+def get_cnn_hyper_params_2() -> CNNHyperParams:
+    cnn_hyper_params_2 = CNNHyperParams(
+        dataset_file=RESISC45_DATASET_FILE,
+        model_name=PretrainedModelsEnum.resnet18,
+        train_transforms=img_transforms_train_v1(),
+        val_transforms=img_trainsforms_val_v1(),
+        num_classes=45,
+        batch_size=32,
+        num_epochs=20,
+        criterion_name="cross_entropy",
+        optimizer_name="sgd",
+        feature_extract=False,  # enable backprop all layers
+        use_pretrained=True,
+    )
+    return cnn_hyper_params_2
+
+
+def get_cnn_hyper_params_3() -> CNNHyperParams:
+    cnn_hyper_params_3 = CNNHyperParams(
+        dataset_file=UCMERCEDLU_DATASET_FILE,
+        model_name=PretrainedModelsEnum.resnet18,
+        train_transforms=img_transforms_train_v1(),
+        val_transforms=img_trainsforms_val_v1(),
+        num_classes=21,
+        batch_size=32,
+        num_epochs=20,
+        criterion_name="cross_entropy",
+        optimizer_name="sgd",
+        feature_extract=True,
+        use_pretrained=True,
+    )
+    return cnn_hyper_params_3
+
+
+def get_cnn_hyper_params_4() -> CNNHyperParams:
+    cnn_hyper_params_4 = CNNHyperParams(
+        dataset_file=UCMERCEDLU_DATASET_FILE,
+        model_name=PretrainedModelsEnum.resnet18,
+        train_transforms=img_transforms_train_v1(),
+        val_transforms=img_trainsforms_val_v1(),
+        num_classes=21,
+        batch_size=32,
+        num_epochs=20,
+        criterion_name="cross_entropy",
+        optimizer_name="sgd",
+        feature_extract=False, # enable backprop all layers
+        use_pretrained=True,
+    )
+    return cnn_hyper_params_4
 
 
 def get_pretrained_model(pretrained_model_config: CNNHyperParams):
@@ -173,9 +326,9 @@ def get_pretrained_model(pretrained_model_config: CNNHyperParams):
     return model_ft, input_size
 
 
-def resnet18_img_transforms_train():
+def img_transforms_train_v1():
     img_transforms = transforms.Compose([
-        transforms.RandomResizedCrop(224),
+        transforms.RandomResizedCrop(224, interpolation=InterpolationMode.BILINEAR),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -183,9 +336,9 @@ def resnet18_img_transforms_train():
     return img_transforms
 
 
-def resnet18_img_transforms_validation():
+def img_trainsforms_val_v1():
     img_transforms = transforms.Compose([
-        transforms.Resize(256),
+        transforms.Resize(256, interpolation=InterpolationMode.BILINEAR),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -311,6 +464,9 @@ def train_one_epoch(criterion, optimizer, dataloader, model, device: str):
     num_batches = len(dataloader)
 
     print("Started train.")
+
+    print(device)
+
     size = len(dataloader.dataset)
     
     model.train()  # set model to train mode
@@ -338,7 +494,7 @@ def train_one_epoch(criterion, optimizer, dataloader, model, device: str):
     return train_loss
 
 
-def val_one_epoch(loss_fn, dataloader, model, device):
+def val_one_epoch(criterion, dataloader, model, device):
     """
     Validation for one epoch.
 
@@ -358,7 +514,7 @@ def val_one_epoch(loss_fn, dataloader, model, device):
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X)
-            test_loss += loss_fn(pred, y).item()
+            test_loss += criterion(pred, y).item()
             # compare pred with y
             pred_vs_y = (nn.Softmax(dim=1)(pred).argmax(1) == y.argmax(1)).type(torch.float)
             correct += pred_vs_y.sum().item()
@@ -416,7 +572,7 @@ def evaluate_classifier_multi(dataloader, model, device) -> EvaluateResult:
 
 
 def get_cross_entropy_loss():
-    return nn.CrossEntropyLoss
+    return nn.CrossEntropyLoss()
 
 def get_sgd_optimizer(model, feature_extract, lr=0.001, momentum=0.9):
     params_to_update = get_params_requires_grad(model, feature_extract)
@@ -494,6 +650,9 @@ def resnet_pretrained_cross_validation(dataset_file, num_epochs, batch_size, num
     
     avg_accuracy = np.mean([stat.accuracy for stat in fold_stats])
     avg_mse = np.mean([stat.mse for stat in fold_stats])
+
+
+
 
 
 if __name__ == "__main__":
