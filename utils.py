@@ -20,86 +20,6 @@ import platform
 from torchvision.transforms.functional import InterpolationMode
 
 
-RESISC45_DIRPATH = "/Users/cristianion/Desktop/satimg_data/NWPU-RESISC45"
-
-RESISC45_LABELS = [
-    'forest',
-    'railway_station',
-    'tennis_court',
-    'basketball_court',
-    'river',
-    'storage_tank',
-    'harbor',
-    'terrace',
-    'thermal_power_station',
-    'golf_course',
-    'runway',
-    'roundabout',
-    'bridge',
-    'industrial_area',
-    'baseball_diamond',
-    'mobile_home_park',
-    'overpass',
-    'church',
-    'chaparral',
-    'railway',
-    'stadium',
-    'medium_residential',
-    'sea_ice',
-    'intersection',
-    'lake',
-    'palace',
-    'airplane',
-    'cloud',
-    'sparse_residential',
-    'airport',
-    'snowberg',
-    'parking_lot',
-    'commercial_area',
-    'rectangular_farmland',
-    'island',
-    'beach',
-    'circular_farmland',
-    'dense_residential',
-    'ship',
-    'mountain',
-    'desert',
-    'freeway',
-    'meadow',
-    'wetland',
-    'ground_track_field',
-]
-
-UCMERCED_LANDUSE_DIRPATH = "/Users/cristianion/Desktop/satimg_data/UCMerced_LandUse/Images"
-UCMERCED_LANDUSE_LABELS = [
-    "forest",
-    "buildings",
-    "river",
-    "mobilehomepark",
-    "harbor",
-    "golfcourse",
-    "agricultural",
-    "runway",
-    "baseballdiamond",
-    "overpass",
-    "chaparral",
-    "tenniscourt",
-    "intersection",
-    "airplane",
-    "parkinglot",
-    "sparseresidential",
-    "mediumresidential",
-    "denseresidential",
-    "beach",
-    "freeway",
-    "storagetanks",
-]
-
-
-RESISC45_DATASET_FILE = "resisc45_dataset.csv"
-UCMERCEDLU_DATASET_FILE = "ucmercedlu_dataset.csv"
-
-
 def print_versions():
     print(platform.platform())  # print current platform
     print("PyTorch Version: ",torch.__version__)
@@ -167,7 +87,7 @@ class PretrainedModelsEnum(enum.Enum):
     inception = "inception"
 
 
-class CNNHyperParams(BaseModel):
+class CNNParams(BaseModel):
     dataset_file: str
     model_name: PretrainedModelsEnum
     num_classes: int
@@ -181,76 +101,11 @@ class CNNHyperParams(BaseModel):
     train_transforms: Any
     val_transforms: Any
     use_pretrained: bool = True
+    lr: float
+    momentum: float
 
 
-def get_cnn_hyper_params_1() -> CNNHyperParams:
-    cnn_hyper_params_1 = CNNHyperParams(
-        dataset_file=RESISC45_DATASET_FILE,
-        model_name=PretrainedModelsEnum.resnet18,
-        train_transforms=img_transforms_train_v1(),
-        val_transforms=img_trainsforms_val_v1(),
-        num_classes=45,
-        batch_size=32,
-        num_epochs=20,
-        criterion_name="cross_entropy",
-        optimizer_name="sgd",
-        feature_extract=True,
-        use_pretrained=True,
-    )
-    return cnn_hyper_params_1
-
-def get_cnn_hyper_params_2() -> CNNHyperParams:
-    cnn_hyper_params_2 = CNNHyperParams(
-        dataset_file=RESISC45_DATASET_FILE,
-        model_name=PretrainedModelsEnum.resnet18,
-        train_transforms=img_transforms_train_v1(),
-        val_transforms=img_trainsforms_val_v1(),
-        num_classes=45,
-        batch_size=32,
-        num_epochs=20,
-        criterion_name="cross_entropy",
-        optimizer_name="sgd",
-        feature_extract=False,  # enable backprop all layers
-        use_pretrained=True,
-    )
-    return cnn_hyper_params_2
-
-
-def get_cnn_hyper_params_3() -> CNNHyperParams:
-    cnn_hyper_params_3 = CNNHyperParams(
-        dataset_file=UCMERCEDLU_DATASET_FILE,
-        model_name=PretrainedModelsEnum.resnet18,
-        train_transforms=img_transforms_train_v1(),
-        val_transforms=img_trainsforms_val_v1(),
-        num_classes=21,
-        batch_size=32,
-        num_epochs=20,
-        criterion_name="cross_entropy",
-        optimizer_name="sgd",
-        feature_extract=True,
-        use_pretrained=True,
-    )
-    return cnn_hyper_params_3
-
-
-def get_cnn_hyper_params_4() -> CNNHyperParams:
-    cnn_hyper_params_4 = CNNHyperParams(
-        dataset_file=UCMERCEDLU_DATASET_FILE,
-        model_name=PretrainedModelsEnum.resnet18,
-        train_transforms=img_transforms_train_v1(),
-        val_transforms=img_trainsforms_val_v1(),
-        num_classes=21,
-        batch_size=32,
-        num_epochs=20,
-        criterion_name="cross_entropy",
-        optimizer_name="sgd",
-        feature_extract=False, # enable backprop all layers
-        use_pretrained=True,
-    )
-    return cnn_hyper_params_4
-
-
-def get_pretrained_model(pretrained_model_config: CNNHyperParams):
+def get_pretrained_model(pretrained_model_config: CNNParams):
     # Initialize these variables which will be set in this if statement. Each of these
     #   variables is model specific.
     model_name = pretrained_model_config.model_name
@@ -326,7 +181,7 @@ def get_pretrained_model(pretrained_model_config: CNNHyperParams):
     return model_ft, input_size
 
 
-def img_transforms_train_v1():
+def get_img_transforms_train_v1():
     img_transforms = transforms.Compose([
         transforms.RandomResizedCrop(224, interpolation=InterpolationMode.BILINEAR),
         transforms.RandomHorizontalFlip(),
@@ -336,7 +191,7 @@ def img_transforms_train_v1():
     return img_transforms
 
 
-def img_trainsforms_val_v1():
+def get_img_trainsforms_val_v1():
     img_transforms = transforms.Compose([
         transforms.Resize(256, interpolation=InterpolationMode.BILINEAR),
         transforms.CenterCrop(224),
@@ -382,16 +237,16 @@ class DatasetConfig(BaseModel):
     resize_res_y: Optional[int] = None
 
 
-class DatasetResisc45(Dataset):
+class DatasetClassification(Dataset):
     def __init__(self, dataset_config: DatasetConfig):
-        val_fold = dataset_config.val_fold or None
+        val_fold = dataset_config.val_fold
         df = pd.read_csv(dataset_config.dataset_file)
         
         if dataset_config.shuffle:
             df = df.sample(frac=1).reset_index(drop=True)
         
         folds = list(df["fold"].unique())  # get all folds
-        if val_fold:
+        if val_fold is not None:
             if val_fold not in folds:
                 raise Exception("Fold not found.")
             if dataset_config.dataset_type == DatasetTypeEnum.train:
@@ -522,6 +377,8 @@ def val_one_epoch(criterion, dataloader, model, device):
     correct /= size
 
     print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+
+    # todo : also return f1, precision, recall, confusion matrix in one object;
     return test_loss
 
 
@@ -534,7 +391,7 @@ def squared_error(preds, target):
     return ((preds - target)**2).sum().item()
 
 
-def evaluate_classifier_multi(dataloader, model, device) -> EvaluateResult:
+def evaluate_classification_model(dataloader, model, device) -> EvaluateResult:
     print("Started evaluation")
     dataset_size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -542,6 +399,8 @@ def evaluate_classifier_multi(dataloader, model, device) -> EvaluateResult:
     df = dataloader.dataset.df
 
     print(df.head())
+
+    model.eval()
 
     correct = 0
     mse = 0
@@ -574,6 +433,7 @@ def evaluate_classifier_multi(dataloader, model, device) -> EvaluateResult:
 def get_cross_entropy_loss():
     return nn.CrossEntropyLoss()
 
+
 def get_sgd_optimizer(model, feature_extract, lr=0.001, momentum=0.9):
     params_to_update = get_params_requires_grad(model, feature_extract)
     optimizer = optim.SGD(params_to_update, lr=lr, momentum=momentum)
@@ -590,7 +450,7 @@ def resnet_pretrained_cross_validation(dataset_file, num_epochs, batch_size, num
     df = pd.read_csv(dataset_file)
     num_classes = len(list(df['label'].unique()))  # take number of classes from datatset
 
-    pretrained_model_config = CNNHyperParams(
+    pretrained_model_config = CNNParams(
         model_name=PretrainedModelsEnum.resnet,
         num_classes=num_classes,
         feature_extract=True,
@@ -615,8 +475,8 @@ def resnet_pretrained_cross_validation(dataset_file, num_epochs, batch_size, num
         val_fold=val_fold,
     )
 
-    train_set = DatasetResisc45(dataset_train_config)
-    val_set = DatasetResisc45(dataset_val_config)
+    train_set = DatasetClassification(dataset_train_config)
+    val_set = DatasetClassification(dataset_val_config)
 
     train_dataloader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
     val_dataloader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
@@ -642,7 +502,7 @@ def resnet_pretrained_cross_validation(dataset_file, num_epochs, batch_size, num
             train_losses.append(train_loss)
             val_losses.append(val_loss)
         
-        eval_result = evaluate_classifier_multi(val_dataloader, clf, device)
+        eval_result = evaluate_classification_model(val_dataloader, clf, device)
         
         fold_stats.append(eval_result)
         fold_train_losses.append(train_losses)
