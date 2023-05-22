@@ -11,6 +11,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torch import nn
 import torch.optim as optim
+from torchvision.transforms import Compose
+from torchvision import transforms
 
 from dstl_config import *
 from unet import UNet
@@ -125,6 +127,18 @@ def load_dstl_dataset():
 
     pd.DataFrame(stats).to_csv("dstl_img_stats.csv", index=False)
 
+def crop_center(img, cropx, cropy):
+    c, y, x = img.shape
+    startx = x // 2 - (cropx // 2)
+    starty = y // 2 - (cropy // 2)    
+    return img[:, starty:starty+cropy,startx:startx+cropx]
+
+
+def crop_center_mask(img, cropx, cropy):
+    y, x = img.shape
+    startx = x // 2 - (cropx // 2)
+    starty = y // 2 - (cropy // 2)    
+    return img[starty:starty+cropy,startx:startx+cropx]
 
 
 class DstlDataset(Dataset):
@@ -159,6 +173,10 @@ class DstlDataset(Dataset):
 
         img = img.astype(np.float32) - 1024.0
 
+        # center crop
+        img = crop_center(img, 256, 256)
+        img_mask = crop_center_mask(img_mask, 256, 256)
+
         return torch.from_numpy(img).float(), torch.from_numpy(img_mask).float()
 
 
@@ -182,6 +200,8 @@ if __name__ == "__main__":
     # train
     ds = DstlDataset()
     dl = DataLoader(ds, batch_size=1, shuffle=True)
+
+    size = len(ds)
 
     model = UNet(3, 2, False)
     device = get_device()
