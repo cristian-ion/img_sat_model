@@ -189,7 +189,6 @@ def dataset_imgpath_label(dataset_file: str, dirpath, labels, num_folds=K_FOLDS)
     return data
 
 
-
 if __name__ == "__main__":
     pd.DataFrame({'label': RESISC45_LABELS}).to_csv("resisc45_labels.csv", index=False, header=False)
     pd.DataFrame({'label': UCMERCED_LANDUSE_LABELS}).to_csv("ucmercedlu_labels.csv", index=False, header=False)
