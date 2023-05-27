@@ -1,0 +1,280 @@
+                                             imgpath   label  label_index
+0  /Users/cristianion/Desktop/satimg_data/UCMerce...  forest            0
+1  /Users/cristianion/Desktop/satimg_data/UCMerce...  forest            0
+2  /Users/cristianion/Desktop/satimg_data/UCMerce...  forest            0
+3  /Users/cristianion/Desktop/satimg_data/UCMerce...  forest            0
+4  /Users/cristianion/Desktop/satimg_data/UCMerce...  forest            0Nonelabel
+forest               100
+tenniscourt          100
+freeway              100
+beach                100
+denseresidential     100
+mediumresidential    100
+sparseresidential    100
+parkinglot           100
+airplane             100
+intersection         100
+chaparral            100
+buildings            100
+overpass             100
+baseballdiamond      100
+runway               100
+agricultural         100
+golfcourse           100
+harbor               100
+mobilehomepark       100
+river                100
+storagetanks         100
+Name: count, dtype: int64label_index
+0     100
+11    100
+19    100
+18    100
+17    100
+16    100
+15    100
+14    100
+13    100
+12    100
+10    100
+1     100
+9     100
+8     100
+7     100
+6     100
+5     100
+4     100
+3     100
+2     100
+20    100
+Name: count, dtype: int64Fold 0 stats:
+label
+harbor               10
+buildings            10
+baseballdiamond      10
+tenniscourt          10
+golfcourse           10
+forest               10
+freeway              10
+mediumresidential    10
+beach                10
+airplane             10
+parkinglot           10
+mobilehomepark       10
+storagetanks         10
+river                10
+intersection         10
+runway               10
+overpass             10
+sparseresidential    10
+chaparral            10
+agricultural         10
+denseresidential     10
+Name: count, dtype: int64Fold 1 stats:
+label
+runway               10
+parkinglot           10
+baseballdiamond      10
+tenniscourt          10
+sparseresidential    10
+buildings            10
+beach                10
+harbor               10
+intersection         10
+river                10
+airplane             10
+freeway              10
+overpass             10
+chaparral            10
+agricultural         10
+storagetanks         10
+mediumresidential    10
+mobilehomepark       10
+forest               10
+golfcourse           10
+denseresidential     10
+Name: count, dtype: int64Fold 2 stats:
+label
+mediumresidential    10
+mobilehomepark       10
+baseballdiamond      10
+buildings            10
+intersection         10
+runway               10
+storagetanks         10
+overpass             10
+airplane             10
+sparseresidential    10
+golfcourse           10
+beach                10
+agricultural         10
+river                10
+chaparral            10
+harbor               10
+parkinglot           10
+forest               10
+tenniscourt          10
+freeway              10
+denseresidential     10
+Name: count, dtype: int64Fold 3 stats:
+label
+harbor               10
+storagetanks         10
+baseballdiamond      10
+airplane             10
+denseresidential     10
+golfcourse           10
+mediumresidential    10
+forest               10
+agricultural         10
+overpass             10
+parkinglot           10
+intersection         10
+runway               10
+chaparral            10
+beach                10
+mobilehomepark       10
+freeway              10
+buildings            10
+tenniscourt          10
+sparseresidential    10
+river                10
+Name: count, dtype: int64Fold 4 stats:
+label
+storagetanks         10
+tenniscourt          10
+river                10
+airplane             10
+baseballdiamond      10
+mobilehomepark       10
+harbor               10
+overpass             10
+chaparral            10
+runway               10
+buildings            10
+parkinglot           10
+golfcourse           10
+agricultural         10
+freeway              10
+mediumresidential    10
+intersection         10
+beach                10
+sparseresidential    10
+forest               10
+denseresidential     10
+Name: count, dtype: int64Fold 5 stats:
+label
+intersection         10
+tenniscourt          10
+denseresidential     10
+baseballdiamond      10
+runway               10
+storagetanks         10
+forest               10
+airplane             10
+buildings            10
+agricultural         10
+golfcourse           10
+sparseresidential    10
+chaparral            10
+mobilehomepark       10
+parkinglot           10
+river                10
+overpass             10
+harbor               10
+mediumresidential    10
+freeway              10
+beach                10
+Name: count, dtype: int64Fold 6 stats:
+label
+intersection         10
+golfcourse           10
+beach                10
+baseballdiamond      10
+denseresidential     10
+river                10
+storagetanks         10
+forest               10
+agricultural         10
+runway               10
+tenniscourt          10
+mobilehomepark       10
+parkinglot           10
+mediumresidential    10
+sparseresidential    10
+buildings            10
+harbor               10
+airplane             10
+freeway              10
+overpass             10
+chaparral            10
+Name: count, dtype: int64Fold 7 stats:
+label
+parkinglot           10
+storagetanks         10
+chaparral            10
+golfcourse           10
+beach                10
+mediumresidential    10
+mobilehomepark       10
+airplane             10
+forest               10
+baseballdiamond      10
+buildings            10
+river                10
+overpass             10
+harbor               10
+denseresidential     10
+freeway              10
+tenniscourt          10
+sparseresidential    10
+intersection         10
+agricultural         10
+runway               10
+Name: count, dtype: int64Fold 8 stats:
+label
+parkinglot           10
+runway               10
+chaparral            10
+beach                10
+golfcourse           10
+harbor               10
+sparseresidential    10
+tenniscourt          10
+forest               10
+river                10
+baseballdiamond      10
+agricultural         10
+denseresidential     10
+intersection         10
+mediumresidential    10
+mobilehomepark       10
+buildings            10
+storagetanks         10
+freeway              10
+overpass             10
+airplane             10
+Name: count, dtype: int64Fold 9 stats:
+label
+overpass             10
+sparseresidential    10
+runway               10
+harbor               10
+chaparral            10
+river                10
+forest               10
+intersection         10
+beach                10
+mediumresidential    10
+freeway              10
+baseballdiamond      10
+airplane             10
+storagetanks         10
+tenniscourt          10
+mobilehomepark       10
+denseresidential     10
+parkinglot           10
+golfcourse           10
+agricultural         10
+buildings            10
+Name: count, dtype: int64
