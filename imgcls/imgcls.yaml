@@ -5,24 +5,24 @@ model:
   input:
     type: image
     train:
-      batch_size: 16
+      batch_size: 32
       file: /Users/cristianion/Desktop/satimg_model/resisc45_dataset.csv
       folds:
         - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
       transforms:
         - resize
         - crop
         - random_horizontal_flip
         - normalize
     val:
-      batch_size: 16
+      batch_size: 32
       file: /Users/cristianion/Desktop/satimg_model/resisc45_dataset.csv
       folds:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
         - 6
         - 7
       transforms:
@@ -30,7 +30,7 @@ model:
         - crop
         - normalize
     test:
-      batch_size: 16
+      batch_size: 32
       file: /Users/cristianion/Desktop/satimg_model/resisc45_dataset.csv
       folds:
         - 8

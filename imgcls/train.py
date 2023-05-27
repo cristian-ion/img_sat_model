@@ -194,7 +194,7 @@ class CNNTrain():
 
         logs_file = os.path.join(self.location, "stats.tsv")
         f = open(logs_file, "w")
-        f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate")
+        f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate\n")
         for epoch in range(self.num_epochs):
             print(f"Epoch {epoch+1}\n-------------------------------")
             train_loss = self.train_epoch()
@@ -206,7 +206,7 @@ class CNNTrain():
                 model_file = os.path.join(self.location, "imgcls.pt")
                 torch.save(self.model, model_file)
 
-            f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}")
+            f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n")
             f.flush()
         f.close()
 
