@@ -139,25 +139,21 @@ class CNNTrain():
             X, y = X.to(self.device), y.to(self.device)
             loss = self.backprop(X, y)
             train_loss += loss.item()
-
-            if batch_index % 100 == 0:
-                _loss, current = loss.item(), (batch_index + 1) * len(X)
-                print(f"loss: {_loss:>7f}  [{current:>5d}/{size:>5d}]")
         
         train_loss /= num_batches
-        print(f"Done train one epoch; avg_loss: {train_loss}.")
+        print(f"Done train one epoch; AvgLoss: {train_loss}.")
         return train_loss
     
-    def validation(self):
+    def stats(self, dataset_name, dataiter):
         print("Started validation.")
-        num_batches = len(self.valiter)
+        num_batches = len(dataiter)
         
         self.model.eval() # set model to evaluation mode
 
         loss = 0.0
         error_rate = 0.0
         with torch.no_grad():
-            for batch_index, (X, y) in enumerate(self.valiter):
+            for batch_index, (X, y) in enumerate(dataiter):
                 X, y = X.to(self.device), y.to(self.device)
                 logits = self.forward(X)
                 loss += self.criterion(logits, y).item()
@@ -166,9 +162,9 @@ class CNNTrain():
         loss /= num_batches
         error_rate /= num_batches
 
-        print(f"Validation stats: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n")
+        print(f"Stats {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n")
 
-        return loss
+        return error_rate, loss
     
     def mean_error_rate(self, logits, y):
         err = y.argmax(dim=1) != self.probability(logits).argmax(dim=1)
@@ -192,25 +188,27 @@ class CNNTrain():
     def train(self):
         print("Train start.")
 
-        train_losses = []
-        val_losses = []
-
         self.model.to(self.device)
         
+        min_error_rate = 1.0
+
+        logs_file = os.path.join(self.location, "stats.tsv")
+        f = open(logs_file, "w")
+        f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate")
         for epoch in range(self.num_epochs):
             print(f"Epoch {epoch+1}\n-------------------------------")
             train_loss = self.train_epoch()
-            val_loss = self.validation()
-            train_losses.append(train_loss)
-            val_losses.append(val_loss)
-        
-        model_file = os.path.join(self.location, "imgcls.pt")
-        torch.save(self.model, model_file)
-        
-        pd.DataFrame({
-            'train_losses': train_losses,
-            'val_losses': val_losses,
-        }).to_csv("loss.csv")
+            train_error_rate, train_loss = self.stats("train", self.trainiter)
+            val_error_rate, val_loss = self.stats("val", self.valiter)
+
+            if val_error_rate < min_error_rate:
+                min_error_rate = val_error_rate
+                model_file = os.path.join(self.location, "imgcls.pt")
+                torch.save(self.model, model_file)
+
+            f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}")
+            f.flush()
+        f.close()
 
         print("Train end.")
 
