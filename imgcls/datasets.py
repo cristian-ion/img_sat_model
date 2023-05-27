@@ -6,7 +6,7 @@ import torch.utils.data
 
 
 class ImgClsDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset_file: str, dataset_type: str, shuffle: bool, load_folds=None, transform=None):
+    def __init__(self, dataset_file: str, shuffle: bool, load_folds=None, transform=None):
         """
         load_folds: [1,2,3] means 60% of data if num_folds is 5
         """
@@ -31,6 +31,7 @@ class ImgClsDataset(torch.utils.data.Dataset):
         print(f"Count samples {self.num_samples} ({self.num_samples / self.total_samples})")
         print(f"Labels = {self.labels}")
         print(f"Num Classes = {self.num_classes}")
+        print(f"Load folds= {data['fold'].unique()}")
 
     def __len__(self):
         return self.num_samples
@@ -41,8 +42,9 @@ class ImgClsDataset(torch.utils.data.Dataset):
 
         label = self.one_hot_labels(label_index)
 
+        image = pil.Image.open(img_path)
+        
         if self.transform:
-            image = pil.Image.open(img_path)
             image = self.transform(image)
 
         return image, label

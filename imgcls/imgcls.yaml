@@ -1,0 +1,102 @@
+name: "resisc45"
+
+model:
+  location: "imgcls/models/v1"
+  input:
+    type: image
+    train:
+      batch_size: 16
+      file: /Users/cristianion/Desktop/satimg_model/resisc45_dataset.csv
+      folds:
+        - 0
+      transforms:
+        - resize
+        - crop
+        - random_horizontal_flip
+        - normalize
+    val:
+      batch_size: 16
+      file: /Users/cristianion/Desktop/satimg_model/resisc45_dataset.csv
+      folds:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+      transforms:
+        - resize
+        - crop
+        - normalize
+    test:
+      batch_size: 16
+      file: /Users/cristianion/Desktop/satimg_model/resisc45_dataset.csv
+      folds:
+        - 8
+        - 9
+      transforms:
+        - resize
+        - crop
+        - normalize
+  output:
+    num_classes: 45
+    probability: softmax
+    criterion: mse
+    val_metrics:
+      error_rate: true
+      mse: true
+    labels:
+      - forest
+      - railway_station
+      - tennis_court
+      - basketball_court
+      - river
+      - storage_tank
+      - harbor
+      - terrace
+      - thermal_power_station
+      - golf_course
+      - runway
+      - roundabout
+      - bridge
+      - industrial_area
+      - baseball_diamond
+      - mobile_home_park
+      - overpass
+      - church
+      - chaparral
+      - railway
+      - stadium
+      - medium_residential
+      - sea_ice
+      - intersection
+      - lake
+      - palace
+      - airplane
+      - cloud
+      - sparse_residential
+      - airport
+      - snowberg
+      - parking_lot
+      - commercial_area
+      - rectangular_farmland
+      - island
+      - beach
+      - circular_farmland
+      - dense_residential
+      - ship
+      - mountain
+      - desert
+      - freeway
+      - meadow
+      - wetland
+      - ground_track_field
+  cnn:
+    optimizer:
+      type: sgd
+      lr: 0.01
+      momentum: 0.9
+    num_epochs: 20
+    weights_init: imagenet
+    architecture: resnet50
