@@ -1,4 +1,4 @@
-name: "resisc45"
+name: "model_resisc45"
 
 model:
   location: "imgcls/models/v1"

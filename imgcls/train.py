@@ -56,6 +56,8 @@ class CNNTrain():
 
         print(config)
 
+        self.name = config["name"]
+
         # model output
         self.device = get_device()
         self.criterion = torch.nn.CrossEntropyLoss()
@@ -121,7 +123,7 @@ class CNNTrain():
 
         self.location = config['model']['location']
         
-        with open(os.path.join(self.location, "config.yaml"), "w") as stream:
+        with open(os.path.join(self.location, f"{self.name}_config.yaml"), "w") as stream:
             try:
                 yaml.safe_dump(config, stream)
             except yaml.YAMLError as exc:
@@ -192,7 +194,7 @@ class CNNTrain():
         
         min_error_rate = 1.0
 
-        logs_file = os.path.join(self.location, "stats.tsv")
+        logs_file = os.path.join(self.location, f"{self.name}_stats.tsv")
         f = open(logs_file, "w")
         f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate\n")
         for epoch in range(self.num_epochs):
@@ -203,7 +205,7 @@ class CNNTrain():
 
             if val_error_rate < min_error_rate:
                 min_error_rate = val_error_rate
-                model_file = os.path.join(self.location, "imgcls.pt")
+                model_file = os.path.join(self.location, f"{self.name}.pt")
                 torch.save(self.model, model_file)
 
             f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n")
