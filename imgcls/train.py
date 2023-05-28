@@ -4,6 +4,7 @@ import torchvision
 import torch.utils.data
 from torchvision import transforms
 import os.path
+import sys
 import pandas as pd
 
 from imgcls.datasets import ImgClsDataset
@@ -47,7 +48,7 @@ def set_parameter_requires_grad(model, feature_extracting):
 
 
 class CNNTrain():
-    def __init__(self, configpath="imgcls/imgcls.yaml") -> None:
+    def __init__(self, configpath) -> None:
         with open(configpath, "r") as stream:
             try:
                 config = yaml.safe_load(stream)
@@ -134,7 +135,6 @@ class CNNTrain():
         num_batches = len(self.trainiter)
 
         self.model.train()  # set model to train mode
-        size = len(self.trainset)
 
         train_loss = 0
         for batch_index, (X, y) in enumerate(self.trainiter):
@@ -216,5 +216,11 @@ class CNNTrain():
 
 
 if __name__ == "__main__":
-    train = CNNTrain()
+    print(sys.argv)
+
+    if len(sys.argv) != 2:
+        print("Please provide path to config.")
+        sys.exit(0)
+
+    train = CNNTrain(configpath=sys.argv[1])
     train.train()
