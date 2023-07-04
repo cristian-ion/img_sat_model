@@ -30,7 +30,7 @@ def get_params_requires_grad(torch_model):
     #  that we have just initialized, i.e. the parameters with requires_grad
     #  is True.
     params_to_update = torch_model.parameters()
-    
+
     print("Params to learn:")
     params_to_update = []
     for name, param in torch_model.named_parameters():
@@ -62,7 +62,7 @@ class CNNTrain():
         # model output
         self.device = get_device()
         self.criterion = torch.nn.CrossEntropyLoss()
-        
+
         model = torchvision.models.resnet50(weights=torchvision.models.ResNet50_Weights.IMAGENET1K_V2)
         model.fc = torch.nn.Linear(model.fc.in_features, config['model']['output']['num_classes'])
 
@@ -84,18 +84,18 @@ class CNNTrain():
         # model input
         #   todo: move transforms to config....
         train_transforms = transforms.Compose([
-            transforms.RandomResizedCrop(size=224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+                transforms.RandomResizedCrop(size=224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
 
         val_transforms = transforms.Compose([
-            transforms.Resize(size=256),
-            transforms.CenterCrop(size=224),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
+                transforms.Resize(size=256),
+                transforms.CenterCrop(size=224),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
 
         self.trainset = ImgClsDataset(
             dataset_file=config['model']['input']['train']['file'],
@@ -115,7 +115,7 @@ class CNNTrain():
             batch_size=config['model']['input']['train']['batch_size'],
             shuffle=True,
         )
-        
+
         self.valiter = torch.utils.data.DataLoader(
             self.valset,
             batch_size=config['model']['input']['val']['batch_size'],
@@ -123,7 +123,7 @@ class CNNTrain():
         )
 
         self.location = config['model']['location']
-        
+
         with open(os.path.join(self.location, f"{self.name}_config.yaml"), "w") as stream:
             try:
                 yaml.safe_dump(config, stream)
@@ -141,15 +141,15 @@ class CNNTrain():
             X, y = X.to(self.device), y.to(self.device)
             loss = self.backprop(X, y)
             train_loss += loss.item()
-        
+
         train_loss /= num_batches
         print(f"Done train one epoch; AvgLoss: {train_loss}.")
         return train_loss
-    
+
     def stats(self, dataset_name, dataiter):
         print("Started validation.")
         num_batches = len(dataiter)
-        
+
         self.model.eval() # set model to evaluation mode
 
         loss = 0.0
@@ -167,17 +167,17 @@ class CNNTrain():
         print(f"Stats {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n")
 
         return error_rate, loss
-    
+
     def mean_error_rate(self, logits, y):
         err = y.argmax(dim=1) != self.probability(logits).argmax(dim=1)
         err = err.type(torch.float)
         err = torch.mean(err).item()
         return err
-    
+
     def forward(self, X):
         logits = self.model(X)
         return logits
-    
+
     def backprop(self, X, y):
         logits = self.forward(X)
         loss = self.criterion(logits, y)
@@ -191,7 +191,7 @@ class CNNTrain():
         print("Train start.")
 
         self.model.to(self.device)
-        
+
         min_error_rate = 1.0
 
         logs_file = os.path.join(self.location, f"{self.name}_stats.tsv")
