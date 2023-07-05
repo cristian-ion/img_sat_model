@@ -7,7 +7,7 @@ import os.path
 import sys
 import pandas as pd
 
-from imgcls.datasets import ImgClsDataset
+from imgcls.dataset import ImgClsDataset
 
 
 def get_device():

@@ -1,4 +1,4 @@
-from segmentation.model import UNet
+from segmentation.unet import UNet
 from segmentation.dataset import SegmentationDataset
 
 import os
