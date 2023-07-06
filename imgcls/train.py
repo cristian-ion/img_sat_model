@@ -219,7 +219,7 @@ if __name__ == "__main__":
     print(sys.argv)
 
     if len(sys.argv) != 2:
-        print("Please provide path to config.")
+        print("Please provide path to config in YAML format.")
         sys.exit(0)
 
     train = CNNTrain(configpath=sys.argv[1])

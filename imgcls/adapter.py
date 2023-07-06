@@ -101,9 +101,24 @@ UCMERCED_LANDUSE_LABELS = [
     "storagetanks",
 ]
 
+EUROSAT_DIRPATH = "/Users/cristianion/Desktop/satimg_data/EuroSAT_RGB"
+EUROSAT_LABELS = [
+    "AnnualCrop",
+    "Forest",
+    "HerbaceousVegetation",
+    "Highway",
+    "Industrial",
+    "Pasture",
+    "PermanentCrop",
+    "Residential",
+    "River",
+    "SeaLake",
+]
+
 
 RESISC45_DATASET_FILE = "resisc45_dataset.csv"
 UCMERCEDLU_DATASET_FILE = "ucmercedlu_dataset.csv"
+EUROSAT_DATASET_FILE = "eurosat_dataset.csv"
 
 K_FOLDS = 10
 
@@ -116,7 +131,7 @@ def _partition_label_in_folds(data, label, num_folds):
     out, bins = pd.cut(np.arange(len(data_by_label)), bins=num_folds, include_lowest=False, labels=[i for i in range(num_folds)], retbins=True)
     # print(bins.tolist())
     fold = pd.Series(out)
-    
+
     print(f"Folds: \n{fold.value_counts()}")
 
     print(len(fold))
@@ -146,20 +161,20 @@ def _parition_dataset_in_folds(data, num_folds):
     return data
 
 
-def dataset_imgpath_label(dataset_file: str, dirpath, labels, num_folds=K_FOLDS):
-    filelist = [(f"{dirpath}/{f}", labels[labels.index(f)]) for f in os.listdir(dirpath) if f in labels]
+def dataset_imgpath_label(out_file: str, input_dir, labels, num_folds=K_FOLDS):
+    filelist = [(f"{input_dir}/{f}", labels[labels.index(f)]) for f in os.listdir(input_dir) if f in labels]
     df = pd.DataFrame(filelist, columns=['dirpath', 'label'])
     print(df.head())
     print(df.info())
 
 
-    f = open(dataset_file + ".stats", "w")
+    f = open(out_file + ".stats", "w")
 
 
     data = []
-    for i, dirpath in enumerate(df["dirpath"]):
-        images = os.listdir(dirpath)
-        images = [f"{dirpath}/{img}" for img in images]
+    for i, input_dir in enumerate(df["dirpath"]):
+        images = os.listdir(input_dir)
+        images = [f"{input_dir}/{img}" for img in images]
         rows = [(img, df['label'][i]) for img in images]
         data.extend(rows)
     data = pd.DataFrame(data, columns=["imgpath", "label"])
@@ -182,19 +197,45 @@ def dataset_imgpath_label(dataset_file: str, dirpath, labels, num_folds=K_FOLDS)
         f.write(str(data[data['fold'] == fold]['label'].value_counts()))
 
     # save dataset on disk
-    data.to_csv(dataset_file, index=False)
-    
+    data.to_csv(out_file, index=False)
+
     f.close()
 
     return data
 
 
-if __name__ == "__main__":
+def adapter_resisc():
     pd.DataFrame({'label': RESISC45_LABELS}).to_csv("resisc45_labels.csv", index=False, header=False)
-    pd.DataFrame({'label': UCMERCED_LANDUSE_LABELS}).to_csv("ucmercedlu_labels.csv", index=False, header=False)
-
+    if os.path.exists(RESISC45_DATASET_FILE):
+        print(f"{RESISC45_DATASET_FILE} already exists.")
+        return
     print(len(RESISC45_LABELS))  # number of expected labels
-    print(len(UCMERCED_LANDUSE_LABELS))
-
     resisc45_data = dataset_imgpath_label(RESISC45_DATASET_FILE, RESISC45_DIRPATH, RESISC45_LABELS)
+    print(len(resisc45_data))
+
+
+def adapter_ucmerced():
+    pd.DataFrame({'label': UCMERCED_LANDUSE_LABELS}).to_csv("ucmercedlu_labels.csv", index=False, header=False)
+    if os.path.exists(UCMERCEDLU_DATASET_FILE):
+        print(f"{UCMERCEDLU_DATASET_FILE} already exists.")
+        return
+    print(len(UCMERCED_LANDUSE_LABELS))
     ucmercedlu_data = dataset_imgpath_label(UCMERCEDLU_DATASET_FILE, UCMERCED_LANDUSE_DIRPATH, UCMERCED_LANDUSE_LABELS)
+    print(len(ucmercedlu_data))
+
+
+def adapter_eurosat():
+    pd.DataFrame({'label': EUROSAT_LABELS}).to_csv("eurosat_labels.csv", index=False, header=False)
+    if os.path.exists(EUROSAT_DATASET_FILE):
+        print(f"{EUROSAT_DATASET_FILE} already exists.")
+        return
+    print(len(EUROSAT_LABELS))
+    eurosat_data = dataset_imgpath_label(EUROSAT_DATASET_FILE, EUROSAT_DIRPATH, EUROSAT_LABELS)
+    print(len(eurosat_data))
+
+
+if __name__ == "__main__":
+    adapter_resisc()
+    adapter_ucmerced()
+    adapter_eurosat()
+    print("done.")

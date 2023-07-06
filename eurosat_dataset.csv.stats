@@ -1,0 +1,148 @@
+                                             imgpath   label  label_index
+0  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1
+1  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1
+2  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1
+3  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1
+4  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1Nonelabel
+Forest                  3000
+AnnualCrop              3000
+SeaLake                 3000
+HerbaceousVegetation    3000
+Residential             3000
+River                   2500
+Highway                 2500
+Industrial              2500
+PermanentCrop           2500
+Pasture                 2000
+Name: count, dtype: int64label_index
+1    3000
+0    3000
+9    3000
+2    3000
+7    3000
+8    2500
+3    2500
+4    2500
+6    2500
+5    2000
+Name: count, dtype: int64Fold 0 stats:
+label
+Forest                  300
+SeaLake                 300
+AnnualCrop              300
+Residential             300
+HerbaceousVegetation    300
+River                   250
+Industrial              250
+Highway                 250
+PermanentCrop           250
+Pasture                 200
+Name: count, dtype: int64Fold 1 stats:
+label
+AnnualCrop              300
+Forest                  300
+Residential             300
+SeaLake                 300
+HerbaceousVegetation    300
+Industrial              250
+River                   250
+PermanentCrop           250
+Highway                 250
+Pasture                 200
+Name: count, dtype: int64Fold 2 stats:
+label
+Residential             300
+SeaLake                 300
+HerbaceousVegetation    300
+Forest                  300
+AnnualCrop              300
+Highway                 250
+Industrial              250
+River                   250
+PermanentCrop           250
+Pasture                 200
+Name: count, dtype: int64Fold 3 stats:
+label
+AnnualCrop              300
+Forest                  300
+Residential             300
+HerbaceousVegetation    300
+SeaLake                 300
+River                   250
+Highway                 250
+PermanentCrop           250
+Industrial              250
+Pasture                 200
+Name: count, dtype: int64Fold 4 stats:
+label
+HerbaceousVegetation    300
+Forest                  300
+Residential             300
+SeaLake                 300
+AnnualCrop              300
+PermanentCrop           250
+Highway                 250
+Industrial              250
+River                   250
+Pasture                 200
+Name: count, dtype: int64Fold 5 stats:
+label
+Forest                  300
+Residential             300
+HerbaceousVegetation    300
+AnnualCrop              300
+SeaLake                 300
+Highway                 250
+PermanentCrop           250
+River                   250
+Industrial              250
+Pasture                 200
+Name: count, dtype: int64Fold 6 stats:
+label
+Forest                  300
+HerbaceousVegetation    300
+SeaLake                 300
+AnnualCrop              300
+Residential             300
+River                   250
+Industrial              250
+PermanentCrop           250
+Highway                 250
+Pasture                 200
+Name: count, dtype: int64Fold 7 stats:
+label
+Residential             300
+HerbaceousVegetation    300
+AnnualCrop              300
+SeaLake                 300
+Forest                  300
+Highway                 250
+River                   250
+Industrial              250
+PermanentCrop           250
+Pasture                 200
+Name: count, dtype: int64Fold 8 stats:
+label
+SeaLake                 300
+Residential             300
+HerbaceousVegetation    300
+Forest                  300
+AnnualCrop              300
+PermanentCrop           250
+Industrial              250
+River                   250
+Highway                 250
+Pasture                 200
+Name: count, dtype: int64Fold 9 stats:
+label
+Residential             300
+AnnualCrop              300
+SeaLake                 300
+Forest                  300
+HerbaceousVegetation    300
+Highway                 250
+Industrial              250
+PermanentCrop           250
+River                   250
+Pasture                 200
+Name: count, dtype: int64
