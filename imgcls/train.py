@@ -1,3 +1,5 @@
+# imgcls/train.py
+
 import yaml
 import torch
 import torchvision
@@ -47,7 +49,7 @@ def set_parameter_requires_grad(model, feature_extracting):
             param.requires_grad = False
 
 
-class CNNTrain():
+class ImgClsTrain():
     def __init__(self, configpath) -> None:
         with open(configpath, "r") as stream:
             try:
@@ -222,5 +224,5 @@ if __name__ == "__main__":
         print("Please provide path to config in YAML format.")
         sys.exit(0)
 
-    train = CNNTrain(configpath=sys.argv[1])
+    train = ImgClsTrain(configpath=sys.argv[1])
     train.train()
