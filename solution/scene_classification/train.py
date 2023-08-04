@@ -9,7 +9,7 @@ import os.path
 import sys
 import pandas as pd
 
-from classification.dataset import ImgClsDataset
+from solution.scene_classification.dataset import ImgClsDataset
 
 
 def get_device():
@@ -125,6 +125,8 @@ class ImgClsTrain():
         )
 
         self.location = config['model']['location']
+        if not os.path.isdir(self.location):
+            os.mkdir(self.location)
 
         with open(os.path.join(self.location, f"{self.name}_config.yaml"), "w") as stream:
             try:

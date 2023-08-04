@@ -1,7 +1,7 @@
 name: "model_ucm21"
 
 model:
-  location: "imgcls/models/v1"
+  location: "models/scene_classification/ucmerced"
   input:
     type: image
     train:

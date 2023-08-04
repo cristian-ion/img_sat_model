@@ -1,7 +1,7 @@
 name: "model_eurosat"
 
 model:
-  location: "imgcls/models/v1"
+  location: "models/scene_classification/eurosat10"
   input:
     type: image
     train:

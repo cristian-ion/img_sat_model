@@ -113,8 +113,13 @@ EUROSAT_LABELS = [
 
 
 RESISC45_DATASET_FILE = "resisc45_dataset.csv"
+RESISC45_LABELS_FILE = "resisc45_labels.csv"
+
 UCMERCEDLU_DATASET_FILE = "ucmercedlu_dataset.csv"
+UCMERCEDLU_LABELS_FILE = "ucmercedlu_labels.csv"
+
 EUROSAT_DATASET_FILE = "eurosat_dataset.csv"
+EUROSAT_LABELS_FILE = "eurosat_labels.csv"
 
 K_FOLDS = 10
 
@@ -201,7 +206,7 @@ def dataset_imgpath_label(out_file: str, input_dir, labels, num_folds=K_FOLDS):
 
 
 def adapter_resisc():
-    pd.DataFrame({'label': RESISC45_LABELS}).to_csv("resisc45_labels.csv", index=False, header=False)
+    pd.DataFrame({'label': RESISC45_LABELS}).to_csv(RESISC45_LABELS_FILE, index=False, header=False)
     if os.path.exists(RESISC45_DATASET_FILE):
         print(f"{RESISC45_DATASET_FILE} already exists.")
         return
@@ -211,7 +216,7 @@ def adapter_resisc():
 
 
 def adapter_ucmerced():
-    pd.DataFrame({'label': UCMERCED_LANDUSE_LABELS}).to_csv("ucmercedlu_labels.csv", index=False, header=False)
+    pd.DataFrame({'label': UCMERCED_LANDUSE_LABELS}).to_csv(UCMERCEDLU_LABELS_FILE, index=False, header=False)
     if os.path.exists(UCMERCEDLU_DATASET_FILE):
         print(f"{UCMERCEDLU_DATASET_FILE} already exists.")
         return
@@ -221,7 +226,7 @@ def adapter_ucmerced():
 
 
 def adapter_eurosat():
-    pd.DataFrame({'label': EUROSAT_LABELS}).to_csv("eurosat_labels.csv", index=False, header=False)
+    pd.DataFrame({'label': EUROSAT_LABELS}).to_csv(EUROSAT_LABELS_FILE, index=False, header=False)
     if os.path.exists(EUROSAT_DATASET_FILE):
         print(f"{EUROSAT_DATASET_FILE} already exists.")
         return

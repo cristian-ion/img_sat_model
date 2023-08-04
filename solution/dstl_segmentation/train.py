@@ -13,10 +13,34 @@ from torch import nn
 import torch.optim as optim
 from torchvision.transforms import Compose
 from torchvision import transforms
+from shapely.wkt import loads as wkt_loads
 
-from dstl_config import *
-from unet import UNet
+from solution.building_segmentation.unet import UNet
 
+
+import os
+
+DSTL_ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/DSTL"
+DEBUG_PATH = "dstl_debug"
+
+# All file paths
+TRAIN_WKT_FILE = os.path.join(DSTL_ROOT_PATH, "train_wkt_v4.csv")
+GRID_SIZES_FILE = os.path.join(DSTL_ROOT_PATH, "grid_sizes.csv")
+IMAGES_DIR_BANDS_16 = os.path.join(DSTL_ROOT_PATH, "sixteen_band")
+IMAGES_DIR_BANDS_3 = os.path.join(DSTL_ROOT_PATH, "three_band")
+
+# All column names
+COL_MULTIPOLYGONWKT = "MultipolygonWKT"
+COL_CLASSTYPE = "ClassType"
+COL_IMAGEID = "ImageId"
+COL_XMAX = "Xmax"
+COL_YMIN = "Ymin"
+
+# Image extension
+EXT_TIFF = ".tif"
+
+IMAGE_RES_X = 512
+IMAGE_RES_Y = 512
 
 
 def convert_coordinates_to_raster(coords, xmax, ymin, width, height):
@@ -28,6 +52,81 @@ def convert_coordinates_to_raster(coords, xmax, ymin, width, height):
     coords[:, 1] *= yf
     coords_int = np.round(coords).astype(np.int32)
     return coords_int
+
+def _get_xmax_ymin(grid_sizes_panda, imageId):
+    # __author__ = visoft
+    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    xmax, ymin = grid_sizes_panda[grid_sizes_panda.ImageId == imageId].iloc[0, 1:].astype(float)
+    return (xmax, ymin)
+
+
+def _convert_coordinates_to_raster(coords, img_size, xymax):
+    # __author__ = visoft
+    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    Xmax, Ymax = xymax
+    H, W = img_size
+    W1 = 1.0 * W * W / (W + 1)
+    H1 = 1.0 * H * H / (H + 1)
+    xf = W1 / Xmax
+    yf = H1 / Ymax
+    coords[:, 1] *= yf
+    coords[:, 0] *= xf
+    coords_int = np.round(coords).astype(np.int32)
+    return coords_int
+
+
+def _get_polygon_list(wkt_list_pandas, imageId, cType):
+    # __author__ = visoft
+    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    df_image = wkt_list_pandas[wkt_list_pandas.ImageId == imageId]
+    multipoly_def = df_image[df_image.ClassType == cType].MultipolygonWKT
+    polygonList = None
+    if len(multipoly_def) > 0:
+        assert len(multipoly_def) == 1
+        polygonList = wkt_loads(multipoly_def.values[0])
+    return polygonList
+
+
+def _get_and_convert_contours(polygonList, raster_img_size, xymax):
+    # __author__ = visoft
+    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    perim_list = []
+    interior_list = []
+    if polygonList is None:
+        return None
+    for k in range(len(polygonList)):
+        poly = polygonList[k]
+        perim = np.array(list(poly.exterior.coords))
+        perim_c = _convert_coordinates_to_raster(perim, raster_img_size, xymax)
+        perim_list.append(perim_c)
+        for pi in poly.interiors:
+            interior = np.array(list(pi.coords))
+            interior_c = _convert_coordinates_to_raster(interior, raster_img_size, xymax)
+            interior_list.append(interior_c)
+    return perim_list, interior_list
+
+
+def _plot_mask_from_contours(raster_img_size, contours, class_value=1):
+    # __author__ = visoft
+    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    img_mask = np.zeros(raster_img_size, np.uint8)
+    if contours is None:
+        return img_mask
+    perim_list, interior_list = contours
+    cv2.fillPoly(img_mask, perim_list, class_value)
+    cv2.fillPoly(img_mask, interior_list, 0)
+    return img_mask
+
+
+
+def generate_mask_for_image_and_class(raster_size, imageId, class_type, grid_sizes_panda=GS, wkt_list_pandas=DF):
+    # __author__ = visoft
+    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
+    xymax = _get_xmax_ymin(grid_sizes_panda, imageId)
+    polygon_list = _get_polygon_list(wkt_list_pandas, imageId, class_type)
+    contours = _get_and_convert_contours(polygon_list, raster_size, xymax)
+    mask = _plot_mask_from_contours(raster_size, contours, 1)
+    return mask
 
 
 def process_polylist(ob, imageid, classtype, xmax, ymin, width, height):
@@ -54,7 +153,7 @@ def process_polylist(ob, imageid, classtype, xmax, ymin, width, height):
 
 
 def process_train_sample(imageid, classtype, mpwkt, xmax, ymin):
-    imgpath = os.path.join(TIFFDIR_B3, imageid + EXT_TIFF)
+    imgpath = os.path.join(IMAGES_DIR_BANDS_3, imageid + EXT_TIFF)
     img = tiff.imread(imgpath)
     # plt.figure()
     # fig = tiff.imshow(img)
@@ -78,9 +177,9 @@ def process_train_sample(imageid, classtype, mpwkt, xmax, ymin):
     return img, img_mask
 
 
-def load_dstl_dataset():
-    df_wkt = pd.read_csv(TRAINSET_FILE)
-    df_gs = pd.read_csv(GRIDSIZES_FILE)
+def run_stats():
+    df_wkt = pd.read_csv(TRAIN_WKT_FILE)
+    df_gs = pd.read_csv(GRID_SIZES_FILE)
 
     df_gs.rename(columns={'Unnamed: 0': COL_IMAGEID}, inplace=True)
 
@@ -104,7 +203,7 @@ def load_dstl_dataset():
             df_wkt.iloc[wkt_i][COL_XMAX],
             df_wkt.iloc[wkt_i][COL_YMIN],
             )
-        
+
         for i in range(3):
             imgmax = np.max(img[i])
             imgmin = np.min(img[i])
@@ -120,7 +219,7 @@ def load_dstl_dataset():
 
         "min_g": [all_imgmin[1]],
         "max_g": [all_imgmax[1]],
-        
+
         "min_b": [all_imgmin[2]],
         "max_b": [all_imgmax[2]],
     }
@@ -130,14 +229,14 @@ def load_dstl_dataset():
 def crop_center(img, cropx, cropy):
     c, y, x = img.shape
     startx = x // 2 - (cropx // 2)
-    starty = y // 2 - (cropy // 2)    
+    starty = y // 2 - (cropy // 2)
     return img[:, starty:starty+cropy,startx:startx+cropx]
 
 
 def crop_center_mask(img, cropx, cropy):
     y, x = img.shape
     startx = x // 2 - (cropx // 2)
-    starty = y // 2 - (cropy // 2)    
+    starty = y // 2 - (cropy // 2)
     return img[starty:starty+cropy,startx:startx+cropx]
 
 
@@ -145,8 +244,8 @@ class DstlDataset(Dataset):
     def __init__(self) -> None:
         super().__init__()
 
-        df_wkt = pd.read_csv(TRAINSET_FILE)
-        df_gs = pd.read_csv(GRIDSIZES_FILE)
+        df_wkt = pd.read_csv(TRAIN_WKT_FILE)
+        df_gs = pd.read_csv(GRID_SIZES_FILE)
         df_gs.rename(columns={'Unnamed: 0': COL_IMAGEID}, inplace=True)
         df_wkt = pd.merge(left=df_wkt, right=df_gs, on=COL_IMAGEID)
 
@@ -193,33 +292,31 @@ def get_device():
     return device
 
 
-if __name__ == "__main__":
-    # computer some stats
-    # load_dstl_dataset()
+def run_tests():
+    assert True is False
 
-    # train
+
+def run_train():
     ds = DstlDataset()
     dl = DataLoader(ds, batch_size=1, shuffle=True)
-
     size = len(ds)
 
-    model = UNet(3, 2, False)
+    # Create UNET
+    model = UNet(in_channels=3, n_classes=10, bilinear=True)
     device = get_device()
     model.to(device)
 
-    model.train()  # set model to train mode
+    # Set model to train mode, necessary before backprop
+    model.train()
 
     train_loss = 0
-
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-
     for batch, (X, y) in enumerate(dl):
         X, y = X.to(device), y.to(device)
-        
-        # Compute prediction error
-        pred = model(X)
-        loss = criterion(pred, y)
+
+        pred = model(X)  # forward
+        loss = criterion(pred, y)  # prediction error / loss
 
         # Backpropagation
         optimizer.zero_grad()
@@ -231,3 +328,9 @@ if __name__ == "__main__":
         if batch % 100 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+
+
+if __name__ == "__main__":
+    run_tests()
+    run_stats()
+    # run_train()

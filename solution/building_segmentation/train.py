@@ -1,5 +1,5 @@
-from segmentation.unet import UNet
-from segmentation.dataset import SegmentationDataset
+from building_segmentation_model.unet import UNet
+from building_segmentation_model.dataset import MuBuildingsSegmentationDataset
 
 import os
 import torch
@@ -67,12 +67,12 @@ class ImgSegmentTrain():
                 ToTensorV2(),
             ])
 
-        segm_dataset_train = SegmentationDataset(
+        segm_dataset_train = MuBuildingsSegmentationDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
             mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
             transform=self.train_transform)
 
-        segm_dataset_val = SegmentationDataset(
+        segm_dataset_val = MuBuildingsSegmentationDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
             mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
             transform=self.val_transform)

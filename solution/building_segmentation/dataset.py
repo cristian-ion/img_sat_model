@@ -8,7 +8,7 @@ from torch.utils.data.dataloader import DataLoader
 import matplotlib.pyplot as plt
 
 
-class SegmentationDataset(Dataset):
+class MuBuildingsSegmentationDataset(Dataset):
     def __init__(self, image_dir, mask_dir, transform=None):
         self.transform = transform
         self.image_dir = image_dir
@@ -38,12 +38,12 @@ class SegmentationDataset(Dataset):
 
 
 if __name__ == "__main__":
-    segm_dataset_train = SegmentationDataset(
+    segm_dataset_train = MuBuildingsSegmentationDataset(
         image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
         mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
         transform=None)
 
-    segm_dataset_val = SegmentationDataset(
+    segm_dataset_val = MuBuildingsSegmentationDataset(
         image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
         mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
         transform=None)

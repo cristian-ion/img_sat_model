@@ -1,7 +1,7 @@
 name: "model_resisc45"
 
 model:
-  location: "classification/models/v1"
+  location: "models/scene_classification/resisc"
   input:
     type: image
     train:
