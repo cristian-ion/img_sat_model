@@ -1,5 +1,5 @@
+import matplotlib.pyplot as plt  # plotting
 import seaborn as sns
-import matplotlib.pyplot as plt # plotting
 
 
 def histogram_boxplot(data, feature, figsize=(12, 7), bins=None):

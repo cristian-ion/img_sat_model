@@ -1,0 +1,13 @@
+dstl_dataset:
+  train_path: "/Users/cristianion/Desktop/satimg_data/DSTL"
+  classes:
+    - building # 1
+    - structures # 2
+    - road # 3
+    - track # 4
+    - tree # 5
+    - crops # 6
+    - waterway # 7
+    - standing_water # 8
+    - vehicle_large # 9
+    - vehicle_small # 10

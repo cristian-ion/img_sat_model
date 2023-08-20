@@ -1,11 +1,11 @@
+import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image
-import os
-
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
-import matplotlib.pyplot as plt
 
 
 class MuBuildingsSegmentationDataset(Dataset):

@@ -1,43 +1,29 @@
-import pandas as pd
-import tifffile as tiff
-import seaborn as sns
-import json
-import shapely
 import csv
+import json
+import os
+import sys
+
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2
+import pandas as pd
+import seaborn as sns
+import shapely
+import tifffile as tiff
 import torch
-from torch.utils.data import Dataset, DataLoader
-from torch import nn
 import torch.optim as optim
-from torchvision.transforms import Compose
-from torchvision import transforms
 from shapely.wkt import loads as wkt_loads
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
+from torchvision.transforms import Compose
+import torchvision
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+
+from dstl_constants import TRAIN_WKT_FILE, GRID_SIZES_FILE
 
 from solution.building_segmentation.unet import UNet
-
-
-import os
-
-DSTL_ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/DSTL"
-DEBUG_PATH = "dstl_debug"
-
-# All file paths
-TRAIN_WKT_FILE = os.path.join(DSTL_ROOT_PATH, "train_wkt_v4.csv")
-GRID_SIZES_FILE = os.path.join(DSTL_ROOT_PATH, "grid_sizes.csv")
-IMAGES_DIR_BANDS_16 = os.path.join(DSTL_ROOT_PATH, "sixteen_band")
-IMAGES_DIR_BANDS_3 = os.path.join(DSTL_ROOT_PATH, "three_band")
-
-# All column names
-COL_MULTIPOLYGONWKT = "MultipolygonWKT"
-COL_CLASSTYPE = "ClassType"
-COL_IMAGEID = "ImageId"
-COL_XMAX = "Xmax"
-COL_YMIN = "Ymin"
-
-# Image extension
-EXT_TIFF = ".tif"
 
 IMAGE_RES_X = 512
 IMAGE_RES_Y = 512
@@ -52,81 +38,6 @@ def convert_coordinates_to_raster(coords, xmax, ymin, width, height):
     coords[:, 1] *= yf
     coords_int = np.round(coords).astype(np.int32)
     return coords_int
-
-def _get_xmax_ymin(grid_sizes_panda, imageId):
-    # __author__ = visoft
-    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
-    xmax, ymin = grid_sizes_panda[grid_sizes_panda.ImageId == imageId].iloc[0, 1:].astype(float)
-    return (xmax, ymin)
-
-
-def _convert_coordinates_to_raster(coords, img_size, xymax):
-    # __author__ = visoft
-    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
-    Xmax, Ymax = xymax
-    H, W = img_size
-    W1 = 1.0 * W * W / (W + 1)
-    H1 = 1.0 * H * H / (H + 1)
-    xf = W1 / Xmax
-    yf = H1 / Ymax
-    coords[:, 1] *= yf
-    coords[:, 0] *= xf
-    coords_int = np.round(coords).astype(np.int32)
-    return coords_int
-
-
-def _get_polygon_list(wkt_list_pandas, imageId, cType):
-    # __author__ = visoft
-    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
-    df_image = wkt_list_pandas[wkt_list_pandas.ImageId == imageId]
-    multipoly_def = df_image[df_image.ClassType == cType].MultipolygonWKT
-    polygonList = None
-    if len(multipoly_def) > 0:
-        assert len(multipoly_def) == 1
-        polygonList = wkt_loads(multipoly_def.values[0])
-    return polygonList
-
-
-def _get_and_convert_contours(polygonList, raster_img_size, xymax):
-    # __author__ = visoft
-    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
-    perim_list = []
-    interior_list = []
-    if polygonList is None:
-        return None
-    for k in range(len(polygonList)):
-        poly = polygonList[k]
-        perim = np.array(list(poly.exterior.coords))
-        perim_c = _convert_coordinates_to_raster(perim, raster_img_size, xymax)
-        perim_list.append(perim_c)
-        for pi in poly.interiors:
-            interior = np.array(list(pi.coords))
-            interior_c = _convert_coordinates_to_raster(interior, raster_img_size, xymax)
-            interior_list.append(interior_c)
-    return perim_list, interior_list
-
-
-def _plot_mask_from_contours(raster_img_size, contours, class_value=1):
-    # __author__ = visoft
-    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
-    img_mask = np.zeros(raster_img_size, np.uint8)
-    if contours is None:
-        return img_mask
-    perim_list, interior_list = contours
-    cv2.fillPoly(img_mask, perim_list, class_value)
-    cv2.fillPoly(img_mask, interior_list, 0)
-    return img_mask
-
-
-
-def generate_mask_for_image_and_class(raster_size, imageId, class_type, grid_sizes_panda=GS, wkt_list_pandas=DF):
-    # __author__ = visoft
-    # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
-    xymax = _get_xmax_ymin(grid_sizes_panda, imageId)
-    polygon_list = _get_polygon_list(wkt_list_pandas, imageId, class_type)
-    contours = _get_and_convert_contours(polygon_list, raster_size, xymax)
-    mask = _plot_mask_from_contours(raster_size, contours, 1)
-    return mask
 
 
 def process_polylist(ob, imageid, classtype, xmax, ymin, width, height):
@@ -177,55 +88,6 @@ def process_train_sample(imageid, classtype, mpwkt, xmax, ymin):
     return img, img_mask
 
 
-def run_stats():
-    df_wkt = pd.read_csv(TRAIN_WKT_FILE)
-    df_gs = pd.read_csv(GRID_SIZES_FILE)
-
-    df_gs.rename(columns={'Unnamed: 0': COL_IMAGEID}, inplace=True)
-
-    print(df_gs.info())
-    print(df_gs.head())
-    print(df_gs.describe().T)
-
-    # join wkt and gs
-    df_wkt = pd.merge(left=df_wkt, right=df_gs, on=COL_IMAGEID)
-    print(df_wkt.head())
-    print(df_wkt.info())
-
-
-    all_imgmax = [None, None, None]
-    all_imgmin = [None, None, None]
-    for wkt_i in range(max(5, len(df_wkt))):
-        img, img_mask = process_train_sample(
-            df_wkt.iloc[wkt_i][COL_IMAGEID],
-            df_wkt.iloc[wkt_i][COL_CLASSTYPE],
-            df_wkt.iloc[wkt_i][COL_MULTIPOLYGONWKT],
-            df_wkt.iloc[wkt_i][COL_XMAX],
-            df_wkt.iloc[wkt_i][COL_YMIN],
-            )
-
-        for i in range(3):
-            imgmax = np.max(img[i])
-            imgmin = np.min(img[i])
-
-            if all_imgmax[i] is None or imgmax > all_imgmax[i]:
-                all_imgmax[i] = imgmax
-            if all_imgmin[i] is None or imgmin < all_imgmin[i]:
-                all_imgmin[i] = imgmin
-
-    stats = {
-        "min_r": [all_imgmin[0]],
-        "max_r": [all_imgmax[0]],
-
-        "min_g": [all_imgmin[1]],
-        "max_g": [all_imgmax[1]],
-
-        "min_b": [all_imgmin[2]],
-        "max_b": [all_imgmax[2]],
-    }
-
-    pd.DataFrame(stats).to_csv("dstl_img_stats.csv", index=False)
-
 def crop_center(img, cropx, cropy):
     c, y, x = img.shape
     startx = x // 2 - (cropx // 2)
@@ -241,21 +103,24 @@ def crop_center_mask(img, cropx, cropy):
 
 
 class DstlDataset(Dataset):
-    def __init__(self) -> None:
+    def __init__(self, transform) -> None:
         super().__init__()
 
         df_wkt = pd.read_csv(TRAIN_WKT_FILE)
         df_gs = pd.read_csv(GRID_SIZES_FILE)
+
         df_gs.rename(columns={'Unnamed: 0': COL_IMAGEID}, inplace=True)
         df_wkt = pd.merge(left=df_wkt, right=df_gs, on=COL_IMAGEID)
 
-        self.df = df_wkt
+        self.df_samples = df_wkt
+        self.transform = transform
 
     def __len__(self):
-        return len(self.df)
+        return len(self.df_samples)
 
     def __getitem__(self, index):
-        sample = self.df.iloc[index]
+        sample = self.df_samples.iloc[index]
+
         img, img_mask = process_train_sample(
             sample[COL_IMAGEID],
             sample[COL_CLASSTYPE],
@@ -263,20 +128,18 @@ class DstlDataset(Dataset):
             sample[COL_XMAX],
             sample[COL_YMIN],
         )
-        print(img.shape)
 
-        # min-max normalization
-        # img[0, :] = (img[0, :] - 1) / (2047 - 1)
-        # img[1, :] = (img[1, :] - 157) / (2047 - 157)
-        # img[2, :] = (img[2, :] - 91) / (2047 - 91)
 
-        img = img.astype(np.float32) - 1024.0
+        image = np.array(Image.open(image_path).convert("RGB"))
+        mask = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)
+        mask[mask == 255.0] = 1.0
 
-        # center crop
-        img = crop_center(img, 256, 256)
-        img_mask = crop_center_mask(img_mask, 256, 256)
+        if self.transform:
+            augmentations = self.transform(image=image, mask=mask)
+            image = augmentations["image"]
+            mask = augmentations["mask"]
 
-        return torch.from_numpy(img).float(), torch.from_numpy(img_mask).float()
+        return image, mask
 
 
 def get_device():
@@ -330,7 +193,167 @@ def run_train():
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
+class DstlTrain:
+    def __init__(self) -> None:
+        self.name = "segment"
+        self.location = "models/dstl"
+        self.num_epochs = 20
+
+        self.resize_width = 512
+        self.resize_height = 512
+
+        self.device = get_device()
+        self.criterion = torch.nn.BCEWithLogitsLoss()
+        self.model = UNet(in_channels=3, n_classes=1, bilinear=True)
+        self.logits_to_probs = nn.Sigmoid()
+        self.optimizer = torch.optim.SGD(
+                params=self.model.parameters(),
+                lr=0.01,
+                momentum=0.9,
+            )
+
+        self.train_transform = A.Compose([
+                A.Resize(height=self.resize_height, width=self.resize_width),
+                A.Rotate(limit=35, p=1.0),
+                A.HorizontalFlip(p=0.5),
+                A.VerticalFlip(p=0.5),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ])
+
+        self.val_transform = A.Compose([
+                A.Resize(height=self.resize_height, width=self.resize_width),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ])
+
+        segm_dataset_train = DstlDataset(transform=self.train_transform)
+
+        segm_dataset_val = DstlDataset(transform=self.val_transform)
+
+        self.train_loader = DataLoader(segm_dataset_train, batch_size=8, shuffle=True)
+        self.val_loader = DataLoader(segm_dataset_val, batch_size=8, shuffle=False)
+
+    def train_epoch(self):
+        print("Started train one epoch.")
+        num_batches = len(self.train_loader)
+
+        self.model.train()  # set model to train mode
+
+        train_loss = 0
+        for batch_index, (X, y) in enumerate(self.train_loader):
+            X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
+            loss = self.backprop(X, y)
+            train_loss += loss.item()
+
+        train_loss /= num_batches
+        print(f"Done train one epoch; AvgLoss: {train_loss}.")
+        return train_loss
+
+    def stats(self, dataset_name, data_loader):
+        print("Started validation.")
+        num_batches = len(data_loader)
+        loss = 0.0
+        error_rate = 1.0
+        num_errors = 0
+        num_pixels = 0
+
+        self.model.eval() # set model to evaluation mode
+        with torch.no_grad():
+            for batch_index, (X, y) in enumerate(data_loader):
+                X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
+                logits = self.forward(X)
+                loss += self.criterion(logits, y).item()
+
+                preds = self.logits_to_probs(logits)
+                preds = (preds > 0.5).float()
+                num_errors += (preds != y).sum()
+                num_pixels += torch.numel(preds)
+
+        loss /= num_batches
+
+        error_rate = num_errors / num_pixels
+
+        print(f"Stats {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n")
+
+        return error_rate, loss
+
+    def forward(self, X):
+        logits = self.model(X)
+        return logits
+
+    def backprop(self, X, y):
+        logits = self.forward(X)
+        loss = self.criterion(logits, y)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss
+
+    def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
+        self.model.eval()
+
+        for batch_index, (X, y) in enumerate(data_loader):
+            X = X.to(self.device)
+
+            with torch.no_grad():
+                logits = self.forward(X)
+                preds = self.logits_to_probs(logits)
+                preds = (preds > 0.5).float()
+
+            torchvision.utils.save_image(
+                preds, f"{self.location}/{folder}/pred_{batch_index}.jpg"
+            )
+            torchvision.utils.save_image(
+                y.unsqueeze(1), f"{self.location}/{folder}/target_{batch_index}.jpg"
+            )
+
+    def train(self):
+        print("Train start.")
+
+        self.model.to(self.device)
+
+        min_error_rate = 1.0
+
+        logs_file = os.path.join(self.location, f"{self.name}_stats.tsv")
+        f = open(logs_file, "w")
+        f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate\n")
+        for epoch in range(self.num_epochs):
+            print(f"Epoch {epoch+1}\n-------------------------------")
+            train_loss = self.train_epoch()
+            train_error_rate, train_loss = self.stats("train", self.train_loader)
+            val_error_rate, val_loss = self.stats("val", self.val_loader)
+
+            if val_error_rate < min_error_rate:
+                min_error_rate = val_error_rate
+                model_file = os.path.join(self.location, f"{self.name}.pt")
+                torch.save(self.model, model_file)  # save best
+                self.save_predictions_as_imgs(self.val_loader)
+
+            f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n")
+            f.flush()
+        f.close()
+
+        print("Train end.")
+
+
 if __name__ == "__main__":
+    print(sys.argv)
+
+    if len(sys.argv) != 2:
+        print("Please provide path to config in YAML format.")
+        sys.exit(0)
+
     run_tests()
     run_stats()
-    # run_train()
+
+    train = DstlTrain(configpath=sys.argv[1])
+    train.train()

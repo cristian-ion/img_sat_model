@@ -1,13 +1,14 @@
 # imgcls/train.py
 
-import yaml
-import torch
-import torchvision
-import torch.utils.data
-from torchvision import transforms
 import os.path
 import sys
+
 import pandas as pd
+import torch
+import torch.utils.data
+import torchvision
+import yaml
+from torchvision import transforms
 
 from solution.scene_classification.dataset import ImgClsDataset
 

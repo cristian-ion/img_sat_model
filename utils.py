@@ -1,22 +1,21 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import torch
-from torch import nn
 import enum
-from PIL import Image
-from torch.utils.data import Dataset, DataLoader
-import pandas as pd
+import platform
+from typing import Any, Optional
+
 import cv2
-from pydantic import BaseModel
-from typing import Optional, Any
-from torchvision.transforms import Compose
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
+import torch.optim as optim
 import torchvision
+from PIL import Image
+from pydantic import BaseModel
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, models, transforms
 from torchvision.models import ResNet18_Weights
-import enum
-from pydantic import BaseModel
-import torch.optim as optim
-import platform
+from torchvision.transforms import Compose
 from torchvision.transforms.functional import InterpolationMode
 
 

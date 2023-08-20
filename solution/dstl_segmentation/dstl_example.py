@@ -1,22 +1,23 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import cv2
-import pandas as pd
-from shapely.wkt import loads as wkt_loads
-import tifffile as tiff
 import os
 import random
-from keras.models import Model
-from keras.layers import Input, concatenate, Convolution2D, MaxPooling2D, UpSampling2D, Reshape, core, Dropout
-from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint, LearningRateScheduler
-from keras import backend as K
-from sklearn.metrics import jaccard_score
-from shapely.geometry import MultiPolygon, Polygon
-import shapely.wkt
-import shapely.affinity
 from collections import defaultdict
 
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import shapely.affinity
+import shapely.wkt
+import tifffile as tiff
+from keras import backend as K
+from keras.callbacks import LearningRateScheduler, ModelCheckpoint
+from keras.layers import (Convolution2D, Dropout, Input, MaxPooling2D, Reshape,
+                          UpSampling2D, concatenate, core)
+from keras.models import Model
+from keras.optimizers import Adam
+from shapely.geometry import MultiPolygon, Polygon
+from shapely.wkt import loads as wkt_loads
+from sklearn.metrics import jaccard_score
 
 N_Cls = 10
 inDir = './dstl'

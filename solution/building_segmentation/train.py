@@ -1,14 +1,13 @@
-from building_segmentation_model.unet import UNet
-from building_segmentation_model.dataset import MuBuildingsSegmentationDataset
-
 import os
-import torch
-from torch.utils.data.dataloader import DataLoader
-import torch.nn as nn
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-import torchvision
 
+import albumentations as A
+import torch
+import torch.nn as nn
+import torchvision
+from albumentations.pytorch import ToTensorV2
+from solution.building_segmentation.dataset import MuBuildingsSegmentationDataset
+from solution.building_segmentation.unet import UNet
+from torch.utils.data.dataloader import DataLoader
 
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512

@@ -1,18 +1,18 @@
-import os
-import pandas as pd
-import numpy as np
 import logging
+import os
 import platform
-import torch
-from torch.utils.data import Dataset, DataLoader
-import torchvision
-from torchvision.transforms import ToTensor
-from torchvision import datasets, models, transforms
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
 import torch.optim as optim
+import torchvision
 from PIL import Image
 from torch import nn
-
+from torch.utils.data import DataLoader, Dataset
+from torchvision import datasets, models, transforms
+from torchvision.transforms import ToTensor
 
 logger = logging.getLogger('train')
 logger.setLevel(logging.INFO)
