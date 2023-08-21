@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
-from solution.common.constants import RESISC45_DATASET_FILE, UCMERCEDLU_DATASET_FILE
+from solution.common.constants import (RESISC45_DATASET_FILE,
+                                       UCMERCEDLU_DATASET_FILE)
 
 
 def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues):

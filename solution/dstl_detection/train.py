@@ -3,6 +3,7 @@ import json
 import os
 import sys
 
+import albumentations as A
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,94 +13,23 @@ import shapely
 import tifffile as tiff
 import torch
 import torch.optim as optim
+import torchvision
+from albumentations.pytorch import ToTensorV2
 from shapely.wkt import loads as wkt_loads
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.transforms import Compose
-import torchvision
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-
-from dstl_constants import TRAIN_WKT_FILE, GRID_SIZES_FILE
+from PIL import Image
 
 from solution.building_detection.unet import UNet
 
+from .dstl_constants import *
+from .dstl_processing import DstlProcessingLib
+
+
 IMAGE_RES_X = 512
 IMAGE_RES_Y = 512
-
-
-def convert_coordinates_to_raster(coords, xmax, ymin, width, height):
-    w1 = 1.0 * width * width / (width + 1)
-    h1 = 1.0 * height * height / (height + 1)
-    xf = w1 / xmax
-    yf = h1 / ymin
-    coords[:, 0] *= xf
-    coords[:, 1] *= yf
-    coords_int = np.round(coords).astype(np.int32)
-    return coords_int
-
-
-def process_polylist(ob, imageid, classtype, xmax, ymin, width, height):
-    # todo: save poly stats (exterior and interior lengths)
-    print(len(ob.geoms))
-
-    perim_list = []
-    interior_list = []
-
-    for i, poly in enumerate(ob.geoms):
-        # print(imageid, classtype, i, poly.area, poly.length)
-        # print(f"[{i}]exterior length = {poly.exterior.length}")
-        coords = np.array(list(poly.exterior.coords))
-        coords = convert_coordinates_to_raster(coords, xmax, ymin, width, height)
-        perim_list.append(coords)
-
-        for j, poly_interior in enumerate(poly.interiors):
-            # print(f"[{i}] {imageid} interior length = {poly_interior.length}")
-            coords = np.array(list(poly_interior.coords))
-            coords = convert_coordinates_to_raster(coords, xmax, ymin, width, height)
-            interior_list.append(coords)
-
-    return perim_list, interior_list
-
-
-def process_train_sample(imageid, classtype, mpwkt, xmax, ymin):
-    imgpath = os.path.join(IMAGES_DIR_BANDS_3, imageid + EXT_TIFF)
-    img = tiff.imread(imgpath)
-    # plt.figure()
-    # fig = tiff.imshow(img)
-    # plt.savefig(os.path.join(DEBUG_PATH, f"{imageid}_{classtype}.png"))
-
-    c, w, h = img.shape
-
-    # print(f"width={w} height={h} channels={c}")
-
-    ob = shapely.from_wkt(mpwkt) # A collection of one or more Polygons.
-    exteriors, interiors = process_polylist(ob, imageid, classtype, xmax, ymin, w, h)
-
-    # create image mask
-    # print(imageid, classtype)
-    img_mask = np.zeros((h, w), np.uint8)
-    cv2.fillPoly(img_mask, exteriors, color=1)
-    cv2.fillPoly(img_mask, interiors, color=0)
-    # plt.imshow(img_mask)
-    # plt.savefig(os.path.join(DEBUG_PATH, f"{imageid}_{classtype}_mask.png"))
-
-    return img, img_mask
-
-
-def crop_center(img, cropx, cropy):
-    c, y, x = img.shape
-    startx = x // 2 - (cropx // 2)
-    starty = y // 2 - (cropy // 2)
-    return img[:, starty:starty+cropy,startx:startx+cropx]
-
-
-def crop_center_mask(img, cropx, cropy):
-    y, x = img.shape
-    startx = x // 2 - (cropx // 2)
-    starty = y // 2 - (cropy // 2)
-    return img[starty:starty+cropy,startx:startx+cropx]
 
 
 class DstlDataset(Dataset):
@@ -112,27 +42,22 @@ class DstlDataset(Dataset):
         df_gs.rename(columns={'Unnamed: 0': COL_IMAGEID}, inplace=True)
         df_wkt = pd.merge(left=df_wkt, right=df_gs, on=COL_IMAGEID)
 
-        self.df_samples = df_wkt
+        # self.df_samples = df_wkt
         self.transform = transform
 
+        self.processing = DstlProcessingLib(df_wkt, df_gs)
+
     def __len__(self):
-        return len(self.df_samples)
+        return len(self.df_wkt)
 
     def __getitem__(self, index):
-        sample = self.df_samples.iloc[index]
+        sample = self.df_wkt.iloc[index]
 
-        img, img_mask = process_train_sample(
-            sample[COL_IMAGEID],
-            sample[COL_CLASSTYPE],
-            sample[COL_MULTIPOLYGONWKT],
-            sample[COL_XMAX],
-            sample[COL_YMIN],
+        image, mask = self.processing.read_image_and_mask(
+            raster_size=(IMAGE_RES_Y, IMAGE_RES_X),
+            image_id=sample[COL_IMAGEID],
         )
-
-
-        image = np.array(Image.open(image_path).convert("RGB"))
-        mask = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)
-        mask[mask == 255.0] = 1.0
+        mask = mask[0]
 
         if self.transform:
             augmentations = self.transform(image=image, mask=mask)

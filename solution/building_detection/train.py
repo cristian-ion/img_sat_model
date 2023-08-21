@@ -5,9 +5,10 @@ import torch
 import torch.nn as nn
 import torchvision
 from albumentations.pytorch import ToTensorV2
+from torch.utils.data.dataloader import DataLoader
+
 from solution.building_detection.dataset import MuBuildingsSegmentationDataset
 from solution.building_detection.unet import UNet
-from torch.utils.data.dataloader import DataLoader
 
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
