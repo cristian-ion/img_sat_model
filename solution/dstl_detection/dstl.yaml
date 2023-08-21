@@ -1,4 +1,4 @@
-dstl_dataset:
+dstl:
   train_path: "/Users/cristianion/Desktop/satimg_data/DSTL"
   classes:
     - building # 1
