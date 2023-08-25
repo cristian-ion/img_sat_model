@@ -16,7 +16,7 @@ def read_train_wkt(train_wkt_csv=TRAIN_WKT_FILE):
     return pd.read_csv(train_wkt_csv)
 
 
-class DstlProcessingLib:
+class DstlProcessing:
     def __init__(self, df_train_wkt, df_grid_sizes, classes) -> None:
         self.df_train_wkt = df_train_wkt
         self.df_grid_sizes =  df_grid_sizes
@@ -73,11 +73,11 @@ class DstlProcessingLib:
 
         for poly in multipolygon.geoms:
             vector_coords = np.array(list(poly.exterior.coords))
-            raster_coords = DstlProcessingLib._convert_coordinates_to_raster(vector_coords, raster_img_size, xymax)
+            raster_coords = DstlProcessing._convert_coordinates_to_raster(vector_coords, raster_img_size, xymax)
             raster_coords_list.append(raster_coords)
             for pi in poly.interiors:
                 interior = np.array(list(pi.coords))
-                interior_c = DstlProcessingLib._convert_coordinates_to_raster(interior, raster_img_size, xymax)
+                interior_c = DstlProcessing._convert_coordinates_to_raster(interior, raster_img_size, xymax)
                 raster_interior_list.append(interior_c)
         return raster_coords_list, raster_interior_list
 

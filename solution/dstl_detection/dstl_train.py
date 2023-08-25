@@ -25,72 +25,15 @@ from PIL import Image
 from solution.building_detection.unet import UNet
 
 from .dstl_constants import *
-from .dstl_processing import DstlProcessingLib
-
-
-IMAGE_RES_X = 512
-IMAGE_RES_Y = 512
-
-
-class DstlDataset(Dataset):
-    def __init__(self, transform) -> None:
-        super().__init__()
-
-        df_wkt = pd.read_csv(TRAIN_WKT_FILE)
-        df_gs = pd.read_csv(GRID_SIZES_FILE)
-
-        df_gs.rename(columns={'Unnamed: 0': COL_IMAGEID}, inplace=True)
-        df_wkt = pd.merge(left=df_wkt, right=df_gs, on=COL_IMAGEID)
-
-        # self.df_samples = df_wkt
-        self.transform = transform
-        self.processing = DstlProcessingLib(df_wkt, df_gs)
-
-    def __len__(self):
-        return len(self.df_wkt)
-
-    def __getitem__(self, index):
-        sample = self.df_wkt.iloc[index]
-
-        image, mask = self.processing.read_image_and_mask(
-            raster_size=(IMAGE_RES_Y, IMAGE_RES_X),
-            image_id=sample[COL_IMAGEID],
-        )
-        mask = mask[0]
-
-        if self.transform:
-            augmentations = self.transform(image=image, mask=mask)
-            image = augmentations["image"]
-            mask = augmentations["mask"]
-
-        return image, mask
-
-
-def get_device():
-    # find CUDA / MPS / CPU device
-    device = (
-        "cuda"
-        if torch.cuda.is_available()
-        else "mps"
-        if torch.backends.mps.is_available()
-        else "cpu"
-    )
-    print(f"Using {device} device")
-    return device
+from .dstl_processing import DstlProcessing
 
 
 class DstlTrain:
-    def __init__(self) -> None:
-        self.name = "segment"
-        self.location = "models/dstl"
+    def __init__(self, dstl_trainset, dstl_valset) -> None:
+        self.unique_id = "dstl_model"
+        self.out_path = "models/dstl"
         self.num_epochs = 20
-
-        self.resize_width = 512
-        self.resize_height = 512
-
-        self.device = get_device()
-
-        # setup model and optimizer
+        self.device = self.get_device()
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.model = UNet(in_channels=3, n_classes=1, bilinear=True)
         self.logits_to_probs = nn.Sigmoid()
@@ -99,36 +42,20 @@ class DstlTrain:
                 lr=0.01,
                 momentum=0.9,
             )
-
-        self.train_transform = A.Compose([
-                A.Resize(height=self.resize_height, width=self.resize_width),
-                A.Rotate(limit=35, p=1.0),
-                A.HorizontalFlip(p=0.5),
-                A.VerticalFlip(p=0.5),
-                A.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1.0, 1.0, 1.0],
-                    max_pixel_value=255.0,
-                ),
-                ToTensorV2(),
-            ])
-
-        self.val_transform = A.Compose([
-                A.Resize(height=self.resize_height, width=self.resize_width),
-                A.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1.0, 1.0, 1.0],
-                    max_pixel_value=255.0,
-                ),
-                ToTensorV2(),
-            ])
-
-        # train / val set
-        dstl_trainset = DstlDataset(transform=self.train_transform)
-        dstl_valset = DstlDataset(transform=self.val_transform)
-
         self.train_loader = DataLoader(dstl_trainset, batch_size=8, shuffle=True)
         self.val_loader = DataLoader(dstl_valset, batch_size=8, shuffle=False)
+
+    def get_device(self):
+        # find CUDA / MPS / CPU device
+        device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else "mps"
+            if torch.backends.mps.is_available()
+            else "cpu"
+        )
+        print(f"Using {device} device")
+        return device
 
     def train_epoch(self):
         print("Started train one epoch.")
@@ -146,7 +73,7 @@ class DstlTrain:
         print(f"Done train one epoch; AvgLoss: {train_loss}.")
         return train_loss
 
-    def stats(self, dataset_name, data_loader):
+    def validation_epoch(self, dataset_name, data_loader):
         print("Started validation.")
         num_batches = len(data_loader)
         loss = 0.0
@@ -198,10 +125,10 @@ class DstlTrain:
                 preds = (preds > 0.5).float()
 
             torchvision.utils.save_image(
-                preds, f"{self.location}/{folder}/pred_{batch_index}.jpg"
+                preds, f"{self.out_path}/{folder}/pred_{batch_index}.jpg"
             )
             torchvision.utils.save_image(
-                y.unsqueeze(1), f"{self.location}/{folder}/target_{batch_index}.jpg"
+                y.unsqueeze(1), f"{self.out_path}/{folder}/target_{batch_index}.jpg"
             )
 
     def train(self):
@@ -211,18 +138,18 @@ class DstlTrain:
 
         min_error_rate = 1.0
 
-        logs_file = os.path.join(self.location, f"{self.name}_stats.tsv")
+        logs_file = os.path.join(self.out_path, f"{self.unique_id}_stats.tsv")
         f = open(logs_file, "w")
         f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate\n")
         for epoch in range(self.num_epochs):
             print(f"Epoch {epoch+1}\n-------------------------------")
             train_loss = self.train_epoch()
-            train_error_rate, train_loss = self.stats("train", self.train_loader)
-            val_error_rate, val_loss = self.stats("val", self.val_loader)
+            train_error_rate, train_loss = self.validation_epoch("train", self.train_loader)
+            val_error_rate, val_loss = self.validation_epoch("val", self.val_loader)
 
             if val_error_rate < min_error_rate:
                 min_error_rate = val_error_rate
-                model_file = os.path.join(self.location, f"{self.name}.pt")
+                model_file = os.path.join(self.out_path, f"{self.unique_id}.pt")
                 torch.save(self.model, model_file)  # save best
                 self.save_predictions_as_imgs(self.val_loader)
 
