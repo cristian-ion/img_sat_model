@@ -44,7 +44,6 @@ class DstlDataset(Dataset):
 
         # self.df_samples = df_wkt
         self.transform = transform
-
         self.processing = DstlProcessingLib(df_wkt, df_gs)
 
     def __len__(self):
@@ -78,41 +77,6 @@ def get_device():
     )
     print(f"Using {device} device")
     return device
-
-
-def run_train():
-    ds = DstlDataset()
-    dl = DataLoader(ds, batch_size=1, shuffle=True)
-    size = len(ds)
-
-    # Create UNET
-    model = UNet(in_channels=3, n_classes=10, bilinear=True)
-    device = get_device()
-    model.to(device)
-
-    # Set model to train mode, necessary before backprop
-    model.train()
-
-    train_loss = 0
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-    for batch, (X, y) in enumerate(dl):
-        X, y = X.to(device), y.to(device)
-
-        pred = model(X)  # forward
-        loss = criterion(pred, y)  # prediction error / loss
-
-        # Backpropagation
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        train_loss += loss.item()
-
-        if batch % 100 == 0:
-            loss, current = loss.item(), (batch + 1) * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-
 
 class DstlTrain:
     def __init__(self) -> None:
