@@ -78,6 +78,7 @@ def get_device():
     print(f"Using {device} device")
     return device
 
+
 class DstlTrain:
     def __init__(self) -> None:
         self.name = "segment"
@@ -88,6 +89,8 @@ class DstlTrain:
         self.resize_height = 512
 
         self.device = get_device()
+
+        # setup model and optimizer
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.model = UNet(in_channels=3, n_classes=1, bilinear=True)
         self.logits_to_probs = nn.Sigmoid()
@@ -120,12 +123,12 @@ class DstlTrain:
                 ToTensorV2(),
             ])
 
-        segm_dataset_train = DstlDataset(transform=self.train_transform)
+        # train / val set
+        dstl_trainset = DstlDataset(transform=self.train_transform)
+        dstl_valset = DstlDataset(transform=self.val_transform)
 
-        segm_dataset_val = DstlDataset(transform=self.val_transform)
-
-        self.train_loader = DataLoader(segm_dataset_train, batch_size=8, shuffle=True)
-        self.val_loader = DataLoader(segm_dataset_val, batch_size=8, shuffle=False)
+        self.train_loader = DataLoader(dstl_trainset, batch_size=8, shuffle=True)
+        self.val_loader = DataLoader(dstl_valset, batch_size=8, shuffle=False)
 
     def train_epoch(self):
         print("Started train one epoch.")
