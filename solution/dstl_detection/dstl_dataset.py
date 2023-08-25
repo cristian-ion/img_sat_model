@@ -1,7 +1,6 @@
 import torch
 import pandas as pd
-
-
+import numpy as np
 
 from solution.dstl_detection.dstl_processing import DstlProcessing
 from solution.dstl_detection.dstl_constants import COL_IMAGEID
@@ -33,8 +32,13 @@ class DstlDataset(torch.utils.data.Dataset):
         )
         mask = mask[0]
 
+        mask[mask == 255] = 1
+        mask = mask.astype(np.float32)
+
         if self.transform:
             augmentations = self.transform(image=image)
             image = augmentations["image"]
 
+        mask = torch.from_numpy(mask)
+        print(mask.shape, mask.dtype)
         return image, mask

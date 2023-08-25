@@ -4,6 +4,7 @@ import pandas as pd
 from shapely.wkt import loads as wkt_loads
 import tifffile as tiff
 import os
+from datetime import datetime
 
 from .dstl_constants import GRID_SIZES_FILE, TRAIN_WKT_FILE, THREE_BAND, EXT_TIFF
 
@@ -33,13 +34,13 @@ class DstlProcessing:
 
         return img, masks
 
-    def generate_mask_for_image_and_class(self, raster_size, image_id, class_type):
+    def generate_mask_for_image_and_class(self, raster_size, image_id, class_index):
         # __author__ = visoft
         # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
         xymax = self._get_xmax_ymin(image_id)
-        polygon_list = self._get_polygon_list(image_id, class_type)
+        polygon_list = self._get_polygon_list(image_id, class_index)
         contours = self._get_and_convert_contours(polygon_list, raster_size, xymax)
-        mask = self._plot_mask_from_contours(raster_size, contours, 1)
+        mask = self._plot_mask_from_contours(raster_size, contours, class_index)
         return mask
 
     def _get_xmax_ymin(self, imageId: int):
@@ -81,7 +82,7 @@ class DstlProcessing:
                 raster_interior_list.append(interior_c)
         return raster_coords_list, raster_interior_list
 
-    def _plot_mask_from_contours(self, raster_size, contours, class_value=1):
+    def _plot_mask_from_contours(self, raster_size, contours, class_index):
         # __author__ = visoft
         # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
         # binary mask.
@@ -89,8 +90,9 @@ class DstlProcessing:
         if contours is None:
             return img_mask
         perim_list, interior_list = contours
-        cv2.fillPoly(img_mask, perim_list, class_value)
+        cv2.fillPoly(img_mask, perim_list, 255)
         cv2.fillPoly(img_mask, interior_list, 0)
+        # cv2.imwrite(f"image_{self.classes[class_index]}_{datetime.utcnow().strftime('%Y-%m-%d_%H_%M_%S')}.png", img_mask)
         return img_mask
 
     def _get_polygon_list(self, image_id, class_type):
