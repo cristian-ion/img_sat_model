@@ -141,6 +141,11 @@ class DstlTrain:
         logs_file = os.path.join(self.out_path, f"{self.unique_id}_stats.tsv")
         f = open(logs_file, "w")
         f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate\n")
+        train_error_rate, train_loss = self.validation_epoch("train", self.train_loader)
+        val_error_rate, val_loss = self.validation_epoch("val", self.val_loader)
+
+        epoch = -1
+        f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n")
         for epoch in range(self.num_epochs):
             print(f"Epoch {epoch+1}\n-------------------------------")
             train_loss = self.train_epoch()
