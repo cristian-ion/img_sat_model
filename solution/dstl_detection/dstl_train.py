@@ -116,6 +116,9 @@ class DstlTrain:
     def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
         self.model.eval()
 
+        if not os.path.exists(f"{self.out_path}/{folder}"):
+            os.mkdir(f"{self.out_path}/{folder}")
+
         for batch_index, (X, y) in enumerate(data_loader):
             X = X.to(self.device)
 
@@ -123,6 +126,7 @@ class DstlTrain:
                 logits = self.forward(X)
                 preds = self.logits_to_probs(logits)
                 preds = (preds > 0.5).float()
+
 
             torchvision.utils.save_image(
                 preds, f"{self.out_path}/{folder}/pred_{batch_index}.jpg"
@@ -156,7 +160,6 @@ class DstlTrain:
                 min_error_rate = val_error_rate
                 model_file = os.path.join(self.out_path, f"{self.unique_id}.pt")
                 torch.save(self.model, model_file)  # save best
-                self.save_predictions_as_imgs(self.val_loader)
 
             f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n")
             f.flush()
