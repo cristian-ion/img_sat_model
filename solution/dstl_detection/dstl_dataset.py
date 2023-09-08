@@ -40,5 +40,4 @@ class DstlDataset(torch.utils.data.Dataset):
             image = augmentations["image"]
 
         mask = torch.from_numpy(mask)
-        print(f"Mask shape {mask.shape}")
         return image, mask

@@ -74,7 +74,7 @@ class DstlTrain:
 
         train_loss = 0
         for batch_index, (X, y) in enumerate(self.train_loader):
-            X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
+            X, y = X.to(self.device), y.to(self.device)
             loss = self.backprop(X, y)
             train_loss += loss.item()
 
@@ -93,8 +93,10 @@ class DstlTrain:
         self.model.eval() # set model to evaluation mode
         with torch.no_grad():
             for batch_index, (X, y) in enumerate(data_loader):
-                X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
+                X, y = X.to(self.device), y.to(self.device)
+
                 logits = self.forward(X)
+
                 loss += self.criterion(logits, y).item()
 
                 preds = self.logits_to_probs(logits)
@@ -116,10 +118,13 @@ class DstlTrain:
 
     def backprop(self, X, y):
         logits = self.forward(X)
+
         loss = self.criterion(logits, y)
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
         return loss
 
     def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
