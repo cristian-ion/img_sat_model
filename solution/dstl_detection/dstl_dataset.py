@@ -30,7 +30,7 @@ class DstlDataset(torch.utils.data.Dataset):
             raster_size=(self.train_res_y, self.train_res_x),
             image_id=sample[COL_IMAGEID],
         )
-        mask = mask[0]
+        # mask = mask[0]
 
         mask[mask == 255] = 1
         mask = mask.astype(np.float32)
@@ -40,4 +40,5 @@ class DstlDataset(torch.utils.data.Dataset):
             image = augmentations["image"]
 
         mask = torch.from_numpy(mask)
+        print(f"Mask shape {mask.shape}")
         return image, mask

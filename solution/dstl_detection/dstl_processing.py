@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import pandas as pd
 from shapely.wkt import loads as wkt_loads
-import tifffile as tiff
+import tifffile
 import os
 from datetime import datetime
 
@@ -25,14 +25,14 @@ class DstlProcessing:
 
     def read_image_and_mask(self, raster_size, image_id):
         img_path = os.path.join(THREE_BAND, image_id + EXT_TIFF)
-        img = tiff.imread(img_path)
+        img = tifffile.imread(img_path)
 
         if img.shape[0] == 3:
             img = np.rollaxis(img, 0, 3)
 
         masks = [self.generate_mask_for_image_and_class(raster_size, image_id, i) for i in range(len(self.classes))]
 
-        return img, masks
+        return img, np.array(masks)
 
     def generate_mask_for_image_and_class(self, raster_size, image_id, class_index):
         # __author__ = visoft

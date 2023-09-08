@@ -8,4 +8,4 @@ building:
 	python -m solution.building_detection.train
 
 dstl:
-	python -m solution.dstl_detection.train solution/dstl_detection/dstl.yaml
+	python -m solution.dstl_detection.dstl_train
