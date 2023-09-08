@@ -9,3 +9,6 @@ building:
 
 dstl:
 	python -m solution.dstl_detection.dstl_train
+
+dstl_predict:
+	python -m solution.dstl_detection.dstl_predict
