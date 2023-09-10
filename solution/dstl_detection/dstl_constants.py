@@ -19,7 +19,18 @@ COL_YMIN = "Ymin"
 # Image extension
 EXT_TIFF = ".tif"
 
-CLASSES = ["building", "structures", "road", "track", "tree", "crops", "waterway", "standing_water", "vehicle_large", "vehicle_small"]
+CLASSES = [
+    "building",
+    "structures",
+    "road",
+    "track",
+    "tree",
+    "crops",
+    "waterway",
+    "standing_water",
+    "vehicle_large",
+    "vehicle_small",
+]
 
 IMAGE_RES_X = 512
 IMAGE_RES_Y = 512
