@@ -22,7 +22,7 @@ from torchvision import transforms
 from torchvision.transforms import Compose
 from PIL import Image
 
-from solution.building_detection.unet import UNet
+from model.building_detection.unet import UNet
 
 from .dstl_constants import *
 from .dstl_constants import CLASSES

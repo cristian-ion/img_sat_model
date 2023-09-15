@@ -7,8 +7,8 @@ import torchvision
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data.dataloader import DataLoader
 
-from solution.building_detection.dataset import MuBuildingsSegmentationDataset
-from solution.building_detection.unet import UNet
+from model.building_detection.dataset import MuBuildingsSegmentationDataset
+from model.building_detection.unet import UNet
 
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
