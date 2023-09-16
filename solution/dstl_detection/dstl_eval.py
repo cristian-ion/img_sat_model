@@ -36,9 +36,8 @@ class DstlEvaluate:
     def evaluate(self):
         pass
 
-    def jaccard_index(self):
+    def jaccard(self):
         pass
-
 
 
 if __name__ == "__main__":
