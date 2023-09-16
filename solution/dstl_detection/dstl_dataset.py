@@ -2,8 +2,8 @@ import torch
 import pandas as pd
 import numpy as np
 
-from model.dstl_detection.dstl_processing import DstlProcessing
-from model.dstl_detection.dstl_constants import COL_IMAGEID
+from solution.dstl_detection.dstl_processing import DstlProcessing
+from solution.dstl_detection.dstl_constants import COL_IMAGEID
 
 
 class DstlDataset(torch.utils.data.Dataset):

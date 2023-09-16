@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from model.dstl_detection.dstl_constants import *
+from solution.dstl_detection.dstl_constants import *
 
 
 def run_stats():
