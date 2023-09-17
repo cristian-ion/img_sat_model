@@ -1,10 +1,9 @@
 import os
+import sys
 from datetime import datetime
-import albumentations as A
 import torch
 import torch.nn as nn
 import torchvision
-from albumentations.pytorch import ToTensorV2
 from torch.utils.data.dataloader import DataLoader
 
 from solution.semantic_segmentation.dataset.dataset_mu_buildings import MUBTrainValData, MU_BUILDINGS_NAMECODE
@@ -169,7 +168,12 @@ class SemanticSegmentationTrainVal:
 
 
 def main():
-    trainer = SemanticSegmentationTrainVal(MU_BUILDINGS_NAMECODE)
+    print(sys.argv)
+
+    if len(sys.argv) != 2:
+        print(f"Please provide dataset namecode: {MU_BUILDINGS_NAMECODE} or {DSTL_NAMECODE}.")
+        sys.exit(0)
+    trainer = SemanticSegmentationTrainVal(sys.argv[1])
     trainer.train_val()
 
 

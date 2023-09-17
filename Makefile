@@ -7,11 +7,11 @@ resisc_train:
 ucm21_train:
 	python -m solution.classification.train_val solution/classification/config_ucm21.yaml
 
-building:
-	python -m solution.building_detection.train
+mub_train:
+	python -m solution.semantic_segmentation.train_val mub
 
-dstl:
-	python -m solution.dstl_detection.dstl_train
+dstl_train:
+	python -m solution.semantic_segmentation.train_val dstl
 
 dstl_predict:
 	python -m solution.dstl_detection.dstl_predict
