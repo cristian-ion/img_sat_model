@@ -1,17 +1,13 @@
+import os
 from typing import Optional
 
-import numpy as np
-import pandas as pd
-import torch
-import os
-
-from albumentations.pytorch import ToTensorV2
 import albumentations as A
 import cv2
-
-from solution.dstl_multiclass_detection.dstl_processing import DstlProcessing
-
+import numpy as np
+import pandas as pd
 import tifffile
+import torch
+from albumentations.pytorch import ToTensorV2
 from shapely.wkt import loads as wkt_loads
 
 DSTL_ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/DSTL"
@@ -153,7 +149,6 @@ class DstlProcessing:
             assert len(multipoly_def) == 1
             polygons = wkt_loads(multipoly_def.values[0])
         return polygons
-
 
 
 class DstlDataset(torch.utils.data.Dataset):

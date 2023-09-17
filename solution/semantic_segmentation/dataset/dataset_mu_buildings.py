@@ -1,13 +1,12 @@
 import os
 
+import albumentations as A
 import matplotlib.pyplot as plt
 import numpy as np
+from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
-from albumentations.pytorch import ToTensorV2
-import albumentations as A
-
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
@@ -107,7 +106,6 @@ class MUBTrainValData:
     @property
     def namecode(self):
         return MU_BUILDINGS_NAMECODE
-
 
 
 if __name__ == "__main__":

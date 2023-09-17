@@ -1,15 +1,21 @@
 import os
 import sys
 from datetime import datetime
+
 import torch
 import torch.nn as nn
 import torchvision
 from torch.utils.data.dataloader import DataLoader
 
-from solution.semantic_segmentation.dataset.dataset_mu_buildings import MUBTrainValData, MU_BUILDINGS_NAMECODE
-from solution.semantic_segmentation.dataset.dataset_dstl import DstlTrainValData, DSTL_NAMECODE
+from solution.semantic_segmentation.dataset.dataset_dstl import (
+    DSTL_NAMECODE,
+    DstlTrainValData,
+)
+from solution.semantic_segmentation.dataset.dataset_mu_buildings import (
+    MU_BUILDINGS_NAMECODE,
+    MUBTrainValData,
+)
 from solution.semantic_segmentation.model.model_unet import UNet
-
 
 NUM_EPOCHS = 20
 
@@ -30,7 +36,6 @@ def get_device():
 def gen_model_id(name, version=1):
     date_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
     return f"{name}_model_{version}_{date_time}"
-
 
 
 def select_train_val_data(dataset_namecode: str):
@@ -55,9 +60,15 @@ class SemanticSegmentationTrainVal:
 
         train_val_data = select_train_val_data(dataset_namecode)
 
-        self.train_loader = DataLoader(train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True)
-        self.val_loader = DataLoader(train_val_data.valset, batch_size=train_val_data.batch_size, shuffle=False)
-        self.model = UNet(in_channels=3, n_classes=train_val_data.num_classes, bilinear=True)
+        self.train_loader = DataLoader(
+            train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True
+        )
+        self.val_loader = DataLoader(
+            train_val_data.valset, batch_size=train_val_data.batch_size, shuffle=False
+        )
+        self.model = UNet(
+            in_channels=3, n_classes=train_val_data.num_classes, bilinear=True
+        )
         self.name = gen_model_id(train_val_data.namecode, version=1)
 
     def train_epoch(self):
@@ -171,7 +182,9 @@ def main():
     print(sys.argv)
 
     if len(sys.argv) != 2:
-        print(f"Please provide dataset namecode: {MU_BUILDINGS_NAMECODE} or {DSTL_NAMECODE}.")
+        print(
+            f"Please provide dataset namecode: {MU_BUILDINGS_NAMECODE} or {DSTL_NAMECODE}."
+        )
         sys.exit(0)
     trainer = SemanticSegmentationTrainVal(sys.argv[1])
     trainer.train_val()

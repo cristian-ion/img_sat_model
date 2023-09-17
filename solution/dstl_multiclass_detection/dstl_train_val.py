@@ -6,16 +6,16 @@ Implementation reference
 import os
 from datetime import datetime
 
-
+import albumentations as A
 import torch
 import torchvision
 from albumentations.pytorch import ToTensorV2
-import albumentations as A
 from torch import nn
 from torch.utils.data import DataLoader
 
 from solution.semantic_segmentation.model.model_unet import UNet
 
+from ..semantic_segmentation.dataset.dataset_dstl import DstlDataset
 from .dstl_constants import (
     CLASSES,
     GRID_SIZES_FILE,
@@ -23,7 +23,6 @@ from .dstl_constants import (
     IMAGE_RES_Y,
     TRAIN_WKT_FILE,
 )
-from ..semantic_segmentation.dataset.dataset_dstl import DstlDataset
 
 
 class DstlTrain:
