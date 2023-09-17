@@ -1,13 +1,13 @@
 import os
+import random
+from timeit import default_timer as timer
 
+import albumentations as A
+import numpy as np
 import tifffile
 import torch
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-import numpy as np
 import torchvision
-from timeit import default_timer as timer
-import random
+from albumentations.pytorch import ToTensorV2
 
 from .dstl_constants import CLASSES
 

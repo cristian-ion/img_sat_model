@@ -1,7 +1,13 @@
+"""
+Implementation reference
+- https://www.kaggle.com/code/alijs1/squeezed-this-in-successful-kernel-run
+"""
+
 import csv
 import json
 import os
 import sys
+from datetime import datetime
 
 import albumentations as A
 import cv2
@@ -15,24 +21,23 @@ import torch
 import torch.optim as optim
 import torchvision
 from albumentations.pytorch import ToTensorV2
+from PIL import Image
 from shapely.wkt import loads as wkt_loads
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from torchvision.transforms import Compose
-from PIL import Image
 
 from solution.building_detection.unet import UNet
 
 from .dstl_constants import *
 from .dstl_constants import CLASSES
-from .dstl_processing import DstlProcessing
 from .dstl_dataset import DstlDataset
-from datetime import datetime
+from .dstl_processing import DstlProcessing
 
 
 class DstlTrain:
-    def __init__(self, dstl_trainset, dstl_valset) -> None:
+    def __init__(self) -> None:
         now = datetime.now()
         date_time = now.strftime("%Y_%m_%d_%H_%M_%S")
         self.version = 1
@@ -51,6 +56,31 @@ class DstlTrain:
                 lr=0.01,
                 momentum=0.9,
             )
+
+
+        DSTL_TRAIN_TRANSFORM = A.Compose([
+            A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
+            A.Normalize(
+                mean=[0.0, 0.0, 0.0],
+                std=[1.0, 1.0, 1.0],
+                max_pixel_value=255.0,
+            ),
+            ToTensorV2(),
+        ])
+
+        DSTL_VAL_TRANSFORM = A.Compose([
+            A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
+            A.Normalize(
+                mean=[0.0, 0.0, 0.0],
+                std=[1.0, 1.0, 1.0],
+                max_pixel_value=255.0,
+            ),
+            ToTensorV2(),
+        ])
+
+        dstl_trainset = DstlDataset(DSTL_TRAIN_TRANSFORM, train_csv=TRAIN_WKT_FILE, grid_csv=GRID_SIZES_FILE, classes=CLASSES, train_res_x=IMAGE_RES_X, train_res_y=IMAGE_RES_Y)
+        dstl_valset = DstlDataset(DSTL_VAL_TRANSFORM, train_csv=TRAIN_WKT_FILE, grid_csv=GRID_SIZES_FILE, classes=CLASSES, train_res_x=IMAGE_RES_X, train_res_y=IMAGE_RES_Y)
+
         self.train_loader = DataLoader(dstl_trainset, batch_size=self.batch_size, shuffle=True)
         self.val_loader = DataLoader(dstl_valset, batch_size=self.batch_size, shuffle=False)
 
@@ -183,30 +213,9 @@ class DstlTrain:
 
 
 def train():
-    DSTL_TRAIN_TRANSFORM = A.Compose([
-        A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
-        A.Normalize(
-            mean=[0.0, 0.0, 0.0],
-            std=[1.0, 1.0, 1.0],
-            max_pixel_value=255.0,
-        ),
-        ToTensorV2(),
-    ])
 
-    DSTL_VAL_TRANSFORM = A.Compose([
-        A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
-        A.Normalize(
-            mean=[0.0, 0.0, 0.0],
-            std=[1.0, 1.0, 1.0],
-            max_pixel_value=255.0,
-        ),
-        ToTensorV2(),
-    ])
 
-    dataset = DstlDataset(DSTL_TRAIN_TRANSFORM, train_file=TRAIN_WKT_FILE, grid_sizes_file=GRID_SIZES_FILE, classes=CLASSES, train_res_x=IMAGE_RES_X, train_res_y=IMAGE_RES_Y)
-    dstl_valset = DstlDataset(DSTL_VAL_TRANSFORM, train_file=TRAIN_WKT_FILE, grid_sizes_file=GRID_SIZES_FILE, classes=CLASSES, train_res_x=IMAGE_RES_X, train_res_y=IMAGE_RES_Y)
-
-    dstl_train = DstlTrain(dataset, dstl_valset)
+    dstl_train = DstlTrain()
     dstl_train.train()
 
 

@@ -15,3 +15,6 @@ dstl_predict:
 
 dstl_eval:
 	python -m solution.dstl_detection.dstl_eval
+
+format:
+	isort solution

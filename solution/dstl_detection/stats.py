@@ -8,14 +8,14 @@ def run_stats():
     df_wkt = pd.read_csv(TRAIN_WKT_FILE)
     df_gs = pd.read_csv(GRID_SIZES_FILE)
 
-    df_gs.rename(columns={'Unnamed: 0': COL_IMAGEID}, inplace=True)
+    df_gs.rename(columns={'Unnamed: 0': IMAGEID_COLUMN}, inplace=True)
 
     print(df_gs.info())
     print(df_gs.head())
     print(df_gs.describe().T)
 
     # join wkt and gs
-    df_wkt = pd.merge(left=df_wkt, right=df_gs, on=COL_IMAGEID)
+    df_wkt = pd.merge(left=df_wkt, right=df_gs, on=IMAGEID_COLUMN)
     print(df_wkt.head())
     print(df_wkt.info())
 
@@ -24,7 +24,7 @@ def run_stats():
     all_imgmin = [None, None, None]
     for wkt_i in range(max(5, len(df_wkt))):
         img, img_mask = process_train_sample(
-            df_wkt.iloc[wkt_i][COL_IMAGEID],
+            df_wkt.iloc[wkt_i][IMAGEID_COLUMN],
             df_wkt.iloc[wkt_i][COL_CLASSTYPE],
             df_wkt.iloc[wkt_i][COL_MULTIPOLYGONWKT],
             df_wkt.iloc[wkt_i][COL_XMAX],

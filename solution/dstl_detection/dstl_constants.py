@@ -12,7 +12,7 @@ THREE_BAND = os.path.join(DSTL_ROOT_PATH, "three_band")
 # Column names
 COL_MULTIPOLYGONWKT = "MultipolygonWKT"
 COL_CLASSTYPE = "ClassType"
-COL_IMAGEID = "ImageId"
+IMAGEID_COLUMN = "ImageId"
 COL_XMAX = "Xmax"
 COL_YMIN = "Ymin"
 

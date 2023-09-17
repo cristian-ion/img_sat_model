@@ -1,12 +1,14 @@
-import cv2
-import numpy as np
-import pandas as pd
-from shapely.wkt import loads as wkt_loads
-import tifffile
 import os
 from datetime import datetime
 
-from .dstl_constants import GRID_SIZES_FILE, TRAIN_WKT_FILE, THREE_BAND, EXT_TIFF
+import cv2
+import numpy as np
+import pandas as pd
+import tifffile
+from shapely.wkt import loads as wkt_loads
+
+from .dstl_constants import (EXT_TIFF, GRID_SIZES_FILE, THREE_BAND,
+                             TRAIN_WKT_FILE)
 
 
 def read_grid_sizes(grid_sizes_csv=GRID_SIZES_FILE):

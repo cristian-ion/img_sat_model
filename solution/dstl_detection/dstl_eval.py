@@ -1,12 +1,12 @@
-import torch
+import random
+from timeit import default_timer as timer
+
+import albumentations as A
+import numpy as np
 import tifffile
 import torch
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-import numpy as np
 import torchvision
-from timeit import default_timer as timer
-import random
+from albumentations.pytorch import ToTensorV2
 
 from .dstl_constants import CLASSES
 
@@ -15,8 +15,8 @@ IMAGE_RES_X = 512
 
 
 class DstlEvaluate:
-    def __init__(self, path) -> None:
-        self.path = path
+    def __init__(self, model_path) -> None:
+        self.path = model_path
         self.model = torch.load(self.path)
         self.device = self.get_device()
         self.model.eval()
@@ -33,7 +33,7 @@ class DstlEvaluate:
 
         self.sigmoid = torch.nn.Sigmoid()
 
-    def evaluate(self):
+    def evaluate_image_filelist(self):
         pass
 
     def jaccard(self):
@@ -43,6 +43,6 @@ class DstlEvaluate:
 if __name__ == "__main__":
     print("DSTL evaluation")
     eval = DstlEvaluate()
-    eval.evaluate()
+    eval.evaluate_submission()
 
 
