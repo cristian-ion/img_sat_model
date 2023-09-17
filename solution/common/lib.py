@@ -12,7 +12,7 @@ def histogram_boxplot(data, feature, figsize=(12, 7), bins=None):
     kde: whether to the show density curve (default False)
     bins: number of bins for histogram (default None)
     """
-    
+
     f2, (ax_box2, ax_hist2, ax_hist3) = plt.subplots(
         nrows=3,  # Number of rows of the subplot grid= 2
         sharex=True,  # x-axis will be shared among all subplots
@@ -22,18 +22,22 @@ def histogram_boxplot(data, feature, figsize=(12, 7), bins=None):
 
     # boxplot will be created and a triangle will indicate the mean value of the column
     sns.boxplot(data=data, x=feature, ax=ax_box2, showmeans=True, color="violet")
-    
+
     # for histogram
     if bins:
-        sns.histplot(data=data, x=feature, kde=False, ax=ax_hist2, bins=bins, stat='count')
+        sns.histplot(
+            data=data, x=feature, kde=False, ax=ax_hist2, bins=bins, stat="count"
+        )
     else:
-        sns.histplot(data=data, x=feature, kde=False, ax=ax_hist2, stat='count')
+        sns.histplot(data=data, x=feature, kde=False, ax=ax_hist2, stat="count")
 
     if bins:
-        sns.histplot(data=data, x=feature, kde=True, ax=ax_hist3, bins=bins, stat='density')
+        sns.histplot(
+            data=data, x=feature, kde=True, ax=ax_hist3, bins=bins, stat="density"
+        )
     else:
-        sns.histplot(data=data, x=feature, kde=True, ax=ax_hist3, stat='density')
-    
+        sns.histplot(data=data, x=feature, kde=True, ax=ax_hist3, stat="density")
+
     ax_hist2.axvline(
         data[feature].mean(), color="green", linestyle="--"
     )  # Add mean to the histogram
@@ -47,6 +51,7 @@ def histogram_boxplot(data, feature, figsize=(12, 7), bins=None):
     ax_hist3.axvline(
         data[feature].median(), color="black", linestyle="-"
     )  # Add median to the histogram
+
 
 def labeled_barplot(data, feature, perc=False, n=None):
     """
@@ -74,7 +79,7 @@ def labeled_barplot(data, feature, perc=False, n=None):
     )
 
     for p in ax.patches:
-        if perc == True:
+        if perc is True:
             label = "{:.1f}%".format(
                 100 * p.get_height() / total
             )  # percentage of each class of the category

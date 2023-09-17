@@ -5,14 +5,16 @@ import torch.utils.data
 
 
 class ImgClsDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset_file: str, shuffle: bool, load_folds=None, transform=None):
+    def __init__(
+        self, dataset_file: str, shuffle: bool, load_folds=None, transform=None
+    ):
         """
         load_folds: [1,2,3] means 60% of data if num_folds is 5
         """
         data = pd.read_csv(dataset_file)
         self.total_samples = len(data)
         print(data.head())
-        
+
         if shuffle:
             print("Shuffle dataset.")
             data = data.sample(frac=1).reset_index(drop=True)
@@ -23,11 +25,13 @@ class ImgClsDataset(torch.utils.data.Dataset):
         self.num_samples = len(data)
         self.samples = data
         self.transform = transform
-        self.labels = list(data['label'].unique())
+        self.labels = list(data["label"].unique())
         self.num_classes = len(self.labels)
 
         print(f"Total count samples {self.total_samples}")
-        print(f"Count samples {self.num_samples} ({self.num_samples / self.total_samples})")
+        print(
+            f"Count samples {self.num_samples} ({self.num_samples / self.total_samples})"
+        )
         print(f"Labels = {self.labels}")
         print(f"Num Classes = {self.num_classes}")
         print(f"Load folds= {data['fold'].unique()}")
@@ -42,12 +46,12 @@ class ImgClsDataset(torch.utils.data.Dataset):
         label = self.one_hot_labels(label_index)
 
         image = pil.Image.open(img_path)
-        
+
         if self.transform:
             image = self.transform(image)
 
         return image, label
-    
+
     def one_hot_labels(self, label_index):
         label = np.zeros(self.num_classes, dtype=np.float32)
         label[label_index] = 1.0

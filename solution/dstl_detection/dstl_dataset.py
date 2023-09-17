@@ -9,11 +9,20 @@ from solution.dstl_detection.dstl_processing import DstlProcessing
 
 
 class DstlDataset(torch.utils.data.Dataset):
-    def __init__(self, transform, train_csv, grid_csv, classes, train_res_y, train_res_x, image_ids: Optional[list[str]]=None) -> None:
+    def __init__(
+        self,
+        transform,
+        train_csv,
+        grid_csv,
+        classes,
+        train_res_y,
+        train_res_x,
+        image_ids: Optional[list[str]] = None,
+    ) -> None:
         super().__init__()
 
         train_df = pd.read_csv(train_csv)
-        grid_df = pd.read_csv(grid_csv, names=['ImageId', 'Xmax', 'Ymin'], skiprows=1)
+        grid_df = pd.read_csv(grid_csv, names=["ImageId", "Xmax", "Ymin"], skiprows=1)
 
         if image_ids:
             train_df = train_df[train_df[IMAGEID_COLUMN].isin(image_ids)]

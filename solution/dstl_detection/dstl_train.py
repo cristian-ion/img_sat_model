@@ -3,37 +3,26 @@ Implementation reference
 - https://www.kaggle.com/code/alijs1/squeezed-this-in-successful-kernel-run
 """
 
-import csv
-import json
 import os
-import sys
 from datetime import datetime
 
 import albumentations as A
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
-import shapely
-import tifffile as tiff
 import torch
-import torch.optim as optim
 import torchvision
 from albumentations.pytorch import ToTensorV2
-from PIL import Image
-from shapely.wkt import loads as wkt_loads
 from torch import nn
-from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
-from torchvision.transforms import Compose
+from torch.utils.data import DataLoader
 
 from solution.building_detection.unet import UNet
 
-from .dstl_constants import *
-from .dstl_constants import CLASSES
+from .dstl_constants import (
+    CLASSES,
+    GRID_SIZES_FILE,
+    IMAGE_RES_X,
+    IMAGE_RES_Y,
+    TRAIN_WKT_FILE,
+)
 from .dstl_dataset import DstlDataset
-from .dstl_processing import DstlProcessing
 
 
 class DstlTrain:
@@ -52,37 +41,58 @@ class DstlTrain:
         self.model = UNet(in_channels=3, n_classes=len(CLASSES), bilinear=True)
         self.logits_to_probs = nn.Sigmoid()
         self.optimizer = torch.optim.SGD(
-                params=self.model.parameters(),
-                lr=0.01,
-                momentum=0.9,
-            )
+            params=self.model.parameters(),
+            lr=0.01,
+            momentum=0.9,
+        )
 
+        DSTL_TRAIN_TRANSFORM = A.Compose(
+            [
+                A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ]
+        )
 
-        DSTL_TRAIN_TRANSFORM = A.Compose([
-            A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
-            A.Normalize(
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                max_pixel_value=255.0,
-            ),
-            ToTensorV2(),
-        ])
+        DSTL_VAL_TRANSFORM = A.Compose(
+            [
+                A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ]
+        )
 
-        DSTL_VAL_TRANSFORM = A.Compose([
-            A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
-            A.Normalize(
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                max_pixel_value=255.0,
-            ),
-            ToTensorV2(),
-        ])
+        dstl_trainset = DstlDataset(
+            DSTL_TRAIN_TRANSFORM,
+            train_csv=TRAIN_WKT_FILE,
+            grid_csv=GRID_SIZES_FILE,
+            classes=CLASSES,
+            train_res_x=IMAGE_RES_X,
+            train_res_y=IMAGE_RES_Y,
+        )
+        dstl_valset = DstlDataset(
+            DSTL_VAL_TRANSFORM,
+            train_csv=TRAIN_WKT_FILE,
+            grid_csv=GRID_SIZES_FILE,
+            classes=CLASSES,
+            train_res_x=IMAGE_RES_X,
+            train_res_y=IMAGE_RES_Y,
+        )
 
-        dstl_trainset = DstlDataset(DSTL_TRAIN_TRANSFORM, train_csv=TRAIN_WKT_FILE, grid_csv=GRID_SIZES_FILE, classes=CLASSES, train_res_x=IMAGE_RES_X, train_res_y=IMAGE_RES_Y)
-        dstl_valset = DstlDataset(DSTL_VAL_TRANSFORM, train_csv=TRAIN_WKT_FILE, grid_csv=GRID_SIZES_FILE, classes=CLASSES, train_res_x=IMAGE_RES_X, train_res_y=IMAGE_RES_Y)
-
-        self.train_loader = DataLoader(dstl_trainset, batch_size=self.batch_size, shuffle=True)
-        self.val_loader = DataLoader(dstl_valset, batch_size=self.batch_size, shuffle=False)
+        self.train_loader = DataLoader(
+            dstl_trainset, batch_size=self.batch_size, shuffle=True
+        )
+        self.val_loader = DataLoader(
+            dstl_valset, batch_size=self.batch_size, shuffle=False
+        )
 
     def get_device(self):
         # find CUDA / MPS / CPU device
@@ -120,7 +130,7 @@ class DstlTrain:
         num_errors = 0
         num_pixels = 0
 
-        self.model.eval() # set model to evaluation mode
+        self.model.eval()  # set model to evaluation mode
         with torch.no_grad():
             for batch_index, (X, y) in enumerate(data_loader):
                 X, y = X.to(self.device), y.to(self.device)
@@ -138,7 +148,9 @@ class DstlTrain:
 
         error_rate = num_errors / num_pixels
 
-        print(f"Stats {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n")
+        print(
+            f"Stats {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n"
+        )
 
         return error_rate, loss
 
@@ -171,7 +183,6 @@ class DstlTrain:
                 preds = self.logits_to_probs(logits)
                 preds = (preds > 0.5).float()
 
-
             torchvision.utils.save_image(
                 preds, f"{self.out_path}/{folder}/pred_{batch_index}.jpg"
             )
@@ -193,11 +204,15 @@ class DstlTrain:
         val_error_rate, val_loss = self.validation_epoch("val", self.val_loader)
 
         epoch = -1
-        f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n")
+        f.write(
+            f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n"
+        )
         for epoch in range(self.num_epochs):
             print(f"Epoch {epoch+1}\n-------------------------------")
             train_loss = self.train_epoch()
-            train_error_rate, train_loss = self.validation_epoch("train", self.train_loader)
+            train_error_rate, train_loss = self.validation_epoch(
+                "train", self.train_loader
+            )
             val_error_rate, val_loss = self.validation_epoch("val", self.val_loader)
 
             if val_error_rate < min_error_rate:
@@ -205,7 +220,9 @@ class DstlTrain:
                 model_file = os.path.join(self.out_path, f"{self.unique_id}.pt")
                 torch.save(self.model, model_file)  # save best
 
-            f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n")
+            f.write(
+                f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n"
+            )
             f.flush()
         f.close()
 
@@ -213,8 +230,6 @@ class DstlTrain:
 
 
 def train():
-
-
     dstl_train = DstlTrain()
     dstl_train.train()
 

@@ -15,7 +15,6 @@ IMAGE_RES_Y = 512
 IMAGE_RES_X = 512
 
 
-
 class DstlPredict:
     def __init__(self, path) -> None:
         self.path = path
@@ -23,15 +22,17 @@ class DstlPredict:
         self.device = self.get_device()
         self.model.eval()
 
-        self.transform = A.Compose([
-            A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
-            A.Normalize(
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                max_pixel_value=255.0,
-            ),
-            ToTensorV2(),
-        ])
+        self.transform = A.Compose(
+            [
+                A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ]
+        )
 
         self.sigmoid = torch.nn.Sigmoid()
 
@@ -95,7 +96,11 @@ def test_multiple_predict():
     model_path = "/Users/cristianion/Desktop/satimg_model/models/dstl/dstl_model_1_2023_09_08_10_15_26.pt"
     path = "/Users/cristianion/Desktop/satimg_data/DSTL/three_band"
 
-    files = [(os.path.join(path, file), file) for file in os.listdir(path) if file.split('.')[-1] == 'tif']
+    files = [
+        (os.path.join(path, file), file)
+        for file in os.listdir(path)
+        if file.split(".")[-1] == "tif"
+    ]
 
     files = random.sample(files, k=int(0.1 * float(len(files))))
 
@@ -108,12 +113,15 @@ def test_multiple_predict():
         result = dstl_predict.predict(file)
         result = result.squeeze(0)
         end = timer()
-        duration = end-start
+        duration = end - start
         print(f"Predict time {duration}")
         times.append(duration)
 
         for i in range(len(CLASSES)):
-            torchvision.utils.save_image(result[i], f"/Users/cristianion/Documents/out/{CLASSES[i]}_{model_id}_{name}.png")
+            torchvision.utils.save_image(
+                result[i],
+                f"/Users/cristianion/Documents/out/{CLASSES[i]}_{model_id}_{name}.png",
+            )
 
     print(min(times))
     print(max(times))

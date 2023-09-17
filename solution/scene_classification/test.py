@@ -1,6 +1,7 @@
 # imgcls/test.py
 
-class ImgClsTest():
+
+class ImgClsTest:
     def __init__(self) -> None:
         print("init")
 

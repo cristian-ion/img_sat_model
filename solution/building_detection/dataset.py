@@ -2,7 +2,6 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
@@ -41,12 +40,14 @@ if __name__ == "__main__":
     segm_dataset_train = MuBuildingsSegmentationDataset(
         image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
         mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
-        transform=None)
+        transform=None,
+    )
 
     segm_dataset_val = MuBuildingsSegmentationDataset(
         image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
         mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
-        transform=None)
+        transform=None,
+    )
 
     train_loader = DataLoader(segm_dataset_train, batch_size=8, shuffle=True)
     val_loader = DataLoader(segm_dataset_val, batch_size=8, shuffle=False)

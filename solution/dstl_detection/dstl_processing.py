@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 import cv2
 import numpy as np
@@ -7,12 +6,11 @@ import pandas as pd
 import tifffile
 from shapely.wkt import loads as wkt_loads
 
-from .dstl_constants import (EXT_TIFF, GRID_SIZES_FILE, THREE_BAND,
-                             TRAIN_WKT_FILE)
+from .dstl_constants import (EXT_TIFF, GRID_SIZES_FILE, THREE_BAND, TRAIN_WKT_FILE, IMAGEID_COLUMN)
 
 
 def read_grid_sizes(grid_sizes_csv=GRID_SIZES_FILE):
-    return pd.read_csv(grid_sizes_csv, names=['ImageId', 'Xmax', 'Ymin'], skiprows=1)
+    return pd.read_csv(grid_sizes_csv, names=["ImageId", "Xmax", "Ymin"], skiprows=1)
 
 
 def read_train_wkt(train_wkt_csv=TRAIN_WKT_FILE):
@@ -22,7 +20,7 @@ def read_train_wkt(train_wkt_csv=TRAIN_WKT_FILE):
 class DstlProcessing:
     def __init__(self, df_train_wkt, df_grid_sizes, classes) -> None:
         self.df_train_wkt = df_train_wkt
-        self.df_grid_sizes =  df_grid_sizes
+        self.df_grid_sizes = df_grid_sizes
         self.classes = classes
 
     def read_image_and_mask(self, raster_size, image_id):
@@ -32,7 +30,10 @@ class DstlProcessing:
         if img.shape[0] == 3:
             img = np.rollaxis(img, 0, 3)
 
-        masks = [self.generate_mask_for_image_and_class(raster_size, image_id, i) for i in range(len(self.classes))]
+        masks = [
+            self.generate_mask_for_image_and_class(raster_size, image_id, i)
+            for i in range(len(self.classes))
+        ]
 
         return img, np.array(masks)
 
@@ -48,7 +49,11 @@ class DstlProcessing:
     def _get_xmax_ymin(self, imageId: int):
         # __author__ = visoft
         # https://www.kaggle.com/visoft/dstl-satellite-imagery-feature-detection/export-pixel-wise-mask
-        xmax, ymin = self.df_grid_sizes[self.df_grid_sizes.ImageId == imageId].iloc[0, 1:].astype(float)
+        xmax, ymin = (
+            self.df_grid_sizes[self.df_grid_sizes.ImageId == imageId]
+            .iloc[0, 1:]
+            .astype(float)
+        )
         return (xmax, ymin)
 
     @staticmethod
@@ -76,11 +81,15 @@ class DstlProcessing:
 
         for poly in multipolygon.geoms:
             vector_coords = np.array(list(poly.exterior.coords))
-            raster_coords = DstlProcessing._convert_coordinates_to_raster(vector_coords, raster_img_size, xymax)
+            raster_coords = DstlProcessing._convert_coordinates_to_raster(
+                vector_coords, raster_img_size, xymax
+            )
             raster_coords_list.append(raster_coords)
             for pi in poly.interiors:
                 interior = np.array(list(pi.coords))
-                interior_c = DstlProcessing._convert_coordinates_to_raster(interior, raster_img_size, xymax)
+                interior_c = DstlProcessing._convert_coordinates_to_raster(
+                    interior, raster_img_size, xymax
+                )
                 raster_interior_list.append(interior_c)
         return raster_coords_list, raster_interior_list
 

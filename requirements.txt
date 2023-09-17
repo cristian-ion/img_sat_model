@@ -17,3 +17,6 @@ torchaudio
 opencv-python
 ipympl
 pydantic
+black
+isort
+flake8

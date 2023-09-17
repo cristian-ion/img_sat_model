@@ -27,8 +27,7 @@ def get_device():
     return device
 
 
-
-class ImgSegmentTrain():
+class ImgSegmentTrain:
     def __init__(self) -> None:
         self.name = "segment"
         self.location = "segmentation/models/v1"
@@ -39,12 +38,13 @@ class ImgSegmentTrain():
         self.model = UNet(in_channels=3, n_classes=1, bilinear=True)
         self.logits_to_probs = nn.Sigmoid()
         self.optimizer = torch.optim.SGD(
-                params=self.model.parameters(),
-                lr=0.01,
-                momentum=0.9,
-            )
+            params=self.model.parameters(),
+            lr=0.01,
+            momentum=0.9,
+        )
 
-        self.train_transform = A.Compose([
+        self.train_transform = A.Compose(
+            [
                 A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
                 A.Rotate(limit=35, p=1.0),
                 A.HorizontalFlip(p=0.5),
@@ -55,9 +55,11 @@ class ImgSegmentTrain():
                     max_pixel_value=255.0,
                 ),
                 ToTensorV2(),
-            ])
+            ]
+        )
 
-        self.val_transform = A.Compose([
+        self.val_transform = A.Compose(
+            [
                 A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
                 A.Normalize(
                     mean=[0.0, 0.0, 0.0],
@@ -65,17 +67,20 @@ class ImgSegmentTrain():
                     max_pixel_value=255.0,
                 ),
                 ToTensorV2(),
-            ])
+            ]
+        )
 
         segm_dataset_train = MuBuildingsSegmentationDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
             mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
-            transform=self.train_transform)
+            transform=self.train_transform,
+        )
 
         segm_dataset_val = MuBuildingsSegmentationDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
             mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
-            transform=self.val_transform)
+            transform=self.val_transform,
+        )
 
         self.train_loader = DataLoader(segm_dataset_train, batch_size=8, shuffle=True)
         self.val_loader = DataLoader(segm_dataset_val, batch_size=8, shuffle=False)
@@ -104,7 +109,7 @@ class ImgSegmentTrain():
         num_errors = 0
         num_pixels = 0
 
-        self.model.eval() # set model to evaluation mode
+        self.model.eval()  # set model to evaluation mode
         with torch.no_grad():
             for batch_index, (X, y) in enumerate(data_loader):
                 X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
@@ -120,7 +125,9 @@ class ImgSegmentTrain():
 
         error_rate = num_errors / num_pixels
 
-        print(f"Stats {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n")
+        print(
+            f"Stats {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n"
+        )
 
         return error_rate, loss
 
@@ -176,7 +183,9 @@ class ImgSegmentTrain():
                 torch.save(self.model, model_file)  # save best
                 self.save_predictions_as_imgs(self.val_loader)
 
-            f.write(f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n")
+            f.write(
+                f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n"
+            )
             f.flush()
         f.close()
 
