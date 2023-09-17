@@ -1,41 +1,44 @@
+"""
+Implementation reference
+- https://www.kaggle.com/code/alijs1/squeezed-this-in-successful-kernel-run
+"""
+
 import os
+from datetime import datetime
 
 import albumentations as A
 import torch
-import torch.nn as nn
 import torchvision
 from albumentations.pytorch import ToTensorV2
-from torch.utils.data.dataloader import DataLoader
+from torch import nn
+from torch.utils.data import DataLoader
 
-from solution.building_detection.dataset import MuBuildingsSegmentationDataset
-from solution.building_detection.unet import UNet
+from solution.satellite_imagery_semantic_segmentation.model.model_unet import UNet
 
-IMAGE_HEIGHT = 512
-IMAGE_WIDTH = 512
-
-
-def get_device():
-    # find CUDA / MPS / CPU device
-    device = (
-        "cuda"
-        if torch.cuda.is_available()
-        else "mps"
-        if torch.backends.mps.is_available()
-        else "cpu"
-    )
-    print(f"Using {device} device")
-    return device
+from .dstl_constants import (
+    CLASSES,
+    GRID_SIZES_FILE,
+    IMAGE_RES_X,
+    IMAGE_RES_Y,
+    TRAIN_WKT_FILE,
+)
+from ..satellite_imagery_semantic_segmentation.dataset.dataset_dstl import DstlDataset
 
 
-class ImgSegmentTrain:
+class DstlTrain:
     def __init__(self) -> None:
-        self.name = "segment"
-        self.location = "segmentation/models/v1"
+        now = datetime.now()
+        date_time = now.strftime("%Y_%m_%d_%H_%M_%S")
+        self.version = 1
+        self.unique_id = f"dstl_model_{self.version}_{date_time}"
+        self.out_path = "models/dstl"
         self.num_epochs = 20
+        self.batch_size = 8
+        self.device = self.get_device()
 
-        self.device = get_device()
-        self.criterion = torch.nn.BCEWithLogitsLoss()
-        self.model = UNet(in_channels=3, n_classes=1, bilinear=True)
+        self.criterion = torch.nn.CrossEntropyLoss()
+
+        self.model = UNet(in_channels=3, n_classes=len(CLASSES), bilinear=True)
         self.logits_to_probs = nn.Sigmoid()
         self.optimizer = torch.optim.SGD(
             params=self.model.parameters(),
@@ -43,12 +46,9 @@ class ImgSegmentTrain:
             momentum=0.9,
         )
 
-        self.train_transform = A.Compose(
+        DSTL_TRAIN_TRANSFORM = A.Compose(
             [
-                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-                A.Rotate(limit=35, p=1.0),
-                A.HorizontalFlip(p=0.5),
-                A.VerticalFlip(p=0.5),
+                A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
                 A.Normalize(
                     mean=[0.0, 0.0, 0.0],
                     std=[1.0, 1.0, 1.0],
@@ -58,9 +58,9 @@ class ImgSegmentTrain:
             ]
         )
 
-        self.val_transform = A.Compose(
+        DSTL_VAL_TRANSFORM = A.Compose(
             [
-                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+                A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
                 A.Normalize(
                     mean=[0.0, 0.0, 0.0],
                     std=[1.0, 1.0, 1.0],
@@ -70,20 +70,41 @@ class ImgSegmentTrain:
             ]
         )
 
-        segm_dataset_train = MuBuildingsSegmentationDataset(
-            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
-            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
-            transform=self.train_transform,
+        dstl_trainset = DstlDataset(
+            DSTL_TRAIN_TRANSFORM,
+            train_csv=TRAIN_WKT_FILE,
+            grid_csv=GRID_SIZES_FILE,
+            classes=CLASSES,
+            train_res_x=IMAGE_RES_X,
+            train_res_y=IMAGE_RES_Y,
+        )
+        dstl_valset = DstlDataset(
+            DSTL_VAL_TRANSFORM,
+            train_csv=TRAIN_WKT_FILE,
+            grid_csv=GRID_SIZES_FILE,
+            classes=CLASSES,
+            train_res_x=IMAGE_RES_X,
+            train_res_y=IMAGE_RES_Y,
         )
 
-        segm_dataset_val = MuBuildingsSegmentationDataset(
-            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
-            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
-            transform=self.val_transform,
+        self.train_loader = DataLoader(
+            dstl_trainset, batch_size=self.batch_size, shuffle=True
+        )
+        self.val_loader = DataLoader(
+            dstl_valset, batch_size=self.batch_size, shuffle=False
         )
 
-        self.train_loader = DataLoader(segm_dataset_train, batch_size=8, shuffle=True)
-        self.val_loader = DataLoader(segm_dataset_val, batch_size=8, shuffle=False)
+    def get_device(self):
+        # find CUDA / MPS / CPU device
+        device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else "mps"
+            if torch.backends.mps.is_available()
+            else "cpu"
+        )
+        print(f"Using {device} device")
+        return device
 
     def train_epoch(self):
         print("Started train one epoch.")
@@ -93,7 +114,7 @@ class ImgSegmentTrain:
 
         train_loss = 0
         for batch_index, (X, y) in enumerate(self.train_loader):
-            X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
+            X, y = X.to(self.device), y.to(self.device)
             loss = self.backprop(X, y)
             train_loss += loss.item()
 
@@ -101,7 +122,7 @@ class ImgSegmentTrain:
         print(f"Done train one epoch; AvgLoss: {train_loss}.")
         return train_loss
 
-    def stats(self, dataset_name, data_loader):
+    def validation_epoch(self, dataset_name, data_loader):
         print("Started validation.")
         num_batches = len(data_loader)
         loss = 0.0
@@ -112,8 +133,10 @@ class ImgSegmentTrain:
         self.model.eval()  # set model to evaluation mode
         with torch.no_grad():
             for batch_index, (X, y) in enumerate(data_loader):
-                X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
+                X, y = X.to(self.device), y.to(self.device)
+
                 logits = self.forward(X)
+
                 loss += self.criterion(logits, y).item()
 
                 preds = self.logits_to_probs(logits)
@@ -137,14 +160,20 @@ class ImgSegmentTrain:
 
     def backprop(self, X, y):
         logits = self.forward(X)
+
         loss = self.criterion(logits, y)
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
         return loss
 
     def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
         self.model.eval()
+
+        if not os.path.exists(f"{self.out_path}/{folder}"):
+            os.mkdir(f"{self.out_path}/{folder}")
 
         for batch_index, (X, y) in enumerate(data_loader):
             X = X.to(self.device)
@@ -155,10 +184,10 @@ class ImgSegmentTrain:
                 preds = (preds > 0.5).float()
 
             torchvision.utils.save_image(
-                preds, f"{self.location}/{folder}/pred_{batch_index}.jpg"
+                preds, f"{self.out_path}/{folder}/pred_{batch_index}.jpg"
             )
             torchvision.utils.save_image(
-                y.unsqueeze(1), f"{self.location}/{folder}/target_{batch_index}.jpg"
+                y.unsqueeze(1), f"{self.out_path}/{folder}/target_{batch_index}.jpg"
             )
 
     def train(self):
@@ -168,20 +197,28 @@ class ImgSegmentTrain:
 
         min_error_rate = 1.0
 
-        logs_file = os.path.join(self.location, f"{self.name}_stats.tsv")
+        logs_file = os.path.join(self.out_path, f"{self.unique_id}_stats.tsv")
         f = open(logs_file, "w")
         f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate\n")
+        train_error_rate, train_loss = self.validation_epoch("train", self.train_loader)
+        val_error_rate, val_loss = self.validation_epoch("val", self.val_loader)
+
+        epoch = -1
+        f.write(
+            f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n"
+        )
         for epoch in range(self.num_epochs):
             print(f"Epoch {epoch+1}\n-------------------------------")
             train_loss = self.train_epoch()
-            train_error_rate, train_loss = self.stats("train", self.train_loader)
-            val_error_rate, val_loss = self.stats("val", self.val_loader)
+            train_error_rate, train_loss = self.validation_epoch(
+                "train", self.train_loader
+            )
+            val_error_rate, val_loss = self.validation_epoch("val", self.val_loader)
 
             if val_error_rate < min_error_rate:
                 min_error_rate = val_error_rate
-                model_file = os.path.join(self.location, f"{self.name}.pt")
+                model_file = os.path.join(self.out_path, f"{self.unique_id}.pt")
                 torch.save(self.model, model_file)  # save best
-                self.save_predictions_as_imgs(self.val_loader)
 
             f.write(
                 f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n"
@@ -192,10 +229,10 @@ class ImgSegmentTrain:
         print("Train end.")
 
 
-def main():
-    trainer = ImgSegmentTrain()
-    trainer.train()
+def train():
+    dstl_train = DstlTrain()
+    dstl_train.train()
 
 
 if __name__ == "__main__":
-    main()
+    train()

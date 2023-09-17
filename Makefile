@@ -1,8 +1,8 @@
 eurosat:
-	python -m solution.scene_classification.train solution/scene_classification/model_eurosat.yaml
+	python -m solution.satellite_imagery_classification.train solution/satellite_imagery_classification/model_eurosat.yaml
 
 resisc:
-	python -m solution.scene_classification.train solution/scene_classification/model_resisc45.yaml
+	python -m solution.satellite_imagery_classification.train solution/satellite_imagery_classification/model_resisc45.yaml
 
 building:
 	python -m solution.building_detection.train

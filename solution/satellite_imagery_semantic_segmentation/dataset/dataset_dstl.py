@@ -4,12 +4,12 @@ import numpy as np
 import pandas as pd
 import torch
 
-from solution.dstl_detection.dstl_constants import (
+from solution.dstl_multiclass_detection.dstl_constants import (
     IMAGEID_COLUMN,
     XMAX_COLUMN,
     YMIN_COLUMN,
 )
-from solution.dstl_detection.dstl_processing import DstlProcessing
+from solution.dstl_multiclass_detection.dstl_processing import DstlProcessing
 
 
 class DstlDataset(torch.utils.data.Dataset):
