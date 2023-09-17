@@ -4,7 +4,11 @@ import numpy as np
 import pandas as pd
 import torch
 
-from solution.dstl_detection.dstl_constants import IMAGEID_COLUMN
+from solution.dstl_detection.dstl_constants import (
+    IMAGEID_COLUMN,
+    XMAX_COLUMN,
+    YMIN_COLUMN,
+)
 from solution.dstl_detection.dstl_processing import DstlProcessing
 
 
@@ -22,7 +26,9 @@ class DstlDataset(torch.utils.data.Dataset):
         super().__init__()
 
         train_df = pd.read_csv(train_csv)
-        grid_df = pd.read_csv(grid_csv, names=["ImageId", "Xmax", "Ymin"], skiprows=1)
+        grid_df = pd.read_csv(
+            grid_csv, names=[IMAGEID_COLUMN, XMAX_COLUMN, YMIN_COLUMN], skiprows=1
+        )
 
         if image_ids:
             train_df = train_df[train_df[IMAGEID_COLUMN].isin(image_ids)]

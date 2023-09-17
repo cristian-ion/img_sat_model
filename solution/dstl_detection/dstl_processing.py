@@ -6,11 +6,19 @@ import pandas as pd
 import tifffile
 from shapely.wkt import loads as wkt_loads
 
-from .dstl_constants import (EXT_TIFF, GRID_SIZES_FILE, THREE_BAND, TRAIN_WKT_FILE, IMAGEID_COLUMN)
+from .dstl_constants import (
+    EXT_TIFF,
+    GRID_SIZES_FILE,
+    IMAGEID_COLUMN,
+    THREE_BAND,
+    TRAIN_WKT_FILE,
+)
 
 
 def read_grid_sizes(grid_sizes_csv=GRID_SIZES_FILE):
-    return pd.read_csv(grid_sizes_csv, names=["ImageId", "Xmax", "Ymin"], skiprows=1)
+    return pd.read_csv(
+        grid_sizes_csv, names=[IMAGEID_COLUMN, "Xmax", "Ymin"], skiprows=1
+    )
 
 
 def read_train_wkt(train_wkt_csv=TRAIN_WKT_FILE):

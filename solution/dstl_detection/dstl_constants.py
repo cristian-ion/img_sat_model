@@ -10,11 +10,11 @@ SIXTEEN_BAND = os.path.join(DSTL_ROOT_PATH, "sixteen_band")
 THREE_BAND = os.path.join(DSTL_ROOT_PATH, "three_band")
 
 # Column names
-COL_MULTIPOLYGONWKT = "MultipolygonWKT"
-COL_CLASSTYPE = "ClassType"
+MPWKT_COLUMN = "MultipolygonWKT"
+CLASSTYPE_COLUMN = "ClassType"
 IMAGEID_COLUMN = "ImageId"
-COL_XMAX = "Xmax"
-COL_YMIN = "Ymin"
+XMAX_COLUMN = "Xmax"
+YMIN_COLUMN = "Ymin"
 
 # Image extension
 EXT_TIFF = ".tif"
