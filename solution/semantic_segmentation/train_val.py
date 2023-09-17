@@ -7,7 +7,8 @@ import torchvision
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data.dataloader import DataLoader
 
-from solution.semantic_segmentation.dataset.dataset_mu_buildings import MUBuildingsTrainValData
+from solution.semantic_segmentation.dataset.dataset_mu_buildings import MUBTrainValData, MU_BUILDINGS_NAMECODE
+from solution.semantic_segmentation.dataset.dataset_dstl import DstlTrainValData, DSTL_NAMECODE
 from solution.semantic_segmentation.model.model_unet import UNet
 
 
@@ -32,6 +33,14 @@ def gen_model_id(name, version=1):
     return f"{name}_model_{version}_{date_time}"
 
 
+
+def select_train_val_data(dataset_namecode: str):
+    if dataset_namecode == DSTL_NAMECODE:
+        return DstlTrainValData()
+    if dataset_namecode == MU_BUILDINGS_NAMECODE:
+        return MUBTrainValData()
+
+
 class SemanticSegmentationTrainVal:
     def __init__(self) -> None:
         self.location = "segmentation/models/v1"
@@ -45,7 +54,7 @@ class SemanticSegmentationTrainVal:
             momentum=0.9,
         )
 
-        train_val_data = MUBuildingsTrainValData()
+        train_val_data = MUBTrainValData()
 
         self.train_loader = DataLoader(train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True)
         self.val_loader = DataLoader(train_val_data.valset, batch_size=train_val_data.batch_size, shuffle=False)

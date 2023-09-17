@@ -12,6 +12,7 @@ import albumentations as A
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
 BATCH_SIZE = 8
+MU_BUILDINGS_NAMECODE = "mub"
 
 
 class MUBuildingsDataset(Dataset):
@@ -43,7 +44,7 @@ class MUBuildingsDataset(Dataset):
         return image, mask
 
 
-class MUBuildingsTrainValData:
+class MUBTrainValData:
     def __init__(self) -> None:
         IMAGE_HEIGHT = 512
         IMAGE_WIDTH = 512
@@ -105,7 +106,7 @@ class MUBuildingsTrainValData:
 
     @property
     def namecode(self):
-        return "mub"  # Massachusetts Buildings
+        return MU_BUILDINGS_NAMECODE
 
 
 
