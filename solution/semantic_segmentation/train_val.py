@@ -42,7 +42,7 @@ def select_train_val_data(dataset_namecode: str):
 
 
 class SemanticSegmentationTrainVal:
-    def __init__(self) -> None:
+    def __init__(self, dataset_namecode: str) -> None:
         self.location = "segmentation/models/v1"
 
         self.device = get_device()
@@ -54,7 +54,7 @@ class SemanticSegmentationTrainVal:
             momentum=0.9,
         )
 
-        train_val_data = MUBTrainValData()
+        train_val_data = select_train_val_data(dataset_namecode)
 
         self.train_loader = DataLoader(train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True)
         self.val_loader = DataLoader(train_val_data.valset, batch_size=train_val_data.batch_size, shuffle=False)
@@ -169,7 +169,7 @@ class SemanticSegmentationTrainVal:
 
 
 def main():
-    trainer = SemanticSegmentationTrainVal()
+    trainer = SemanticSegmentationTrainVal(MU_BUILDINGS_NAMECODE)
     trainer.train_val()
 
 
