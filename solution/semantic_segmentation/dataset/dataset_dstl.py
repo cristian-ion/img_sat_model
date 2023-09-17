@@ -59,3 +59,47 @@ class DstlDataset(torch.utils.data.Dataset):
 
         mask = torch.from_numpy(mask)
         return image, mask
+
+
+class DstlTrainValData:
+    def __init__(self) -> None:
+        DSTL_TRAIN_TRANSFORM = A.Compose(
+            [
+                A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ]
+        )
+
+        DSTL_VAL_TRANSFORM = A.Compose(
+            [
+                A.Resize(height=IMAGE_RES_Y, width=IMAGE_RES_X),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ]
+        )
+
+        dstl_trainset = DstlDataset(
+            DSTL_TRAIN_TRANSFORM,
+            train_csv=TRAIN_WKT_FILE,
+            grid_csv=GRID_SIZES_FILE,
+            classes=CLASSES,
+            train_res_x=IMAGE_RES_X,
+            train_res_y=IMAGE_RES_Y,
+        )
+        dstl_valset = DstlDataset(
+            DSTL_VAL_TRANSFORM,
+            train_csv=TRAIN_WKT_FILE,
+            grid_csv=GRID_SIZES_FILE,
+            classes=CLASSES,
+            train_res_x=IMAGE_RES_X,
+            train_res_y=IMAGE_RES_Y,
+        )

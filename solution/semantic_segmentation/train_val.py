@@ -1,5 +1,5 @@
 import os
-
+from datetime import datetime
 import albumentations as A
 import torch
 import torch.nn as nn
@@ -7,11 +7,11 @@ import torchvision
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data.dataloader import DataLoader
 
-from solution.semantic_segmentation.dataset.dataset_mu_buildings import MUBuildingsDataset
+from solution.semantic_segmentation.dataset.dataset_mu_buildings import MUBuildingsTrainValData
 from solution.semantic_segmentation.model.model_unet import UNet
 
-IMAGE_HEIGHT = 512
-IMAGE_WIDTH = 512
+
+NUM_EPOCHS = 20
 
 
 def get_device():
@@ -27,15 +27,17 @@ def get_device():
     return device
 
 
-class ImgSegmentTrain:
+def gen_model_id(name, version=1):
+    date_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    return f"{name}_model_{version}_{date_time}"
+
+
+class SemanticSegmentationTrainVal:
     def __init__(self) -> None:
-        self.name = "segment"
         self.location = "segmentation/models/v1"
-        self.num_epochs = 20
 
         self.device = get_device()
         self.criterion = torch.nn.BCEWithLogitsLoss()
-        self.model = UNet(in_channels=3, n_classes=1, bilinear=True)
         self.logits_to_probs = nn.Sigmoid()
         self.optimizer = torch.optim.SGD(
             params=self.model.parameters(),
@@ -43,47 +45,12 @@ class ImgSegmentTrain:
             momentum=0.9,
         )
 
-        self.train_transform = A.Compose(
-            [
-                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-                A.Rotate(limit=35, p=1.0),
-                A.HorizontalFlip(p=0.5),
-                A.VerticalFlip(p=0.5),
-                A.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1.0, 1.0, 1.0],
-                    max_pixel_value=255.0,
-                ),
-                ToTensorV2(),
-            ]
-        )
+        train_val_data = MUBuildingsTrainValData()
 
-        self.val_transform = A.Compose(
-            [
-                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-                A.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1.0, 1.0, 1.0],
-                    max_pixel_value=255.0,
-                ),
-                ToTensorV2(),
-            ]
-        )
-
-        segm_dataset_train = MUBuildingsDataset(
-            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
-            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
-            transform=self.train_transform,
-        )
-
-        segm_dataset_val = MUBuildingsDataset(
-            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
-            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
-            transform=self.val_transform,
-        )
-
-        self.train_loader = DataLoader(segm_dataset_train, batch_size=8, shuffle=True)
-        self.val_loader = DataLoader(segm_dataset_val, batch_size=8, shuffle=False)
+        self.train_loader = DataLoader(train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True)
+        self.val_loader = DataLoader(train_val_data.valset, batch_size=train_val_data.batch_size, shuffle=False)
+        self.model = UNet(in_channels=3, n_classes=train_val_data.num_classes, bilinear=True)
+        self.name = gen_model_id(train_val_data.namecode, version=1)
 
     def train_epoch(self):
         print("Started train one epoch.")
@@ -161,7 +128,7 @@ class ImgSegmentTrain:
                 y.unsqueeze(1), f"{self.location}/{folder}/target_{batch_index}.jpg"
             )
 
-    def train(self):
+    def train_val(self):
         print("Train start.")
 
         self.model.to(self.device)
@@ -171,7 +138,7 @@ class ImgSegmentTrain:
         logs_file = os.path.join(self.location, f"{self.name}_stats.tsv")
         f = open(logs_file, "w")
         f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate\n")
-        for epoch in range(self.num_epochs):
+        for epoch in range(NUM_EPOCHS):
             print(f"Epoch {epoch+1}\n-------------------------------")
             train_loss = self.train_epoch()
             train_error_rate, train_loss = self.stats("train", self.train_loader)
@@ -193,8 +160,8 @@ class ImgSegmentTrain:
 
 
 def main():
-    trainer = ImgSegmentTrain()
-    trainer.train()
+    trainer = SemanticSegmentationTrainVal()
+    trainer.train_val()
 
 
 if __name__ == "__main__":

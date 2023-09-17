@@ -27,10 +27,10 @@ from ..semantic_segmentation.dataset.dataset_dstl import DstlDataset
 
 class DstlTrain:
     def __init__(self) -> None:
-        now = datetime.now()
-        date_time = now.strftime("%Y_%m_%d_%H_%M_%S")
+        date_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         self.version = 1
         self.unique_id = f"dstl_model_{self.version}_{date_time}"
+
         self.out_path = "models/dstl"
         self.num_epochs = 20
         self.batch_size = 8

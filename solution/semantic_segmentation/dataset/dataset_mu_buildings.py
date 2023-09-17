@@ -9,6 +9,11 @@ from albumentations.pytorch import ToTensorV2
 import albumentations as A
 
 
+CLASSES = ["building"]
+NUM_CLASSES = len(CLASSES)
+BATCH_SIZE = 8
+
+
 class MUBuildingsDataset(Dataset):
     def __init__(self, image_dir, mask_dir, transform=None):
         self.transform = transform
@@ -38,7 +43,7 @@ class MUBuildingsDataset(Dataset):
         return image, mask
 
 
-class MUBuildingsDatasetTrainVal:
+class MUBuildingsTrainValData:
     def __init__(self) -> None:
         IMAGE_HEIGHT = 512
         IMAGE_WIDTH = 512
@@ -90,9 +95,24 @@ class MUBuildingsDatasetTrainVal:
     def valset(self):
         return self._valset
 
+    @property
+    def num_classes(self):
+        return len(CLASSES)
+
+    @property
+    def batch_size(self):
+        return BATCH_SIZE
+
+    @property
+    def namecode(self):
+        return "mub"  # Massachusetts Buildings
+
 
 
 if __name__ == "__main__":
+    """
+    Example of usage.
+    """
     segm_dataset_train = MUBuildingsDataset(
         image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
         mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
