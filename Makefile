@@ -1,8 +1,11 @@
-eurosat:
-	python -m solution.satellite_imagery_classification.train solution/satellite_imagery_classification/model_eurosat.yaml
+eurosat_train:
+	python -m solution.classification.train_val solution/classification/config_eurosat.yaml
 
-resisc:
-	python -m solution.satellite_imagery_classification.train solution/satellite_imagery_classification/model_resisc45.yaml
+resisc_train:
+	python -m solution.classification.train_val solution/classification/config_resisc45.yaml
+
+ucm21_train:
+	python -m solution.classification.train_val solution/classification/config_ucm21.yaml
 
 building:
 	python -m solution.building_detection.train
