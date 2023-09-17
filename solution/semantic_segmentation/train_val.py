@@ -7,8 +7,8 @@ import torchvision
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data.dataloader import DataLoader
 
-from solution.satellite_imagery_semantic_segmentation.dataset.dataset_mu_buildings import MuBuildingsSegmentationDataset
-from solution.satellite_imagery_semantic_segmentation.model.model_unet import UNet
+from solution.semantic_segmentation.dataset.dataset_mu_buildings import MUBuildingsDataset
+from solution.semantic_segmentation.model.model_unet import UNet
 
 IMAGE_HEIGHT = 512
 IMAGE_WIDTH = 512
@@ -70,13 +70,13 @@ class ImgSegmentTrain:
             ]
         )
 
-        segm_dataset_train = MuBuildingsSegmentationDataset(
+        segm_dataset_train = MUBuildingsDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
             mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
             transform=self.train_transform,
         )
 
-        segm_dataset_val = MuBuildingsSegmentationDataset(
+        segm_dataset_val = MUBuildingsDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
             mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
             transform=self.val_transform,

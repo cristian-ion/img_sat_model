@@ -6,7 +6,7 @@ class ImgClsTest:
         print("init")
 
     def test(self):
-        print("test")
+        print("evaluate")
 
 
 if __name__ == "__main__":

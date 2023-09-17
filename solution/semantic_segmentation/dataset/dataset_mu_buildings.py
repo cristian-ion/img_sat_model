@@ -5,9 +5,11 @@ import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
+from albumentations.pytorch import ToTensorV2
+import albumentations as A
 
 
-class MuBuildingsSegmentationDataset(Dataset):
+class MUBuildingsDataset(Dataset):
     def __init__(self, image_dir, mask_dir, transform=None):
         self.transform = transform
         self.image_dir = image_dir
@@ -36,14 +38,68 @@ class MuBuildingsSegmentationDataset(Dataset):
         return image, mask
 
 
+class MUBuildingsDatasetTrainVal:
+    def __init__(self) -> None:
+        IMAGE_HEIGHT = 512
+        IMAGE_WIDTH = 512
+
+        self.train_transform = A.Compose(
+            [
+                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+                A.Rotate(limit=35, p=1.0),
+                A.HorizontalFlip(p=0.5),
+                A.VerticalFlip(p=0.5),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ]
+        )
+
+        self.val_transform = A.Compose(
+            [
+                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+                A.Normalize(
+                    mean=[0.0, 0.0, 0.0],
+                    std=[1.0, 1.0, 1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ]
+        )
+
+        self._trainset = MUBuildingsDataset(
+            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
+            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
+            transform=self.train_transform,
+        )
+
+        self._valset = MUBuildingsDataset(
+            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
+            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
+            transform=self.val_transform,
+        )
+
+    @property
+    def trainset(self):
+        return self._trainset
+
+    @property
+    def valset(self):
+        return self._valset
+
+
+
 if __name__ == "__main__":
-    segm_dataset_train = MuBuildingsSegmentationDataset(
+    segm_dataset_train = MUBuildingsDataset(
         image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
         mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
         transform=None,
     )
 
-    segm_dataset_val = MuBuildingsSegmentationDataset(
+    segm_dataset_val = MUBuildingsDataset(
         image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
         mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
         transform=None,

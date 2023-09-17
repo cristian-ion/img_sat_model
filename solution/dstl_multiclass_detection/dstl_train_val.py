@@ -13,7 +13,7 @@ from albumentations.pytorch import ToTensorV2
 from torch import nn
 from torch.utils.data import DataLoader
 
-from solution.satellite_imagery_semantic_segmentation.model.model_unet import UNet
+from solution.semantic_segmentation.model.model_unet import UNet
 
 from .dstl_constants import (
     CLASSES,
@@ -22,7 +22,7 @@ from .dstl_constants import (
     IMAGE_RES_Y,
     TRAIN_WKT_FILE,
 )
-from ..satellite_imagery_semantic_segmentation.dataset.dataset_dstl import DstlDataset
+from ..semantic_segmentation.dataset.dataset_dstl import DstlDataset
 
 
 class DstlTrain:
