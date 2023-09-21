@@ -13,12 +13,6 @@ mub_train:
 dstl_train:
 	python -m solution.semantic_segmentation.train_val dstl
 
-dstl_predict:
-	python -m solution.dstl_detection.dstl_predict
-
-dstl_eval:
-	python -m solution.dstl_detection.dstl_eval
-
 format:
 	isort solution
 	black solution
