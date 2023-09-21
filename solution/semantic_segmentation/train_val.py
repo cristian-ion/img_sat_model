@@ -7,15 +7,15 @@ import torch.nn as nn
 import torchvision
 from torch.utils.data.dataloader import DataLoader
 
-from solution.semantic_segmentation.dataset.dataset_dstl import (
+from solution.semantic_segmentation.dataset_dstl import (
     DSTL_NAMECODE,
     DstlTrainValData,
 )
-from solution.semantic_segmentation.dataset.dataset_mu_buildings import (
+from solution.semantic_segmentation.dataset_mu_buildings import (
     MU_BUILDINGS_NAMECODE,
     MUBTrainValData,
 )
-from solution.semantic_segmentation.model.model_unet import UNet
+from solution.semantic_segmentation.model_unet import UNet
 
 NUM_EPOCHS = 20
 
