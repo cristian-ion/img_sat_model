@@ -107,12 +107,13 @@ class SemanticSegmentationTrainVal:
     def _torch_not_equal(self, preds, target):
         return preds != target
 
-    def _evaluate_dataset(self, dataset_name: str, data_loader: DataLoader):
+    def _evaluate_dataset(self, dataset_name: str, data_loader: DataLoader) -> tuple[float, float]:
         num_batches = len(data_loader)
         loss = 0.0
         error_rate = 1.0
-        num_errors = 0
-        num_pixels = 0
+
+        num_errors = 0.0
+        num_pixels = 0.0
 
         self.model.eval()  # set model to evaluation mode
         with torch.no_grad():
@@ -138,7 +139,7 @@ class SemanticSegmentationTrainVal:
             f"Evaluate {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n"
         )
 
-        return error_rate, loss
+        return error_rate.item(), loss
 
     def forward(self, X):
         logits = self.model(X)

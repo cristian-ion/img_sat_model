@@ -123,7 +123,7 @@ class DstlTrain:
         print(f"Done train one epoch; AvgLoss: {train_loss}.")
         return train_loss
 
-    def validation_epoch(self, dataset_name, data_loader):
+    def validation_epoch(self, dataset_name, data_loader) -> tuple[float, float]:
         print("Started validation.")
         num_batches = len(data_loader)
         loss = 0.0
