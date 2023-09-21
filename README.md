@@ -1,3 +1,3 @@
-# Visual recognition models
+# Visual recognition train
 
-Applied to overhead imagery
+- Applied to overhead imagery
