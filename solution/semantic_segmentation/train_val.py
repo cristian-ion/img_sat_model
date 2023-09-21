@@ -7,10 +7,7 @@ import torch.nn as nn
 import torchvision
 from torch.utils.data.dataloader import DataLoader
 
-from solution.semantic_segmentation.dataset_dstl import (
-    DSTL_NAMECODE,
-    DstlTrainValData,
-)
+from solution.semantic_segmentation.dataset_dstl import DSTL_NAMECODE, DstlTrainValData
 from solution.semantic_segmentation.dataset_mu_buildings import (
     MU_BUILDINGS_NAMECODE,
     MUBTrainValData,
@@ -18,6 +15,15 @@ from solution.semantic_segmentation.dataset_mu_buildings import (
 from solution.semantic_segmentation.model_unet import UNet
 
 NUM_EPOCHS = 20
+
+
+VALIDATION_COLUMNS = [
+    "epoch",
+    "train_loss",
+    "val_loss",
+    "train_error_rate",
+    "val_error_rate",
+]
 
 
 def get_device():
@@ -47,18 +53,11 @@ def select_train_val_data(dataset_namecode: str):
 
 class SemanticSegmentationTrainVal:
     def __init__(self, dataset_namecode: str) -> None:
-        self.location = "segmentation/models/v1"
-
         self.device = get_device()
-        self.criterion = torch.nn.BCEWithLogitsLoss()
-        self.logits_to_probs = nn.Sigmoid()
-        self.optimizer = torch.optim.SGD(
-            params=self.model.parameters(),
-            lr=0.01,
-            momentum=0.9,
-        )
-
+        self.dataset_namecode = dataset_namecode
         train_val_data = select_train_val_data(dataset_namecode)
+
+        self.criterion = train_val_data.criterion
 
         self.train_loader = DataLoader(
             train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True
@@ -69,26 +68,46 @@ class SemanticSegmentationTrainVal:
         self.model = UNet(
             in_channels=3, n_classes=train_val_data.num_classes, bilinear=True
         )
-        self.name = gen_model_id(train_val_data.namecode, version=1)
+        self.optimizer = torch.optim.SGD(
+            params=self.model.parameters(),
+            lr=0.01,
+            momentum=0.9,
+        )
+        self.sigmoid_op = nn.Sigmoid()
 
-    def train_epoch(self):
-        print("Started train one epoch.")
+        self.out_path = f"models/{dataset_namecode}"
+        self.model_id = gen_model_id(train_val_data.namecode, version=1)
+        self.val_file = os.path.join(self.out_path, f"{self.model_id}_val.tsv")
+        self.model_file = os.path.join(self.out_path, f"{self.model_id}.pt")
+        self.min_error_rate = 1.0
+        self.h_val_file = None
+
+    def train_epoch(self, epoch: int):
+        print(f"Started train epoch {epoch}.")
+
         num_batches = len(self.train_loader)
-
         self.model.train()  # set model to train mode
 
         train_loss = 0
         for batch_index, (X, y) in enumerate(self.train_loader):
-            X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
+            X, y = X.to(self.device), y.to(self.device)
+
+            if self.dataset_namecode == MU_BUILDINGS_NAMECODE:
+                y = y.unsqueeze(1)
+
             loss = self.backprop(X, y)
             train_loss += loss.item()
 
         train_loss /= num_batches
-        print(f"Done train one epoch; AvgLoss: {train_loss}.")
-        return train_loss
+        print(f"Done train epoch {epoch}; AvgLoss: {train_loss}.")
 
-    def stats(self, dataset_name, data_loader):
-        print("Started validation.")
+    def _torch_binarize(self, preds):
+        return (preds > 0.5).float()
+
+    def _torch_not_equal(self, preds, target):
+        return preds != target
+
+    def _evaluate_dataset(self, dataset_name: str, data_loader: DataLoader):
         num_batches = len(data_loader)
         loss = 0.0
         error_rate = 1.0
@@ -98,13 +117,17 @@ class SemanticSegmentationTrainVal:
         self.model.eval()  # set model to evaluation mode
         with torch.no_grad():
             for batch_index, (X, y) in enumerate(data_loader):
-                X, y = X.to(self.device), y.to(self.device).unsqueeze(1)
+                X, y = X.to(self.device), y.to(self.device)
+
+                if self.dataset_namecode == MU_BUILDINGS_NAMECODE:
+                    y = y.unsqueeze(1)
+
                 logits = self.forward(X)
                 loss += self.criterion(logits, y).item()
 
-                preds = self.logits_to_probs(logits)
-                preds = (preds > 0.5).float()
-                num_errors += (preds != y).sum()
+                preds = self.sigmoid_op(logits)
+                preds = self._torch_binarize(preds=preds)
+                num_errors += self._torch_not_equal(preds, y).sum()
                 num_pixels += torch.numel(preds)
 
         loss /= num_batches
@@ -112,7 +135,7 @@ class SemanticSegmentationTrainVal:
         error_rate = num_errors / num_pixels
 
         print(
-            f"Stats {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n"
+            f"Evaluate {dataset_name}: \n ErrorRate: {(100 * error_rate):>0.1f}%, AvgLoss: {loss:>8f} \n"
         )
 
         return error_rate, loss
@@ -132,48 +155,73 @@ class SemanticSegmentationTrainVal:
     def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
         self.model.eval()
 
+        if not os.path.exists(f"{self.out_path}/{folder}"):
+            os.mkdir(f"{self.out_path}/{folder}")
+
         for batch_index, (X, y) in enumerate(data_loader):
             X = X.to(self.device)
 
             with torch.no_grad():
                 logits = self.forward(X)
-                preds = self.logits_to_probs(logits)
-                preds = (preds > 0.5).float()
+                preds = self.sigmoid_op(logits)
+                preds = self._torch_binarize(preds=preds)
 
             torchvision.utils.save_image(
-                preds, f"{self.location}/{folder}/pred_{batch_index}.jpg"
+                preds, f"{self.out_path}/{folder}/pred_{batch_index}.jpg"
             )
             torchvision.utils.save_image(
-                y.unsqueeze(1), f"{self.location}/{folder}/target_{batch_index}.jpg"
+                y.unsqueeze(1), f"{self.out_path}/{folder}/target_{batch_index}.jpg"
             )
+
+    def _save_min_val_error_rate(self, val_error_rate):
+        if val_error_rate < self.min_error_rate:
+            self.min_error_rate = val_error_rate
+            torch.save(self.model, self.model_file)
+
+    def evaluate_epoch(self, epoch: int):
+        if epoch == 0:
+            self.h_val_file = open(self.val_file, "w")
+            val_file_header = "\t".join(VALIDATION_COLUMNS)
+            self.h_val_file.write(f"{val_file_header}\n")
+            self.h_val_file.flush()
+
+        print("Started epoch validation.")
+        train_error_rate, train_loss = self._evaluate_dataset(
+            "train", self.train_loader
+        )
+        val_error_rate, val_loss = self._evaluate_dataset("val", self.val_loader)
+        print("Ended epoch validation.")
+
+        self._save_min_val_error_rate(val_error_rate=val_error_rate)
+
+        val_row = "\t".join(
+            map(
+                str,
+                [
+                    epoch,
+                    train_loss,
+                    val_loss,
+                    train_error_rate,
+                    val_error_rate,
+                ]
+            )
+        )
+        self.h_val_file.write(f"{val_row}\n")
+        self.h_val_file.flush()
 
     def train_val(self):
         print("Train start.")
 
         self.model.to(self.device)
 
-        min_error_rate = 1.0
+        self.evaluate_epoch(epoch=0)
 
-        logs_file = os.path.join(self.location, f"{self.name}_stats.tsv")
-        f = open(logs_file, "w")
-        f.write("epoch\ttrain_loss\tval_loss\ttrain_error_rate\tval_error_rate\n")
-        for epoch in range(NUM_EPOCHS):
-            print(f"Epoch {epoch+1}\n-------------------------------")
-            train_loss = self.train_epoch()
-            train_error_rate, train_loss = self.stats("train", self.train_loader)
-            val_error_rate, val_loss = self.stats("val", self.val_loader)
+        for epoch in range(1, NUM_EPOCHS+1):
+            print(f"Epoch {epoch}\n-------------------------------")
+            self.train_epoch(epoch=epoch)
+            self.evaluate_epoch(epoch=epoch)
 
-            if val_error_rate < min_error_rate:
-                min_error_rate = val_error_rate
-                model_file = os.path.join(self.location, f"{self.name}.pt")
-                torch.save(self.model, model_file)  # save best
-                self.save_predictions_as_imgs(self.val_loader)
-
-            f.write(
-                f"{epoch}\t{train_loss}\t{val_loss}\t{train_error_rate}\t{val_error_rate}\n"
-            )
-            f.flush()
-        f.close()
+        self.h_val_file.close()
 
         print("Train end.")
 
@@ -186,6 +234,7 @@ def main():
             f"Please provide dataset namecode: {MU_BUILDINGS_NAMECODE} or {DSTL_NAMECODE}."
         )
         sys.exit(0)
+
     trainer = SemanticSegmentationTrainVal(sys.argv[1])
     trainer.train_val()
 

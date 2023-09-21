@@ -13,9 +13,9 @@ from albumentations.pytorch import ToTensorV2
 from torch import nn
 from torch.utils.data import DataLoader
 
-from solution.semantic_segmentation.model.model_unet import UNet
+from solution.semantic_segmentation.model_unet import UNet
 
-from ..semantic_segmentation.dataset.dataset_dstl import DstlDataset
+from ..semantic_segmentation.dataset_dstl import DstlDataset
 from .dstl_constants import (
     CLASSES,
     GRID_SIZES_FILE,
@@ -115,6 +115,7 @@ class DstlTrain:
         train_loss = 0
         for batch_index, (X, y) in enumerate(self.train_loader):
             X, y = X.to(self.device), y.to(self.device)
+
             loss = self.backprop(X, y)
             train_loss += loss.item()
 
@@ -160,13 +161,12 @@ class DstlTrain:
 
     def backprop(self, X, y):
         logits = self.forward(X)
+        print(logits.shape, y.shape)
 
         loss = self.criterion(logits, y)
-
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-
         return loss
 
     def save_predictions_as_imgs(self, data_loader, folder="saved_images"):

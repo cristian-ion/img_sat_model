@@ -7,6 +7,7 @@ from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import DataLoader
+import torch
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
@@ -87,6 +88,8 @@ class MUBTrainValData:
             transform=self.val_transform,
         )
 
+        self._criterion = torch.nn.BCEWithLogitsLoss()
+
     @property
     def trainset(self):
         return self._trainset
@@ -106,6 +109,10 @@ class MUBTrainValData:
     @property
     def namecode(self):
         return MU_BUILDINGS_NAMECODE
+
+    @property
+    def criterion(self):
+        return self._criterion
 
 
 if __name__ == "__main__":

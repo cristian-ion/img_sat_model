@@ -49,6 +49,8 @@ BATCH_SIZE = 8
 
 DSTL_NAMECODE = "dstl"
 
+VALIDATION_IMAGE_IDS = {"6070_2_3", "6010_1_2", "6040_4_4", "6100_2_2"}
+
 
 class DstlProcessing:
     def __init__(self, df_train_wkt, df_grid_sizes, classes) -> None:
@@ -227,21 +229,25 @@ class DstlTrainValData:
         )
 
         self._trainset = DstlDataset(
-            DSTL_TRAIN_TRANSFORM,
+            transform=DSTL_TRAIN_TRANSFORM,
             train_csv=TRAIN_WKT_FILE,
             grid_csv=GRID_SIZES_FILE,
             classes=CLASSES,
             train_res_x=IMAGE_RES_X,
             train_res_y=IMAGE_RES_Y,
+            image_ids=None,
         )
         self._valset = DstlDataset(
-            DSTL_VAL_TRANSFORM,
+            transform=DSTL_VAL_TRANSFORM,
             train_csv=TRAIN_WKT_FILE,
             grid_csv=GRID_SIZES_FILE,
             classes=CLASSES,
             train_res_x=IMAGE_RES_X,
             train_res_y=IMAGE_RES_Y,
+            image_ids=VALIDATION_IMAGE_IDS,
         )
+
+        self._criterion = torch.nn.CrossEntropyLoss()
 
     @property
     def trainset(self):
@@ -262,3 +268,7 @@ class DstlTrainValData:
     @property
     def namecode(self):
         return DSTL_NAMECODE
+
+    @property
+    def criterion(self):
+        return self._criterion
