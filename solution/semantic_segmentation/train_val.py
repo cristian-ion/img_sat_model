@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import torchvision
 from torch.utils.data.dataloader import DataLoader
+import numpy as np
+import matplotlib.pyplot as plt
 
 from solution.semantic_segmentation.dataset_dstl import DSTL_NAMECODE, DstlTrainValData
 from solution.semantic_segmentation.dataset_mu_buildings import (
@@ -18,6 +20,8 @@ from solution.semantic_segmentation.dataset_inria import (
 )
 from solution.semantic_segmentation.model_unet import UNet
 
+import torchvision.transforms.functional as F
+
 NUM_EPOCHS = 20
 
 VALIDATION_COLUMNS = [
@@ -28,6 +32,16 @@ VALIDATION_COLUMNS = [
     "val_error_rate",
 ]
 
+def show(imgs, fname):
+    if not isinstance(imgs, list):
+        imgs = [imgs]
+    fig, axs = plt.subplots(ncols=len(imgs), squeeze=False)
+    for i, img in enumerate(imgs):
+        img = img.detach()
+        img = F.to_pil_image(img)
+        axs[0, i].imshow(np.asarray(img))
+        axs[0, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+    plt.savefig(fname=fname, dpi=400)
 
 def get_device():
     # find CUDA / MPS / CPU device
@@ -84,6 +98,8 @@ class SemanticSegmentationTrainVal:
         self.sigmoid_op = nn.Sigmoid()
 
         self.out_path = f"models/{dataset_namecode}"
+        if not os.path.isdir(self.out_path):
+            os.mkdir(self.out_path)
         self.model_id = gen_model_id(train_val_data.namecode, version=1)
         self.val_file = os.path.join(self.out_path, f"{self.model_id}_val.tsv")
         self.model_file = os.path.join(self.out_path, f"{self.model_id}.pt")
@@ -162,25 +178,45 @@ class SemanticSegmentationTrainVal:
         return loss
 
     def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
+        if self.dataset_namecode not in UNSQUEEZE_GT_ACTIVATED:
+            return
+
         self.model.eval()
 
         if not os.path.exists(f"{self.out_path}/{folder}"):
             os.mkdir(f"{self.out_path}/{folder}")
 
-        for batch_index, (X, y) in enumerate(data_loader):
+        for batch_index, (X, gt) in enumerate(data_loader):
             X = X.to(self.device)
 
             with torch.no_grad():
                 logits = self.forward(X)
-                preds = self.sigmoid_op(logits)
-                preds = self._torch_binarize(preds=preds)
+                mask = self.sigmoid_op(logits)
+                mask = (mask > 0.5)
 
-            torchvision.utils.save_image(
-                preds, f"{self.out_path}/{folder}/pred_{batch_index}.jpg"
-            )
-            torchvision.utils.save_image(
-                y.unsqueeze(1), f"{self.out_path}/{folder}/target_{batch_index}.jpg"
-            )
+            # 3 separate images
+            if True is False:
+                torchvision.utils.save_image(
+                    torchvision.utils.make_grid(mask), f"{self.out_path}/{folder}/mask_{batch_index}.jpg"
+                )
+                torchvision.utils.save_image(
+                    torchvision.utils.make_grid(gt.unsqueeze(1)), f"{self.out_path}/{folder}/gt_{batch_index}.jpg"
+                )
+                torchvision.utils.save_image(
+                    torchvision.utils.make_grid(X), f"{self.out_path}/{folder}/image_{batch_index}.jpg"
+                )
+            else:
+                X = X.to('cpu')
+                mask = mask.to('cpu')
+                X = F.convert_image_dtype(X, torch.uint8)
+                buildings_with_masks = [
+                    torchvision.utils.draw_segmentation_masks(image=img, masks=tmp, alpha=0.7, colors='red')
+                    for img, tmp in zip(X, mask)
+                ]
+                show(
+                    buildings_with_masks,
+                    f"{self.out_path}/{folder}/mask_{batch_index}.jpg",
+                )
 
     def _save_min_val_error_rate(self, val_error_rate):
         if val_error_rate < self.min_error_rate:
@@ -193,6 +229,8 @@ class SemanticSegmentationTrainVal:
             val_file_header = "\t".join(VALIDATION_COLUMNS)
             self.h_val_file.write(f"{val_file_header}\n")
             self.h_val_file.flush()
+
+        self.save_predictions_as_imgs(self.val_loader)
 
         print("Started epoch validation.")
         train_error_rate, train_loss = self._evaluate_dataset(
