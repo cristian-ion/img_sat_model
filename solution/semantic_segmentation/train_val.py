@@ -230,7 +230,7 @@ class SemanticSegmentationTrainVal:
             self.h_val_file.write(f"{val_file_header}\n")
             self.h_val_file.flush()
 
-        self.save_predictions_as_imgs(self.val_loader, folder=f"out_{epoch}")
+        self.save_predictions_as_imgs(self.val_loader, folder=f"figures_{epoch}")
 
         print("Started epoch validation.")
         train_error_rate, train_loss = self._evaluate_dataset(
