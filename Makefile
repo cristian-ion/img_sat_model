@@ -13,6 +13,9 @@ mub_train:
 dstl_train:
 	python -m solution.semantic_segmentation.train_val dstl
 
+inria_train:
+	python -m solution.semantic_segmentation.train_val inria
+
 format:
 	isort solution
 	black solution

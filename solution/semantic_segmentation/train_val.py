@@ -12,10 +12,13 @@ from solution.semantic_segmentation.dataset_mu_buildings import (
     MU_BUILDINGS_NAMECODE,
     MUBTrainValData,
 )
+from solution.semantic_segmentation.dataset_inria import (
+    INRIA_NAMECODE,
+    InriaTrainValData,
+)
 from solution.semantic_segmentation.model_unet import UNet
 
 NUM_EPOCHS = 20
-
 
 VALIDATION_COLUMNS = [
     "epoch",
@@ -44,18 +47,23 @@ def gen_model_id(name, version=1):
     return f"{name}_model_{version}_{date_time}"
 
 
-def select_train_val_data(dataset_namecode: str):
+def train_val_data_factory(dataset_namecode: str):
     if dataset_namecode == DSTL_NAMECODE:
         return DstlTrainValData()
     if dataset_namecode == MU_BUILDINGS_NAMECODE:
         return MUBTrainValData()
+    if dataset_namecode == INRIA_NAMECODE:
+        return InriaTrainValData()
+
+
+UNSQUEEZE_GT_ACTIVATED = [MU_BUILDINGS_NAMECODE, INRIA_NAMECODE]
 
 
 class SemanticSegmentationTrainVal:
     def __init__(self, dataset_namecode: str) -> None:
         self.device = get_device()
         self.dataset_namecode = dataset_namecode
-        train_val_data = select_train_val_data(dataset_namecode)
+        train_val_data = train_val_data_factory(dataset_namecode)
 
         self.criterion = train_val_data.criterion
 
@@ -92,7 +100,7 @@ class SemanticSegmentationTrainVal:
         for batch_index, (X, y) in enumerate(self.train_loader):
             X, y = X.to(self.device), y.to(self.device)
 
-            if self.dataset_namecode == MU_BUILDINGS_NAMECODE:
+            if self.dataset_namecode in UNSQUEEZE_GT_ACTIVATED:
                 y = y.unsqueeze(1)
 
             loss = self.backprop(X, y)
@@ -120,7 +128,7 @@ class SemanticSegmentationTrainVal:
             for batch_index, (X, y) in enumerate(data_loader):
                 X, y = X.to(self.device), y.to(self.device)
 
-                if self.dataset_namecode == MU_BUILDINGS_NAMECODE:
+                if self.dataset_namecode in UNSQUEEZE_GT_ACTIVATED:
                     y = y.unsqueeze(1)
 
                 logits = self.forward(X)

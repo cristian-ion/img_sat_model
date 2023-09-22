@@ -11,11 +11,11 @@ import torch
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
-BATCH_SIZE = 8
-MU_BUILDINGS_NAMECODE = "mub"
+BATCH_SIZE = 4
+INRIA_NAMECODE = "inria"
 
 
-class MUBuildingsDataset(Dataset):
+class InriaDataset(Dataset):
     def __init__(self, image_dir, mask_dir, transform=None):
         self.transform = transform
         self.image_dir = image_dir
@@ -44,16 +44,14 @@ class MUBuildingsDataset(Dataset):
         return image, mask
 
 
-class MUBTrainValData:
+class InriaTrainValData:
     def __init__(self) -> None:
-        IMAGE_HEIGHT = 512
-        IMAGE_WIDTH = 512
+        IMAGE_HEIGHT = 256
+        IMAGE_WIDTH = 256
 
         self.train_transform = A.Compose(
             [
-                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-                A.HorizontalFlip(p=0.5),
-                A.VerticalFlip(p=0.5),
+                A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
                 A.Normalize(
                     mean=[0.0, 0.0, 0.0],
                     std=[1.0, 1.0, 1.0],
@@ -65,7 +63,7 @@ class MUBTrainValData:
 
         self.val_transform = A.Compose(
             [
-                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+                A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
                 A.Normalize(
                     mean=[0.0, 0.0, 0.0],
                     std=[1.0, 1.0, 1.0],
@@ -75,13 +73,13 @@ class MUBTrainValData:
             ]
         )
 
-        self._trainset = MUBuildingsDataset(
+        self._trainset = InriaDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
             mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
             transform=self.train_transform,
         )
 
-        self._valset = MUBuildingsDataset(
+        self._valset = InriaDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
             mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
             transform=self.val_transform,
@@ -107,41 +105,8 @@ class MUBTrainValData:
 
     @property
     def namecode(self):
-        return MU_BUILDINGS_NAMECODE
+        return INRIA_NAMECODE
 
     @property
     def criterion(self):
         return self._criterion
-
-
-if __name__ == "__main__":
-    """
-    Example of usage.
-    """
-    segm_dataset_train = MUBuildingsDataset(
-        image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
-        mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
-        transform=None,
-    )
-
-    segm_dataset_val = MUBuildingsDataset(
-        image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
-        mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
-        transform=None,
-    )
-
-    train_loader = DataLoader(segm_dataset_train, batch_size=8, shuffle=True)
-    val_loader = DataLoader(segm_dataset_val, batch_size=8, shuffle=False)
-
-    it = iter(segm_dataset_train)
-    for i in range(5):
-        train_features, train_labels = next(it)
-        print(train_features)
-        print(f"Feature batch shape: {train_features.shape}")
-        print(f"Labels batch shape: {train_labels.shape}")
-        img = train_features
-        plt.imshow(img)
-        plt.show()
-        img = train_labels
-        plt.imshow(img)
-        plt.show()
