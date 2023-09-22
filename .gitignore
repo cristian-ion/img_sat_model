@@ -5,3 +5,4 @@ __pycache__
 models
 cls_models
 imgdetection/debug
+inria/AerialImageDataset
