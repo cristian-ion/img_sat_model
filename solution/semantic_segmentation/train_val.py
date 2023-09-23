@@ -38,11 +38,12 @@ def draw_things(img, mask):
     drawn_mask = draw_segmentation_masks(
         image=img, masks=mask, alpha=0.7, colors="red"
     )
-    return draw_bounding_boxes(
+    drawn_mask_and_boxes = draw_bounding_boxes(
         image=drawn_mask,
         boxes=masks_to_boxes(mask),
         colors="red",
     )
+    return drawn_mask_and_boxes
 
 
 def show(imgs, fname):
