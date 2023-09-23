@@ -2,25 +2,24 @@ import os
 import sys
 from datetime import datetime
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision
+import torchvision.transforms.functional as F
 from torch.utils.data.dataloader import DataLoader
-import numpy as np
-import matplotlib.pyplot as plt
 
 from solution.semantic_segmentation.dataset_dstl import DSTL_NAMECODE, DstlTrainValData
-from solution.semantic_segmentation.dataset_mu_buildings import (
-    MU_BUILDINGS_NAMECODE,
-    MUBTrainValData,
-)
 from solution.semantic_segmentation.dataset_inria import (
     INRIA_NAMECODE,
     InriaTrainValData,
 )
+from solution.semantic_segmentation.dataset_mu_buildings import (
+    MU_BUILDINGS_NAMECODE,
+    MUBTrainValData,
+)
 from solution.semantic_segmentation.model_unet import UNet
-
-import torchvision.transforms.functional as F
 
 NUM_EPOCHS = 20
 
@@ -32,7 +31,11 @@ VALIDATION_COLUMNS = [
     "val_error_rate",
 ]
 
+
 def show(imgs, fname):
+    #
+    # https://pytorch.org/vision/stable/auto_examples/plot_visualization_utils.html#semantic-segmentation-models
+    #
     if not isinstance(imgs, list):
         imgs = [imgs]
     fig, axs = plt.subplots(ncols=len(imgs), squeeze=False)
@@ -43,12 +46,15 @@ def show(imgs, fname):
         axs[0, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
     plt.savefig(fname=fname, dpi=400)
 
+
 def get_device():
+    #
     # find CUDA / MPS / CPU device
+    #
     device = (
         "cuda"
         if torch.cuda.is_available()
-        else "mps"
+        else "mps"  #
         if torch.backends.mps.is_available()
         else "cpu"
     )
@@ -56,11 +62,11 @@ def get_device():
     return device
 
 
-def gen_model_id(namecode: str, major_version: int=1, out_dir: str=None):
+def gen_model_id(namecode: str, major_version: int = 1, out_dir: str = None):
     if out_dir:
         files = os.listdir(out_dir)
-        files = [f.split('.')[0] for f in files if f[-3:] == '.pt']
-        versions = [tuple(m.split('_')[-3:]) for m in files]
+        files = [f.split(".")[0] for f in files if f[-3:] == ".pt"]
+        versions = [tuple(m.split("_")[-3:]) for m in files]
         versions = [tuple(map(int, v)) for v in versions]
         versions.sort(key=lambda x: (x[0], x[1], x[2]))
         latest = versions[-1]
@@ -79,7 +85,9 @@ def gen_model_id(namecode: str, major_version: int=1, out_dir: str=None):
                 subminor = 0
                 minor += 1
             if minor > 9:
-                raise Exception(f"Minor version > 9, please increase major version constant manually.")
+                raise Exception(
+                    "Minor version > 9, please increase major version constant manually."
+                )
             next_version = (latest[0], minor, subminor)
 
         major_version = next_version[0]
@@ -130,7 +138,11 @@ class SemanticSegmentationTrainVal:
         if not os.path.isdir(self.out_dir):
             os.mkdir(self.out_dir)
 
-        self.model_id = gen_model_id(train_val_data.namecode, major_version=train_val_data.version, out_dir=self.out_dir)
+        self.model_id = gen_model_id(
+            train_val_data.namecode,
+            major_version=train_val_data.version,
+            out_dir=self.out_dir,
+        )
         self.val_file = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
         self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
         self.min_error_rate = 1.0
@@ -161,7 +173,9 @@ class SemanticSegmentationTrainVal:
     def _torch_not_equal(self, preds, target):
         return preds != target
 
-    def _evaluate_dataset(self, dataset_name: str, data_loader: DataLoader) -> tuple[float, float]:
+    def _evaluate_dataset(
+        self, dataset_name: str, data_loader: DataLoader
+    ) -> tuple[float, float]:
         num_batches = len(data_loader)
         loss = 0.0
         error_rate = 1.0
@@ -208,6 +222,9 @@ class SemanticSegmentationTrainVal:
         return loss
 
     def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
+        #
+        # https://pytorch.org/vision/stable/auto_examples/plot_visualization_utils.html#semantic-segmentation-models
+        #
         if self.dataset_namecode not in UNSQUEEZE_GT_ACTIVATED:
             return
 
@@ -222,25 +239,30 @@ class SemanticSegmentationTrainVal:
             with torch.no_grad():
                 logits = self.forward(X)
                 mask = self.sigmoid_op(logits)
-                mask = (mask > 0.5)
+                mask = mask > 0.5
 
             # 3 separate images
             if True is False:
                 torchvision.utils.save_image(
-                    torchvision.utils.make_grid(mask), f"{self.out_dir}/{folder}/mask_{batch_index}.jpg"
+                    torchvision.utils.make_grid(mask),
+                    f"{self.out_dir}/{folder}/mask_{batch_index}.jpg",
                 )
                 torchvision.utils.save_image(
-                    torchvision.utils.make_grid(gt.unsqueeze(1)), f"{self.out_dir}/{folder}/gt_{batch_index}.jpg"
+                    torchvision.utils.make_grid(gt.unsqueeze(1)),
+                    f"{self.out_dir}/{folder}/gt_{batch_index}.jpg",
                 )
                 torchvision.utils.save_image(
-                    torchvision.utils.make_grid(X), f"{self.out_dir}/{folder}/image_{batch_index}.jpg"
+                    torchvision.utils.make_grid(X),
+                    f"{self.out_dir}/{folder}/image_{batch_index}.jpg",
                 )
             else:
-                X = X.to('cpu')
-                mask = mask.to('cpu')
+                X = X.to("cpu")
+                mask = mask.to("cpu")
                 X = F.convert_image_dtype(X, torch.uint8)
                 buildings_with_masks = [
-                    torchvision.utils.draw_segmentation_masks(image=img, masks=tmp, alpha=0.7, colors='red')
+                    torchvision.utils.draw_segmentation_masks(
+                        image=img, masks=tmp, alpha=0.7, colors="red"
+                    )
                     for img, tmp in zip(X, mask)
                 ]
                 show(
@@ -280,7 +302,7 @@ class SemanticSegmentationTrainVal:
                     val_loss,
                     train_error_rate,
                     val_error_rate,
-                ]
+                ],
             )
         )
         self.h_val_file.write(f"{val_row}\n")
@@ -293,7 +315,7 @@ class SemanticSegmentationTrainVal:
 
         self.evaluate_epoch(epoch=0)
 
-        for epoch in range(1, NUM_EPOCHS+1):
+        for epoch in range(1, NUM_EPOCHS + 1):
             print(f"Epoch {epoch}\n-------------------------------")
             self.train_epoch(epoch=epoch)
             self.evaluate_epoch(epoch=epoch)

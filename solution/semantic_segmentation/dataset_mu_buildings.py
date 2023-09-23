@@ -1,13 +1,11 @@
 import os
 
 import albumentations as A
-import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
-from torch.utils.data.dataloader import DataLoader
-import torch
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
@@ -120,36 +118,3 @@ class MUBTrainValData:
     @property
     def version(self):
         return 1
-
-
-if __name__ == "__main__":
-    """
-    Example of usage.
-    """
-    segm_dataset_train = MUBuildingsDataset(
-        image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
-        mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
-        transform=None,
-    )
-
-    segm_dataset_val = MUBuildingsDataset(
-        image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
-        mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
-        transform=None,
-    )
-
-    train_loader = DataLoader(segm_dataset_train, batch_size=8, shuffle=True)
-    val_loader = DataLoader(segm_dataset_val, batch_size=8, shuffle=False)
-
-    it = iter(segm_dataset_train)
-    for i in range(5):
-        train_features, train_labels = next(it)
-        print(train_features)
-        print(f"Feature batch shape: {train_features.shape}")
-        print(f"Labels batch shape: {train_labels.shape}")
-        img = train_features
-        plt.imshow(img)
-        plt.show()
-        img = train_labels
-        plt.imshow(img)
-        plt.show()
