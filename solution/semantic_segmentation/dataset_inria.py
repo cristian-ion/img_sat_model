@@ -9,7 +9,7 @@ from torch.utils.data import Dataset
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
-BATCH_SIZE = 4
+BATCH_SIZE = 1
 VAL_BATCH_SIZE = 1
 INRIA_NAMECODE = "inria"
 VERSION = 1

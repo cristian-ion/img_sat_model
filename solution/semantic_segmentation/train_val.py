@@ -9,6 +9,8 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms.functional as F
 from torch.utils.data.dataloader import DataLoader
+from torchvision.ops import masks_to_boxes
+from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 
 from solution.semantic_segmentation.dataset_dstl import DSTL_NAMECODE, DstlTrainValData
 from solution.semantic_segmentation.dataset_inria import (
@@ -30,6 +32,17 @@ VALIDATION_COLUMNS = [
     "train_error_rate",
     "val_error_rate",
 ]
+
+
+def draw_things(img, mask):
+    drawn_mask = draw_segmentation_masks(
+        image=img, masks=mask, alpha=0.7, colors="red"
+    )
+    return draw_bounding_boxes(
+        image=drawn_mask,
+        boxes=masks_to_boxes(mask),
+        colors="red",
+    )
 
 
 def show(imgs, fname):
@@ -224,6 +237,7 @@ class SemanticSegmentationTrainVal:
     def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
         #
         # https://pytorch.org/vision/stable/auto_examples/plot_visualization_utils.html#semantic-segmentation-models
+        # https://pytorch.org/vision/main/auto_examples/others/plot_repurposing_annotations.html#
         #
         if self.dataset_namecode not in UNSQUEEZE_GT_ACTIVATED:
             return
@@ -259,14 +273,14 @@ class SemanticSegmentationTrainVal:
                 X = X.to("cpu")
                 mask = mask.to("cpu")
                 X = F.convert_image_dtype(X, torch.uint8)
-                buildings_with_masks = [
-                    torchvision.utils.draw_segmentation_masks(
-                        image=img, masks=tmp, alpha=0.7, colors="red"
-                    )
+
+                drawn_masks_and_boxes = [
+                    draw_things(img, tmp)
                     for img, tmp in zip(X, mask)
                 ]
+
                 show(
-                    buildings_with_masks,
+                    drawn_masks_and_boxes,
                     f"{self.out_dir}/{folder}/mask_{batch_index}.jpg",
                 )
 
@@ -340,3 +354,14 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+# References
+# Polygonal Building Segmentation by Frame Field Learning
+# https://arxiv.org/abs/2004.14875
+# https://github.com/Lydorn/Polygonization-by-Frame-Field-Learning/tree/master#inria-aerial-image-labeling-dataset
+#
+# Todo:
+#    Train the model with edges as ground truth and adjust the loss function
+#
