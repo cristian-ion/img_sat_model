@@ -106,12 +106,20 @@ class MUBTrainValData:
         return BATCH_SIZE
 
     @property
+    def val_batch_size(self):
+        return 1
+
+    @property
     def namecode(self):
         return MU_BUILDINGS_NAMECODE
 
     @property
     def criterion(self):
         return self._criterion
+
+    @property
+    def version(self):
+        return 1
 
 
 if __name__ == "__main__":

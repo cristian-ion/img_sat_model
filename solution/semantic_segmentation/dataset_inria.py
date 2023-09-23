@@ -12,7 +12,9 @@ import torch
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
 BATCH_SIZE = 4
+VAL_BATCH_SIZE = 1
 INRIA_NAMECODE = "inria"
+VERSION = 1
 
 
 class InriaDataset(Dataset):
@@ -104,9 +106,17 @@ class InriaTrainValData:
         return BATCH_SIZE
 
     @property
+    def val_batch_size(self):
+        return BATCH_SIZE
+
+    @property
     def namecode(self):
         return INRIA_NAMECODE
 
     @property
     def criterion(self):
         return self._criterion
+
+    @property
+    def version(self):
+        return VERSION

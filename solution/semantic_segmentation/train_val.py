@@ -56,9 +56,38 @@ def get_device():
     return device
 
 
-def gen_model_id(name, version=1):
-    date_time = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    return f"{name}_model_{version}_{date_time}"
+def gen_model_id(namecode: str, major_version: int=1, out_dir: str=None):
+    if out_dir:
+        files = os.listdir(out_dir)
+        files = [f.split('.')[0] for f in files if f[-3:] == '.pt']
+        versions = [tuple(m.split('_')[-3:]) for m in files]
+        versions = [tuple(map(int, v)) for v in versions]
+        versions.sort(key=lambda x: (x[0], x[1], x[2]))
+        latest = versions[-1]
+
+        next_version = (0, 0, 0)
+        if latest[0] > major_version:
+            print("Please increase the major version constant manually.")
+            raise Exception("Please increase the major version constant manually.")
+        if latest[0] < major_version:
+            print(f"New major version {major_version}")
+            next_version = (major_version, 0, 0)
+        else:
+            minor = latest[1]
+            subminor = latest[2] + 1
+            if subminor > 9:
+                subminor = 0
+                minor += 1
+            if minor > 9:
+                raise Exception(f"Minor version > 9, please increase major version constant manually.")
+            next_version = (latest[0], minor, subminor)
+
+        major_version = next_version[0]
+        minor_version = f"{next_version[1]}_{next_version[2]}"
+    else:
+        minor_version = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+
+    return f"{namecode}_model_{major_version}_{minor_version}"
 
 
 def train_val_data_factory(dataset_namecode: str):
@@ -97,12 +126,13 @@ class SemanticSegmentationTrainVal:
         )
         self.sigmoid_op = nn.Sigmoid()
 
-        self.out_path = f"models/{dataset_namecode}"
-        if not os.path.isdir(self.out_path):
-            os.mkdir(self.out_path)
-        self.model_id = gen_model_id(train_val_data.namecode, version=1)
-        self.val_file = os.path.join(self.out_path, f"{self.model_id}_val.tsv")
-        self.model_file = os.path.join(self.out_path, f"{self.model_id}.pt")
+        self.out_dir = f"models/{dataset_namecode}"
+        if not os.path.isdir(self.out_dir):
+            os.mkdir(self.out_dir)
+
+        self.model_id = gen_model_id(train_val_data.namecode, major_version=train_val_data.version, out_dir=self.out_dir)
+        self.val_file = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
+        self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
         self.min_error_rate = 1.0
         self.h_val_file = None
 
@@ -183,8 +213,8 @@ class SemanticSegmentationTrainVal:
 
         self.model.eval()
 
-        if not os.path.exists(f"{self.out_path}/{folder}"):
-            os.mkdir(f"{self.out_path}/{folder}")
+        if not os.path.exists(f"{self.out_dir}/{folder}"):
+            os.mkdir(f"{self.out_dir}/{folder}")
 
         for batch_index, (X, gt) in enumerate(data_loader):
             X = X.to(self.device)
@@ -197,13 +227,13 @@ class SemanticSegmentationTrainVal:
             # 3 separate images
             if True is False:
                 torchvision.utils.save_image(
-                    torchvision.utils.make_grid(mask), f"{self.out_path}/{folder}/mask_{batch_index}.jpg"
+                    torchvision.utils.make_grid(mask), f"{self.out_dir}/{folder}/mask_{batch_index}.jpg"
                 )
                 torchvision.utils.save_image(
-                    torchvision.utils.make_grid(gt.unsqueeze(1)), f"{self.out_path}/{folder}/gt_{batch_index}.jpg"
+                    torchvision.utils.make_grid(gt.unsqueeze(1)), f"{self.out_dir}/{folder}/gt_{batch_index}.jpg"
                 )
                 torchvision.utils.save_image(
-                    torchvision.utils.make_grid(X), f"{self.out_path}/{folder}/image_{batch_index}.jpg"
+                    torchvision.utils.make_grid(X), f"{self.out_dir}/{folder}/image_{batch_index}.jpg"
                 )
             else:
                 X = X.to('cpu')
@@ -215,7 +245,7 @@ class SemanticSegmentationTrainVal:
                 ]
                 show(
                     buildings_with_masks,
-                    f"{self.out_path}/{folder}/mask_{batch_index}.jpg",
+                    f"{self.out_dir}/{folder}/mask_{batch_index}.jpg",
                 )
 
     def _save_min_val_error_rate(self, val_error_rate):

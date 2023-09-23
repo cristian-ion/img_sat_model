@@ -45,7 +45,8 @@ NUM_CLASSES = len(CLASSES)
 
 IMAGE_RES_X = 512
 IMAGE_RES_Y = 512
-BATCH_SIZE = 8
+BATCH_SIZE = 4
+VAL_BATCH_SIZE = 1
 
 DSTL_NAMECODE = "dstl"
 
@@ -266,9 +267,17 @@ class DstlTrainValData:
         return BATCH_SIZE
 
     @property
+    def val_batch_size(self):
+        return 1
+
+    @property
     def namecode(self):
         return DSTL_NAMECODE
 
     @property
     def criterion(self):
         return self._criterion
+
+    @property
+    def version(self):
+        return 1
