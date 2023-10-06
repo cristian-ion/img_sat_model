@@ -13,6 +13,8 @@ BATCH_SIZE = 1
 VAL_BATCH_SIZE = 1
 INRIA_NAMECODE = "inria"
 VERSION = 1
+IMAGE_HEIGHT = 572
+IMAGE_WIDTH = 572
 
 
 class InriaDataset(Dataset):
@@ -46,9 +48,6 @@ class InriaDataset(Dataset):
 
 class InriaTrainValData:
     def __init__(self) -> None:
-        IMAGE_HEIGHT = 256
-        IMAGE_WIDTH = 256
-
         self.train_transform = A.Compose(
             [
                 A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),

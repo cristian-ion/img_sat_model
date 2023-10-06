@@ -13,4 +13,8 @@ Segmentation:
 - DSTL Dataset: https://www.kaggle.com/competitions/dstl-satellite-imagery-feature-detection/overview
 
 
-Detection: ...todo
+Detection:
+- Mask R-CNN
+- Window method
+- DOTAv2 dataset
+- Dior dataset

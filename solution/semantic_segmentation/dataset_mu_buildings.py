@@ -11,6 +11,8 @@ CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
 BATCH_SIZE = 8
 MU_BUILDINGS_NAMECODE = "mub"
+IMAGE_HEIGHT = 572
+IMAGE_WIDTH = 572
 
 
 class MUBuildingsDataset(Dataset):
@@ -44,9 +46,6 @@ class MUBuildingsDataset(Dataset):
 
 class MUBTrainValData:
     def __init__(self) -> None:
-        IMAGE_HEIGHT = 512
-        IMAGE_WIDTH = 512
-
         self.train_transform = A.Compose(
             [
                 A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
