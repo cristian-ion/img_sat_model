@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 
-def image_split_in_blocks(img, block_size, use_padding=False):
+def image_split_in_blocks(img, block_size, new_size=None, use_padding=False):
     blocks = []
     h = img.shape[0]
     w = img.shape[1]
@@ -18,7 +18,10 @@ def image_split_in_blocks(img, block_size, use_padding=False):
         canvas[0:h, 0:w] = img
     else:
         canvas = img
-        p2 = int(math.pow(2, int(math.ceil(math.log2(h)))-1))
+        if new_size:
+            p2 = new_size
+        else:
+            p2 = int(math.pow(2, int(math.ceil(math.log2(h)))-1))
         canvas = cv2.resize(canvas, (p2, p2), interpolation=cv2.INTER_AREA)
         print(canvas.shape)
 
@@ -27,6 +30,8 @@ def image_split_in_blocks(img, block_size, use_padding=False):
             block = np.zeros((block_size, block_size, 3), dtype="uint8")
             block[0:block_size, 0:block_size] = canvas[y0:(y0+block_size), x0:(x0+block_size)]
             blocks.append(block)
+
+    print(len(blocks))
     return blocks
 
 
@@ -57,7 +62,7 @@ if __name__ == "__main__":
     height = img.shape[0]
     width = img.shape[1]
 
-    dim = (width + 12, height+12)
+    dim = (5000, 5000)
     img = cv2.resize(img, dim, interpolation= cv2.INTER_AREA)
 
     print(img.size)
@@ -66,7 +71,7 @@ if __name__ == "__main__":
     cv2.imshow("lena", img)
     cv2.waitKey()
 
-    blocks = image_split_in_blocks(img, 256)
+    blocks = image_split_in_blocks(img, 512, new_size=4096)
 
     for block in blocks:
         cv2.imshow("lena", block)
