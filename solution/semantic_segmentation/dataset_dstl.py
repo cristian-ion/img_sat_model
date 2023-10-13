@@ -10,6 +10,8 @@ import torch
 from albumentations.pytorch import ToTensorV2
 from shapely.wkt import loads as wkt_loads
 
+
+MAJOR_VERSION = 1
 DSTL_ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/DSTL"
 DEBUG_PATH = "imgdetection/debug"
 
@@ -279,5 +281,5 @@ class DstlTrainValData:
         return self._criterion
 
     @property
-    def version(self):
-        return 1
+    def major_version(self):
+        return MAJOR_VERSION

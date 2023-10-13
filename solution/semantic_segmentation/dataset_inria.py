@@ -12,9 +12,39 @@ NUM_CLASSES = len(CLASSES)
 BATCH_SIZE = 1
 VAL_BATCH_SIZE = 1
 INRIA_NAMECODE = "inria"
-VERSION = 1
+MAJOR_VERSION = 1
 IMAGE_HEIGHT = 572
 IMAGE_WIDTH = 572
+ROOT_PATH = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset"
+TRAIN_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/images"
+TRAIN_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/gt"
+VAL_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/images"
+VAL_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/gt"
+
+
+TRAIN_TRANSFORMS = A.Compose(
+    [
+        A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0,
+        ),
+        ToTensorV2(),
+    ]
+)
+
+VAL_TRANSFORMS = A.Compose(
+    [
+        A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0,
+        ),
+        ToTensorV2(),
+    ]
+)
 
 
 class InriaDataset(Dataset):
@@ -48,29 +78,8 @@ class InriaDataset(Dataset):
 
 class InriaTrainValData:
     def __init__(self) -> None:
-        self.train_transform = A.Compose(
-            [
-                A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-                A.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1.0, 1.0, 1.0],
-                    max_pixel_value=255.0,
-                ),
-                ToTensorV2(),
-            ]
-        )
-
-        self.val_transform = A.Compose(
-            [
-                A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-                A.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1.0, 1.0, 1.0],
-                    max_pixel_value=255.0,
-                ),
-                ToTensorV2(),
-            ]
-        )
+        self.train_transform = TRAIN_TRANSFORMS
+        self.val_transform = VAL_TRANSFORMS
 
         self._trainset = InriaDataset(
             image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
@@ -115,5 +124,5 @@ class InriaTrainValData:
         return self._criterion
 
     @property
-    def version(self):
-        return VERSION
+    def major_version(self):
+        return MAJOR_VERSION

@@ -35,9 +35,21 @@ VALIDATION_COLUMNS = [
 
 
 def draw_things(img, mask):
+    """
+    Known problems:
+    File "/Users/cristianion/Desktop/visual_recognition_train/solution/semantic_segmentation/train_val.py", line 279, in <listcomp>
+        draw_things(img, tmp)
+    File "/Users/cristianion/Desktop/visual_recognition_train/solution/semantic_segmentation/train_val.py", line 43, in draw_things
+        boxes=masks_to_boxes(mask),
+            ^^^^^^^^^^^^^^^^^^^^
+    File "/Users/cristianion/Desktop/visual_recognition_train/.venv/lib/python3.11/site-packages/torchvision/ops/boxes.py", line 412, in masks_to_boxes
+        bounding_boxes[index, 0] = torch.min(x)
+                                ^^^^^^^^^^^^
+    """
     drawn_mask = draw_segmentation_masks(
         image=img, masks=mask, alpha=0.7, colors="red"
     )
+    print(len(mask))
     drawn_mask_and_boxes = draw_bounding_boxes(
         image=drawn_mask,
         boxes=masks_to_boxes(mask),
@@ -154,7 +166,7 @@ class SemanticSegmentationTrainVal:
 
         self.model_id = gen_model_id(
             train_val_data.namecode,
-            major_version=train_val_data.version,
+            major_version=train_val_data.major_version,
             out_dir=self.out_dir,
         )
         self.val_file = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
@@ -342,10 +354,9 @@ class SemanticSegmentationTrainVal:
 
 def main():
     print(sys.argv)
-
     if len(sys.argv) != 2:
         print(
-            f"Please provide dataset namecode: {MU_BUILDINGS_NAMECODE} or {DSTL_NAMECODE}."
+            f"Please provide dataset namecode: {MU_BUILDINGS_NAMECODE}, {DSTL_NAMECODE}, {INRIA_NAMECODE}."
         )
         sys.exit(0)
 

@@ -54,7 +54,6 @@ def image_join_blocks(blocks):
     return img
 
 if __name__ == "__main__":
-
     img = cv2.imread('lena.tif')
     print(img.size)
     print(img.shape)

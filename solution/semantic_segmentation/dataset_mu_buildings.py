@@ -7,12 +7,47 @@ from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 
+
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
+MAJOR_VERSION = 1
 BATCH_SIZE = 8
 MU_BUILDINGS_NAMECODE = "mub"
 IMAGE_HEIGHT = 572
 IMAGE_WIDTH = 572
+ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset"
+TRAIN_IMG_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train"
+VAL_IMG_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val"
+TRAIN_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels"
+VAL_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels"
+
+
+TRAIN_TRANSFORM =A.Compose(
+    [
+        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.HorizontalFlip(p=0.5),
+        A.VerticalFlip(p=0.5),
+        A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0,
+        ),
+        ToTensorV2(),
+    ]
+)
+
+
+VAL_TRANSFORM = A.Compose(
+    [
+        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0,
+        ),
+        ToTensorV2(),
+    ]
+)
 
 
 class MUBuildingsDataset(Dataset):
@@ -46,41 +81,18 @@ class MUBuildingsDataset(Dataset):
 
 class MUBTrainValData:
     def __init__(self) -> None:
-        self.train_transform = A.Compose(
-            [
-                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-                A.HorizontalFlip(p=0.5),
-                A.VerticalFlip(p=0.5),
-                A.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1.0, 1.0, 1.0],
-                    max_pixel_value=255.0,
-                ),
-                ToTensorV2(),
-            ]
-        )
-
-        self.val_transform = A.Compose(
-            [
-                A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-                A.Normalize(
-                    mean=[0.0, 0.0, 0.0],
-                    std=[1.0, 1.0, 1.0],
-                    max_pixel_value=255.0,
-                ),
-                ToTensorV2(),
-            ]
-        )
+        self.train_transform = TRAIN_TRANSFORM
+        self.val_transform = VAL_TRANSFORM
 
         self._trainset = MUBuildingsDataset(
-            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
-            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
+            image_dir=TRAIN_IMG_DIR,
+            mask_dir=TRAIN_MASK_DIR,
             transform=self.train_transform,
         )
 
         self._valset = MUBuildingsDataset(
-            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
-            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
+            image_dir=VAL_IMG_DIR,
+            mask_dir=VAL_MASK_DIR,
             transform=self.val_transform,
         )
 
@@ -115,5 +127,5 @@ class MUBTrainValData:
         return self._criterion
 
     @property
-    def version(self):
-        return 1
+    def major_version(self):
+        return MAJOR_VERSION
