@@ -20,11 +20,13 @@ TRAIN_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/Aeria
 TRAIN_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/gt"
 VAL_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/images"
 VAL_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/gt"
-
+IMG_EXT = "tif"
+MASK_EXT = "tif"
 
 TRAIN_TRANSFORMS = A.Compose(
     [
-        A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
             std=[1.0, 1.0, 1.0],
@@ -36,7 +38,8 @@ TRAIN_TRANSFORMS = A.Compose(
 
 VAL_TRANSFORMS = A.Compose(
     [
-        A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
             std=[1.0, 1.0, 1.0],
@@ -54,6 +57,9 @@ class InriaDataset(Dataset):
         self.mask_dir = mask_dir
         self.images = os.listdir(image_dir)
         self.masks = os.listdir(mask_dir)
+
+        self.images = [f for f in self.images if f.split('.')[-1] == IMG_EXT]
+        self.masks = [f for f in self.masks if f.split('.')[-1] == MASK_EXT]
 
     def __len__(self):
         return len(self.images)
@@ -82,14 +88,14 @@ class InriaTrainValData:
         self.val_transform = VAL_TRANSFORMS
 
         self._trainset = InriaDataset(
-            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train",
-            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels",
+            image_dir=TRAIN_IMG_DIR,
+            mask_dir=TRAIN_MASK_DIR,
             transform=self.train_transform,
         )
 
         self._valset = InriaDataset(
-            image_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val",
-            mask_dir="/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels",
+            image_dir=VAL_IMG_DIR,
+            mask_dir=VAL_MASK_DIR,
             transform=self.val_transform,
         )
 

@@ -34,7 +34,7 @@ VALIDATION_COLUMNS = [
 ]
 
 
-def draw_things(img, mask):
+def draw_things(img, masks, draw_masks=True, draw_boxes=False):
     """
     Known problems:
     File "/Users/cristianion/Desktop/visual_recognition_train/solution/semantic_segmentation/train_val.py", line 279, in <listcomp>
@@ -46,19 +46,23 @@ def draw_things(img, mask):
         bounding_boxes[index, 0] = torch.min(x)
                                 ^^^^^^^^^^^^
     """
-    drawn_mask = draw_segmentation_masks(
-        image=img, masks=mask, alpha=0.7, colors="red"
-    )
-    print(len(mask))
-    drawn_mask_and_boxes = draw_bounding_boxes(
-        image=drawn_mask,
-        boxes=masks_to_boxes(mask),
-        colors="red",
-    )
-    return drawn_mask_and_boxes
+    print(masks.shape)
+    print(masks.numel())
+    canvas = img
+    if draw_masks:
+        canvas = draw_segmentation_masks(
+            image=canvas, masks=masks, alpha=0.7, colors="red"
+        )
+    if draw_boxes:
+        canvas = draw_bounding_boxes(
+            image=canvas,
+            boxes=masks_to_boxes(masks),
+            colors="red",
+        )
+    return canvas
 
 
-def show(imgs, fname):
+def plot_img(imgs, fname):
     #
     # https://pytorch.org/vision/stable/auto_examples/plot_visualization_utils.html#semantic-segmentation-models
     #
@@ -95,7 +99,11 @@ def gen_model_id(namecode: str, major_version: int = 1, out_dir: str = None):
         versions = [tuple(m.split("_")[-3:]) for m in files]
         versions = [tuple(map(int, v)) for v in versions]
         versions.sort(key=lambda x: (x[0], x[1], x[2]))
-        latest = versions[-1]
+
+        if not versions:
+            latest = (-1, 0, 0)
+        else:
+            latest = versions[-1]
 
         next_version = (0, 0, 0)
         if latest[0] > major_version:
@@ -148,7 +156,7 @@ class SemanticSegmentationTrainVal:
             train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True
         )
         self.val_loader = DataLoader(
-            train_val_data.valset, batch_size=train_val_data.batch_size, shuffle=False
+            train_val_data.valset, batch_size=train_val_data.val_batch_size, shuffle=False
         )
         self.model = UNet(
             in_channels=3, n_classes=train_val_data.num_classes, bilinear=True
@@ -292,7 +300,7 @@ class SemanticSegmentationTrainVal:
                     for img, tmp in zip(X, mask)
                 ]
 
-                show(
+                plot_img(
                     drawn_masks_and_boxes,
                     f"{self.out_dir}/{folder}/mask_{batch_index}.jpg",
                 )
