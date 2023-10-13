@@ -16,6 +16,12 @@ dstl_train:
 inria_train:
 	python -m solution.semantic_segmentation.train_val inria
 
+inria_sample:
+	python -m solution.semantic_segmentation.inria.predict_one
+
+inria_convert_model:
+	python -m solution.semantic_segmentation.convert_model
+
 format:
 	isort solution
 	black solution
