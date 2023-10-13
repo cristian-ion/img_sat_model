@@ -255,7 +255,7 @@ class SemanticSegmentationTrainVal:
         self.optimizer.step()
         return loss
 
-    def save_predictions_as_imgs(self, data_loader, folder="saved_images"):
+    def save_predictions_as_imgs(self, data_loader, separate_mask=False, folder="saved_images"):
         #
         # https://pytorch.org/vision/stable/auto_examples/plot_visualization_utils.html#semantic-segmentation-models
         # https://pytorch.org/vision/main/auto_examples/others/plot_repurposing_annotations.html#
@@ -276,8 +276,7 @@ class SemanticSegmentationTrainVal:
                 mask = self.sigmoid_op(logits)
                 mask = mask > 0.5
 
-            # 3 separate images
-            if True is False:
+            if separate_mask:
                 torchvision.utils.save_image(
                     torchvision.utils.make_grid(mask),
                     f"{self.out_dir}/{folder}/mask_{batch_index}.jpg",
