@@ -8,6 +8,7 @@ Intentions/Goals:
 Train tasks
 - download dataset https://project.inria.fr/aerialimagelabeling/contest/ (status: done)
 - train with images and masks at 572 width and height size
+- experiment with other preconfigured convnets (U-Net, DeepLabv3, etc.)
 
 Test tasks
 - script to process test images
