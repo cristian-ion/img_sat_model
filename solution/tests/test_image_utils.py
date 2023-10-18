@@ -34,6 +34,6 @@ def test_extract_red_color_channel(images_filelist: dict):
 
 
 def test_binarize_grayscale(images_filelist):
-    arr = np.array([10, 127, 128, 255], dtype=np.uint8)
+    arr = np.array([10, 127, 128, 255], dtype=np.float32)
     out = binarize_grayscale(arr, threshold=127)
     assert np.array_equal(out, np.array([0, 0, 1, 1]))

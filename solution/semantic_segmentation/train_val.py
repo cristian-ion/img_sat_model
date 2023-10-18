@@ -46,7 +46,8 @@ def draw_things(img, masks, draw_masks=True, draw_boxes=False):
         bounding_boxes[index, 0] = torch.min(x)
                                 ^^^^^^^^^^^^
     """
-    print(masks.shape)
+    print(f"img.shape={img.shape}")
+    print(f"masks.shape={masks.shape}")
     print(masks.numel())
     canvas = img
     if draw_masks:

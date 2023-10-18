@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 
 from solution.image_utils.image_io import save_image
 
@@ -274,3 +275,7 @@ def grayscale_to_rgb(gray, save=False):
 
 def binarize_grayscale(gray, threshold=127):
     return np.where(gray > threshold, 1, 0)
+
+
+def grayscale_resize(img, new_w, new_h):
+    return cv2.resize(img, dsize=(new_w, new_h), interpolation=cv2.INTER_NEAREST)

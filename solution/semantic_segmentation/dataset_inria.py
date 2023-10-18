@@ -7,6 +7,10 @@ from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 
+
+from solution.image_utils.image_gray import binarize_grayscale
+
+
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
 BATCH_SIZE = 1
@@ -74,7 +78,7 @@ class InriaDataset(Dataset):
 
         image = np.array(Image.open(image_path).convert("RGB"))
         mask = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)
-        mask[mask == 255.0] = 1.0
+        mask = binarize_grayscale(mask)
 
         if self.transform:
             augmentations = self.transform(image=image, mask=mask)
