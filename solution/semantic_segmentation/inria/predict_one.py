@@ -1,15 +1,15 @@
+import numpy as np
 import torch
 from PIL import Image
-import numpy as np
 from torch import nn
 
-from solution.semantic_segmentation.dataset_inria import (
-    VAL_TRANSFORMS
+from solution.semantic_segmentation.dataset_inria import VAL_TRANSFORMS
+
+SAMPLE_PATH = (
+    "/Users/cristianion/Desktop/visual_recognition_train/inria/sample_color.jpg"
 )
-
-
-SAMPLE_PATH = "/Users/cristianion/Desktop/visual_recognition_train/inria/sample_color.jpg"
 MODEL_PATH = "/Users/cristianion/Desktop/visual_recognition_train/models/inria/inria_model_1_0_0.pt"
+
 
 def get_device():
     #
@@ -25,6 +25,7 @@ def get_device():
     print(f"Using {device} device")
     return device
 
+
 def load_eval_model():
     model = torch.load(MODEL_PATH)
     model.eval()
@@ -36,8 +37,6 @@ def predict_one(image_path):
     sigmoid = nn.Sigmoid()
 
     image = np.array(Image.open(image_path).convert("RGB"))
-
-    orignal_size = image.shape
 
     image = VAL_TRANSFORMS(image=image)["image"]
     image = image[None, :]

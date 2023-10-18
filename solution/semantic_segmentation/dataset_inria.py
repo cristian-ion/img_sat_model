@@ -15,7 +15,9 @@ INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1
 IMAGE_HEIGHT = 572
 IMAGE_WIDTH = 572
-ROOT_PATH = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset"
+ROOT_PATH = (
+    "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset"
+)
 TRAIN_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/images"
 TRAIN_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/gt"
 VAL_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/images"
@@ -58,8 +60,8 @@ class InriaDataset(Dataset):
         self.images = os.listdir(image_dir)
         self.masks = os.listdir(mask_dir)
 
-        self.images = [f for f in self.images if f.split('.')[-1] == IMG_EXT]
-        self.masks = [f for f in self.masks if f.split('.')[-1] == MASK_EXT]
+        self.images = [f for f in self.images if f.split(".")[-1] == IMG_EXT]
+        self.masks = [f for f in self.masks if f.split(".")[-1] == MASK_EXT]
 
     def __len__(self):
         return len(self.images)

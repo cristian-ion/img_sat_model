@@ -1,5 +1,6 @@
-import cv2
 import math
+
+import cv2
 import numpy as np
 
 
@@ -21,14 +22,16 @@ def image_split_in_blocks(img, block_size, new_size=None, use_padding=False):
         if new_size:
             p2 = new_size
         else:
-            p2 = int(math.pow(2, int(math.ceil(math.log2(h)))-1))
+            p2 = int(math.pow(2, int(math.ceil(math.log2(h))) - 1))
         canvas = cv2.resize(canvas, (p2, p2), interpolation=cv2.INTER_AREA)
         print(canvas.shape)
 
     for y0 in range(0, canvas.shape[0], block_size):
         for x0 in range(0, canvas.shape[1], block_size):
             block = np.zeros((block_size, block_size, 3), dtype="uint8")
-            block[0:block_size, 0:block_size] = canvas[y0:(y0+block_size), x0:(x0+block_size)]
+            block[0:block_size, 0:block_size] = canvas[
+                y0 : (y0 + block_size), x0 : (x0 + block_size)
+            ]
             blocks.append(block)
 
     print(len(blocks))
@@ -48,13 +51,14 @@ def image_join_blocks(blocks):
     current_block = 0
     for y0 in range(0, h, block_size):
         for x0 in range(0, w, block_size):
-            img[y0:(y0+block_size), x0:(x0+block_size)] = blocks[current_block]
+            img[y0 : (y0 + block_size), x0 : (x0 + block_size)] = blocks[current_block]
             current_block += 1
 
     return img
 
+
 if __name__ == "__main__":
-    img = cv2.imread('lena.tif')
+    img = cv2.imread("lena.tif")
     print(img.size)
     print(img.shape)
 
@@ -62,7 +66,7 @@ if __name__ == "__main__":
     width = img.shape[1]
 
     dim = (5000, 5000)
-    img = cv2.resize(img, dim, interpolation= cv2.INTER_AREA)
+    img = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
 
     print(img.size)
     print(img.shape)

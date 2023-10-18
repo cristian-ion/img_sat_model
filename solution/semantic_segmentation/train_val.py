@@ -156,7 +156,9 @@ class SemanticSegmentationTrainVal:
             train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True
         )
         self.val_loader = DataLoader(
-            train_val_data.valset, batch_size=train_val_data.val_batch_size, shuffle=False
+            train_val_data.valset,
+            batch_size=train_val_data.val_batch_size,
+            shuffle=False,
         )
         self.model = UNet(
             in_channels=3, n_classes=train_val_data.num_classes, bilinear=True
@@ -255,7 +257,9 @@ class SemanticSegmentationTrainVal:
         self.optimizer.step()
         return loss
 
-    def save_predictions_as_imgs(self, data_loader, separate_mask=False, folder="saved_images"):
+    def save_predictions_as_imgs(
+        self, data_loader, separate_mask=False, folder="saved_images"
+    ):
         #
         # https://pytorch.org/vision/stable/auto_examples/plot_visualization_utils.html#semantic-segmentation-models
         # https://pytorch.org/vision/main/auto_examples/others/plot_repurposing_annotations.html#
@@ -295,8 +299,7 @@ class SemanticSegmentationTrainVal:
                 X = F.convert_image_dtype(X, torch.uint8)
 
                 drawn_masks_and_boxes = [
-                    draw_things(img, tmp)
-                    for img, tmp in zip(X, mask)
+                    draw_things(img, tmp) for img, tmp in zip(X, mask)
                 ]
 
                 plot_img(
@@ -373,7 +376,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 
 # References

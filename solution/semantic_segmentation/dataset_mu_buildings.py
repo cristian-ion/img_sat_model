@@ -7,7 +7,6 @@ from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 
-
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
 MAJOR_VERSION = 1
@@ -16,13 +15,17 @@ MU_BUILDINGS_NAMECODE = "mub"
 IMAGE_HEIGHT = 572
 IMAGE_WIDTH = 572
 ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset"
-TRAIN_IMG_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train"
-VAL_IMG_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val"
+TRAIN_IMG_DIR = (
+    "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train"
+)
+VAL_IMG_DIR = (
+    "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val"
+)
 TRAIN_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels"
 VAL_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels"
 
 
-TRAIN_TRANSFORM =A.Compose(
+TRAIN_TRANSFORM = A.Compose(
     [
         A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.HorizontalFlip(p=0.5),

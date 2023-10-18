@@ -1,6 +1,5 @@
 import torch
 
-
 MODEL_PATH = "/Users/cristianion/Desktop/visual_recognition_train/models/inria/inria_model_1_0_0.pt"
 OUT_PATH = "/Users/cristianion/Desktop/visual_recognition_train/models/inria/inria_model_scripted_1_0_0.pt"
 

@@ -26,3 +26,6 @@ format:
 	isort solution
 	black solution
 	flake8 --ignore=E1,E23,E203,W503,E501 solution
+
+test:
+	python -m pytest -v
