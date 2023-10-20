@@ -74,7 +74,9 @@ class DstlPredict:
 
 def test_predict():
     model_path = "/Users/cristianion/Desktop/visual_recognition_train/models/dstl/dstl_model_1_2023_09_08_10_15_26.pt"
-    image_path = "/Users/cristianion/Desktop/visual_recognition_train/samples/sample_dstl.tif"
+    image_path = (
+        "/Users/cristianion/Desktop/visual_recognition_train/samples/sample_dstl.tif"
+    )
 
     dstl_predict = DstlPredict(path=model_path)
 

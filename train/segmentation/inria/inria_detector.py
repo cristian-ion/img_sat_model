@@ -4,9 +4,9 @@ from PIL import Image
 from torch import nn
 
 from train.image_utils.image_gray import (
+    gray_nearest_black_and_white_uint8,
     grayscale_resize_nearest_uint8,
     probability_to_black_and_white_uint8,
-    gray_nearest_black_and_white_uint8,
 )
 from train.image_utils.image_io import read_image, show_image
 from train.segmentation.inria.dataset_inria import VAL_TRANSFORMS

@@ -1,30 +1,23 @@
 import os
-import sys
-from datetime import datetime
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 import torchvision
 import torchvision.transforms.functional as F
 from torch.utils.data.dataloader import DataLoader
-from torchvision.ops import masks_to_boxes
-from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 
-from train.segmentation.dstl.dataset_dstl import DSTL_NAMECODE, DstlTrainConfig
-from train.segmentation.inria.dataset_inria import (
+from train.image_utils.segm_utils import draw_things, plot_img
+from train.segmentation import (
     INRIA_NAMECODE,
-    InriaTrainConfig,
-)
-from train.segmentation.mu_buildings.dataset_mu_buildings import (
     MU_BUILDINGS_NAMECODE,
-    MUBuildingsTrainConfig,
+    train_config_by_namecode,
 )
 from train.segmentation.convnet.unet import UNet
+from train.segmentation.gen_model_id import gen_model_id
+from train.segmentation.get_device import get_device
 
-NUM_EPOCHS = 20
-
+NUM_EPOCHS = 25
 VALIDATION_COLUMNS = [
     "epoch",
     "train_loss",
@@ -32,114 +25,6 @@ VALIDATION_COLUMNS = [
     "train_error_rate",
     "val_error_rate",
 ]
-
-
-def draw_things(img, masks, draw_masks=True, draw_boxes=False):
-    """
-    Known problems:
-    File "/Users/cristianion/Desktop/visual_recognition_train/train/segmentation/train_val.py", line 279, in <listcomp>
-        draw_things(img, tmp)
-    File "/Users/cristianion/Desktop/visual_recognition_train/train/segmentation/train_val.py", line 43, in draw_things
-        boxes=masks_to_boxes(mask),
-            ^^^^^^^^^^^^^^^^^^^^
-    File "/Users/cristianion/Desktop/visual_recognition_train/.venv/lib/python3.11/site-packages/torchvision/ops/boxes.py", line 412, in masks_to_boxes
-        bounding_boxes[index, 0] = torch.min(x)
-                                ^^^^^^^^^^^^
-    """
-    print(f"img.shape={img.shape}")
-    print(f"masks.shape={masks.shape}")
-    print(masks.numel())
-    canvas = img
-    if draw_masks:
-        canvas = draw_segmentation_masks(
-            image=canvas, masks=masks, alpha=0.7, colors="red"
-        )
-    if draw_boxes:
-        canvas = draw_bounding_boxes(
-            image=canvas,
-            boxes=masks_to_boxes(masks),
-            colors="red",
-        )
-    return canvas
-
-
-def plot_img(imgs, fname):
-    #
-    # https://pytorch.org/vision/stable/auto_examples/plot_visualization_utils.html#semantic-segmentation-models
-    #
-    if not isinstance(imgs, list):
-        imgs = [imgs]
-    fig, axs = plt.subplots(ncols=len(imgs), squeeze=False)
-    for i, img in enumerate(imgs):
-        img = img.detach()
-        img = F.to_pil_image(img)
-        axs[0, i].imshow(np.asarray(img))
-        axs[0, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
-    plt.savefig(fname=fname, dpi=400)
-
-
-def get_device():
-    #
-    # find CUDA / MPS / CPU device
-    #
-    device = (
-        "cuda"
-        if torch.cuda.is_available()
-        else "mps"  #
-        if torch.backends.mps.is_available()
-        else "cpu"
-    )
-    print(f"Using {device} device")
-    return device
-
-
-def gen_model_id(namecode: str, major_version: int = 1, out_dir: str = None):
-    if out_dir:
-        files = os.listdir(out_dir)
-        files = [f.split(".")[0] for f in files if f[-3:] == ".pt"]
-        versions = [tuple(m.split("_")[-3:]) for m in files]
-        versions = [tuple(map(int, v)) for v in versions]
-        versions.sort(key=lambda x: (x[0], x[1], x[2]))
-
-        if not versions:
-            latest = (-1, 0, 0)
-        else:
-            latest = versions[-1]
-
-        next_version = (0, 0, 0)
-        if latest[0] > major_version:
-            print("Please increase the major version constant manually.")
-            raise Exception("Please increase the major version constant manually.")
-        if latest[0] < major_version:
-            print(f"New major version {major_version}")
-            next_version = (major_version, 0, 0)
-        else:
-            minor = latest[1]
-            subminor = latest[2] + 1
-            if subminor > 9:
-                subminor = 0
-                minor += 1
-            if minor > 9:
-                raise Exception(
-                    "Minor version > 9, please increase major version constant manually."
-                )
-            next_version = (latest[0], minor, subminor)
-
-        major_version = next_version[0]
-        minor_version = f"{next_version[1]}_{next_version[2]}"
-    else:
-        minor_version = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-
-    return f"{namecode}_model_{major_version}_{minor_version}"
-
-
-def train_config_by_namecode(dataset_namecode: str):
-    if dataset_namecode == DSTL_NAMECODE:
-        return DstlTrainConfig()
-    if dataset_namecode == MU_BUILDINGS_NAMECODE:
-        return MUBuildingsTrainConfig()
-    if dataset_namecode == INRIA_NAMECODE:
-        return InriaTrainConfig()
 
 
 UNSQUEEZE_GT_ACTIVATED = [MU_BUILDINGS_NAMECODE, INRIA_NAMECODE]
@@ -156,6 +41,7 @@ class BackpropImageLabel:
     - object detection
     - image labeling (image classification)
     """
+
     def __init__(self, dataset_namecode: str) -> None:
         self.device = self._get_device()
         self.dataset_namecode = dataset_namecode

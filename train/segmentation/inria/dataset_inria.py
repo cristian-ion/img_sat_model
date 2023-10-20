@@ -9,7 +9,6 @@ from torch.utils.data import Dataset
 
 from train.image_utils.image_gray import binarize_grayscale
 
-
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
 BATCH_SIZE = 1
