@@ -7,29 +7,31 @@ from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 
+from train.image_utils.image_gray import binarize_grayscale
+
+
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
+BATCH_SIZE = 1
+VAL_BATCH_SIZE = 1
+INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1
-BATCH_SIZE = 8
-MU_BUILDINGS_NAMECODE = "mub"
 IMAGE_HEIGHT = 572
 IMAGE_WIDTH = 572
-ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset"
-TRAIN_IMG_DIR = (
-    "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train"
+ROOT_PATH = (
+    "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset"
 )
-VAL_IMG_DIR = (
-    "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val"
-)
-TRAIN_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels"
-VAL_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels"
+TRAIN_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/images"
+TRAIN_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/gt"
+VAL_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/images"
+VAL_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/gt"
+IMG_EXT = "tif"
+MASK_EXT = "tif"
 
-
-TRAIN_TRANSFORM = A.Compose(
+TRAIN_TRANSFORMS = A.Compose(
     [
+        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        A.HorizontalFlip(p=0.5),
-        A.VerticalFlip(p=0.5),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
             std=[1.0, 1.0, 1.0],
@@ -39,9 +41,9 @@ TRAIN_TRANSFORM = A.Compose(
     ]
 )
 
-
-VAL_TRANSFORM = A.Compose(
+VAL_TRANSFORMS = A.Compose(
     [
+        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
@@ -53,13 +55,16 @@ VAL_TRANSFORM = A.Compose(
 )
 
 
-class MUBuildingsDataset(Dataset):
+class InriaDataset(Dataset):
     def __init__(self, image_dir, mask_dir, transform=None):
         self.transform = transform
         self.image_dir = image_dir
         self.mask_dir = mask_dir
         self.images = os.listdir(image_dir)
         self.masks = os.listdir(mask_dir)
+
+        self.images = [f for f in self.images if f.split(".")[-1] == IMG_EXT]
+        self.masks = [f for f in self.masks if f.split(".")[-1] == MASK_EXT]
 
     def __len__(self):
         return len(self.images)
@@ -72,7 +77,7 @@ class MUBuildingsDataset(Dataset):
 
         image = np.array(Image.open(image_path).convert("RGB"))
         mask = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)
-        mask[mask == 255.0] = 1.0
+        mask = binarize_grayscale(mask)
 
         if self.transform:
             augmentations = self.transform(image=image, mask=mask)
@@ -82,18 +87,18 @@ class MUBuildingsDataset(Dataset):
         return image, mask
 
 
-class MUBTrainValData:
+class InriaTrainConfig:
     def __init__(self) -> None:
-        self.train_transform = TRAIN_TRANSFORM
-        self.val_transform = VAL_TRANSFORM
+        self.train_transform = TRAIN_TRANSFORMS
+        self.val_transform = VAL_TRANSFORMS
 
-        self._trainset = MUBuildingsDataset(
+        self._trainset = InriaDataset(
             image_dir=TRAIN_IMG_DIR,
             mask_dir=TRAIN_MASK_DIR,
             transform=self.train_transform,
         )
 
-        self._valset = MUBuildingsDataset(
+        self._valset = InriaDataset(
             image_dir=VAL_IMG_DIR,
             mask_dir=VAL_MASK_DIR,
             transform=self.val_transform,
@@ -119,11 +124,11 @@ class MUBTrainValData:
 
     @property
     def val_batch_size(self):
-        return 1
+        return BATCH_SIZE
 
     @property
     def namecode(self):
-        return MU_BUILDINGS_NAMECODE
+        return INRIA_NAMECODE
 
     @property
     def criterion(self):

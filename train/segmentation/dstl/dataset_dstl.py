@@ -204,7 +204,7 @@ class DstlDataset(torch.utils.data.Dataset):
         return image, mask
 
 
-class DstlTrainValData:
+class DstlTrainConfig:
     def __init__(self) -> None:
         DSTL_TRAIN_TRANSFORM = A.Compose(
             [

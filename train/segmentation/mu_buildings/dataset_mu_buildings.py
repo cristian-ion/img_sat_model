@@ -7,44 +7,29 @@ from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 
-from train.image_utils.image_gray import binarize_grayscale
-
-
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
-BATCH_SIZE = 1
-VAL_BATCH_SIZE = 1
-INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1
+BATCH_SIZE = 8
+MU_BUILDINGS_NAMECODE = "mu_buildings"
 IMAGE_HEIGHT = 572
 IMAGE_WIDTH = 572
-ROOT_PATH = (
-    "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset"
+ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset"
+TRAIN_IMG_DIR = (
+    "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train"
 )
-TRAIN_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/images"
-TRAIN_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/train/gt"
-VAL_IMG_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/images"
-VAL_MASK_DIR = "/Users/cristianion/Desktop/visual_recognition_train/inria/AerialImageDataset/val/gt"
-IMG_EXT = "tif"
-MASK_EXT = "tif"
-
-TRAIN_TRANSFORMS = A.Compose(
-    [
-        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        A.Normalize(
-            mean=[0.0, 0.0, 0.0],
-            std=[1.0, 1.0, 1.0],
-            max_pixel_value=255.0,
-        ),
-        ToTensorV2(),
-    ]
+VAL_IMG_DIR = (
+    "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val"
 )
+TRAIN_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels"
+VAL_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels"
 
-VAL_TRANSFORMS = A.Compose(
+
+TRAIN_TRANSFORM = A.Compose(
     [
-        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.HorizontalFlip(p=0.5),
+        A.VerticalFlip(p=0.5),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
             std=[1.0, 1.0, 1.0],
@@ -55,16 +40,26 @@ VAL_TRANSFORMS = A.Compose(
 )
 
 
-class InriaDataset(Dataset):
+VAL_TRANSFORM = A.Compose(
+    [
+        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0,
+        ),
+        ToTensorV2(),
+    ]
+)
+
+
+class MUBuildingsDataset(Dataset):
     def __init__(self, image_dir, mask_dir, transform=None):
         self.transform = transform
         self.image_dir = image_dir
         self.mask_dir = mask_dir
         self.images = os.listdir(image_dir)
         self.masks = os.listdir(mask_dir)
-
-        self.images = [f for f in self.images if f.split(".")[-1] == IMG_EXT]
-        self.masks = [f for f in self.masks if f.split(".")[-1] == MASK_EXT]
 
     def __len__(self):
         return len(self.images)
@@ -77,7 +72,7 @@ class InriaDataset(Dataset):
 
         image = np.array(Image.open(image_path).convert("RGB"))
         mask = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)
-        mask = binarize_grayscale(mask)
+        mask[mask == 255.0] = 1.0
 
         if self.transform:
             augmentations = self.transform(image=image, mask=mask)
@@ -87,18 +82,18 @@ class InriaDataset(Dataset):
         return image, mask
 
 
-class InriaTrainValData:
+class MUBuildingsTrainConfig:
     def __init__(self) -> None:
-        self.train_transform = TRAIN_TRANSFORMS
-        self.val_transform = VAL_TRANSFORMS
+        self.train_transform = TRAIN_TRANSFORM
+        self.val_transform = VAL_TRANSFORM
 
-        self._trainset = InriaDataset(
+        self._trainset = MUBuildingsDataset(
             image_dir=TRAIN_IMG_DIR,
             mask_dir=TRAIN_MASK_DIR,
             transform=self.train_transform,
         )
 
-        self._valset = InriaDataset(
+        self._valset = MUBuildingsDataset(
             image_dir=VAL_IMG_DIR,
             mask_dir=VAL_MASK_DIR,
             transform=self.val_transform,
@@ -124,11 +119,11 @@ class InriaTrainValData:
 
     @property
     def val_batch_size(self):
-        return BATCH_SIZE
+        return 1
 
     @property
     def namecode(self):
-        return INRIA_NAMECODE
+        return MU_BUILDINGS_NAMECODE
 
     @property
     def criterion(self):

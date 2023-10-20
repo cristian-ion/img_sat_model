@@ -12,16 +12,16 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision.ops import masks_to_boxes
 from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 
-from train.segmentation.dataset_dstl import DSTL_NAMECODE, DstlTrainValData
-from train.segmentation.dataset_inria import (
+from train.segmentation.dstl.dataset_dstl import DSTL_NAMECODE, DstlTrainConfig
+from train.segmentation.inria.dataset_inria import (
     INRIA_NAMECODE,
-    InriaTrainValData,
+    InriaTrainConfig,
 )
-from train.segmentation.dataset_mu_buildings import (
+from train.segmentation.mu_buildings.dataset_mu_buildings import (
     MU_BUILDINGS_NAMECODE,
-    MUBTrainValData,
+    MUBuildingsTrainConfig,
 )
-from train.segmentation.model_unet import UNet
+from train.segmentation.convnet.unet import UNet
 
 NUM_EPOCHS = 20
 
@@ -133,36 +133,46 @@ def gen_model_id(namecode: str, major_version: int = 1, out_dir: str = None):
     return f"{namecode}_model_{major_version}_{minor_version}"
 
 
-def train_val_data_factory(dataset_namecode: str):
+def train_config_by_namecode(dataset_namecode: str):
     if dataset_namecode == DSTL_NAMECODE:
-        return DstlTrainValData()
+        return DstlTrainConfig()
     if dataset_namecode == MU_BUILDINGS_NAMECODE:
-        return MUBTrainValData()
+        return MUBuildingsTrainConfig()
     if dataset_namecode == INRIA_NAMECODE:
-        return InriaTrainValData()
+        return InriaTrainConfig()
 
 
 UNSQUEEZE_GT_ACTIVATED = [MU_BUILDINGS_NAMECODE, INRIA_NAMECODE]
 
 
-class SemanticSegmentationTrainVal:
+class BackpropImageLabel:
+    """
+    Trains a models for image labeling.
+    class = template of common attributes,properties (car, building, airplane, etc.)
+    object = instance of the class (a specific car, a specific building, etc.)
+    Applications:
+    - semantic segmentation (pixel class labeling)
+    - instance segmentation (pixel object labeling)
+    - object detection
+    - image labeling (image classification)
+    """
     def __init__(self, dataset_namecode: str) -> None:
-        self.device = get_device()
+        self.device = self._get_device()
         self.dataset_namecode = dataset_namecode
-        train_val_data = train_val_data_factory(dataset_namecode)
+        train_config = train_config_by_namecode(dataset_namecode)
 
-        self.criterion = train_val_data.criterion
+        self.criterion = train_config.criterion
 
         self.train_loader = DataLoader(
-            train_val_data.trainset, batch_size=train_val_data.batch_size, shuffle=True
+            train_config.trainset, batch_size=train_config.batch_size, shuffle=True
         )
         self.val_loader = DataLoader(
-            train_val_data.valset,
-            batch_size=train_val_data.val_batch_size,
+            train_config.valset,
+            batch_size=train_config.val_batch_size,
             shuffle=False,
         )
         self.model = UNet(
-            in_channels=3, n_classes=train_val_data.num_classes, bilinear=True
+            in_channels=3, n_classes=train_config.num_classes, bilinear=True
         )
         self.optimizer = torch.optim.SGD(
             params=self.model.parameters(),
@@ -176,14 +186,18 @@ class SemanticSegmentationTrainVal:
             os.mkdir(self.out_dir)
 
         self.model_id = gen_model_id(
-            train_val_data.namecode,
-            major_version=train_val_data.major_version,
+            train_config.namecode,
+            major_version=train_config.major_version,
             out_dir=self.out_dir,
         )
         self.val_file = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
         self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
         self.min_error_rate = 1.0
         self.h_val_file = None
+
+    @staticmethod
+    def _get_device():
+        return get_device()
 
     def train_epoch(self, epoch: int):
         print(f"Started train epoch {epoch}.")
@@ -237,7 +251,6 @@ class SemanticSegmentationTrainVal:
                 num_pixels += torch.numel(preds)
 
         loss /= num_batches
-
         error_rate = num_errors / num_pixels
 
         print(
@@ -346,7 +359,7 @@ class SemanticSegmentationTrainVal:
         self.h_val_file.write(f"{val_row}\n")
         self.h_val_file.flush()
 
-    def train_val(self):
+    def train(self):
         print("Train start.")
 
         self.model.to(self.device)
@@ -361,22 +374,6 @@ class SemanticSegmentationTrainVal:
         self.h_val_file.close()
 
         print("Train end.")
-
-
-def main():
-    print(sys.argv)
-    if len(sys.argv) != 2:
-        print(
-            f"Please provide dataset namecode: {MU_BUILDINGS_NAMECODE}, {DSTL_NAMECODE}, {INRIA_NAMECODE}."
-        )
-        sys.exit(0)
-
-    trainer = SemanticSegmentationTrainVal(sys.argv[1])
-    trainer.train_val()
-
-
-if __name__ == "__main__":
-    main()
 
 
 # References

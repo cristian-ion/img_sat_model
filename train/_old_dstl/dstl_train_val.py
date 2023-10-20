@@ -13,9 +13,9 @@ from albumentations.pytorch import ToTensorV2
 from torch import nn
 from torch.utils.data import DataLoader
 
-from train.segmentation.model_unet import UNet
+from train.segmentation.convnet.unet import UNet
 
-from ..segmentation.dataset_dstl import DstlDataset
+from ..segmentation.dstl.dataset_dstl import DstlDataset
 from .dstl_constants import (
     CLASSES,
     GRID_SIZES_FILE,
