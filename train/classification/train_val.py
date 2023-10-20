@@ -9,7 +9,7 @@ import torchvision
 import yaml
 from torchvision import transforms
 
-from solution.classification.dataset import ImgClsDataset
+from train.classification.dataset import ImgClsDataset
 
 
 def get_device():

@@ -1,12 +1,12 @@
 import numpy as np
 
-from solution.image_utils.image_gray import (
+from train.image_utils.image_gray import (
     binarize_grayscale,
     convert_numbers_to_bucket,
     extract_red_color_channel,
     rgb_to_gray_simple_average,
 )
-from solution.image_utils.image_io import read_image
+from train.image_utils.image_io import read_image
 
 
 def test_read(images_filelist):

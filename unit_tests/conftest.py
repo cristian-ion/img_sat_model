@@ -2,10 +2,10 @@ import os
 
 import pytest
 
-from solution.image_utils.image_io import read_image
+from train.image_utils.image_io import read_image
 
-TEST_LENA_IMAGE = "test_images/lena.tif"
-TEST_IMAGES_DIR = "solution/tests/test_images"
+
+TEST_IMAGES_DIR = "tests/test_images"
 
 
 def read_image_help(path):

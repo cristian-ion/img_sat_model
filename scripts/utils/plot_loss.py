@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 if __name__ == "__main__":
-    input_path = "/Users/cristianion/Desktop/satimg_model/cls_models"
+    input_path = "/Users/cristianion/Desktop/visual_recognition_train/cls_models"
 
     models = listdir(input_path)
 

@@ -3,13 +3,13 @@ import torch
 from PIL import Image
 from torch import nn
 
-from solution.image_utils.image_gray import (
+from train.image_utils.image_gray import (
     grayscale_resize_nearest_uint8,
     probability_to_black_and_white_uint8,
     gray_nearest_black_and_white_uint8,
 )
-from solution.image_utils.image_io import read_image, show_image
-from solution.semantic_segmentation.dataset_inria import VAL_TRANSFORMS
+from train.image_utils.image_io import read_image, show_image
+from train.segmentation.dataset_inria import VAL_TRANSFORMS
 
 SAMPLE_PATH = (
     "/Users/cristianion/Desktop/visual_recognition_train/inria/sample_color.jpg"

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from solution.image_utils.image_io import save_image
+from train.image_utils.image_io import save_image
 
 SAMPLE_IMAGE = "lena.tif"
 OUTDIR = "l2_out"

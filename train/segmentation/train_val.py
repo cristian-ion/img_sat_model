@@ -12,16 +12,16 @@ from torch.utils.data.dataloader import DataLoader
 from torchvision.ops import masks_to_boxes
 from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 
-from solution.semantic_segmentation.dataset_dstl import DSTL_NAMECODE, DstlTrainValData
-from solution.semantic_segmentation.dataset_inria import (
+from train.segmentation.dataset_dstl import DSTL_NAMECODE, DstlTrainValData
+from train.segmentation.dataset_inria import (
     INRIA_NAMECODE,
     InriaTrainValData,
 )
-from solution.semantic_segmentation.dataset_mu_buildings import (
+from train.segmentation.dataset_mu_buildings import (
     MU_BUILDINGS_NAMECODE,
     MUBTrainValData,
 )
-from solution.semantic_segmentation.model_unet import UNet
+from train.segmentation.model_unet import UNet
 
 NUM_EPOCHS = 20
 
@@ -37,9 +37,9 @@ VALIDATION_COLUMNS = [
 def draw_things(img, masks, draw_masks=True, draw_boxes=False):
     """
     Known problems:
-    File "/Users/cristianion/Desktop/visual_recognition_train/solution/semantic_segmentation/train_val.py", line 279, in <listcomp>
+    File "/Users/cristianion/Desktop/visual_recognition_train/train/segmentation/train_val.py", line 279, in <listcomp>
         draw_things(img, tmp)
-    File "/Users/cristianion/Desktop/visual_recognition_train/solution/semantic_segmentation/train_val.py", line 43, in draw_things
+    File "/Users/cristianion/Desktop/visual_recognition_train/train/segmentation/train_val.py", line 43, in draw_things
         boxes=masks_to_boxes(mask),
             ^^^^^^^^^^^^^^^^^^^^
     File "/Users/cristianion/Desktop/visual_recognition_train/.venv/lib/python3.11/site-packages/torchvision/ops/boxes.py", line 412, in masks_to_boxes
