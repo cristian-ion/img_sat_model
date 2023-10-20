@@ -1,5 +1,5 @@
-import numpy as np
 import cv2
+import numpy as np
 
 from solution.image_utils.image_io import save_image
 
@@ -277,5 +277,17 @@ def binarize_grayscale(gray, threshold=127):
     return np.where(gray > threshold, 1, 0)
 
 
-def grayscale_resize(img, new_w, new_h):
+def grayscale_resize_nearest_uint8(img, new_w, new_h):
     return cv2.resize(img, dsize=(new_w, new_h), interpolation=cv2.INTER_NEAREST)
+
+
+def probability_to_black_and_white_uint8(preds):
+    return np.where(preds > 0.5, 255, 0).astype(np.uint8)
+
+
+def gray_nearest_black_and_white_uint8(gray):
+    return np.where(gray > 127, 255, 0).astype(np.uint8)
+
+
+def overlay_color_image_with_bw_mask(color_image, bw_mask):
+    pass

@@ -7,7 +7,6 @@ from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
 
-
 from solution.image_utils.image_gray import binarize_grayscale
 
 
