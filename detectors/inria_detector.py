@@ -8,13 +8,14 @@ from train.image_utils.image_gray import (
     probability_to_black_and_white_uint8,
     gray_nearest_black_and_white_uint8,
 )
-from train.image_utils.image_io import read_image, show_image
+from train.image_utils.image_io import read_image, show_image, save_image
 from train.segmentation.inria.dataset_inria import VAL_TRANSFORMS
 
 SAMPLE_PATH = (
     "/Users/cristianion/Desktop/visual_recognition_train/inria/sample_color.jpg"
 )
-MODEL_PATH = "/Users/cristianion/Desktop/visual_recognition_train/models/inria/inria_model_1_0_0.pt"
+OUT_PATH = "/Users/cristianion/Desktop/visual_recognition_train/inria/sample_color_out.png"
+MODEL_PATH = "/Users/cristianion/Desktop/visual_recognition_train/models/inria/inria_model_1_0_1.pt"
 
 
 def get_device():
@@ -43,10 +44,9 @@ class InriaDetector:
 
     def detect_image_file(self, filepath):
         image = np.array(Image.open(filepath).convert("RGB"))
-        show_image(image, "image")
         object_masks = self.detect_object_mask(image)
         print(object_masks.shape)
-        show_image(object_masks, "mask")
+        save_image(OUT_PATH, object_masks)
 
     def detect_object_mask(self, image):
         orig_w = image.shape[1]
