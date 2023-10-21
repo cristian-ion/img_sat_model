@@ -287,7 +287,3 @@ def probability_to_black_and_white_uint8(preds):
 
 def gray_nearest_black_and_white_uint8(gray):
     return np.where(gray > 127, 255, 0).astype(np.uint8)
-
-
-def overlay_color_image_with_bw_mask(color_image, bw_mask):
-    pass
