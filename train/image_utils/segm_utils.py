@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import torchvision.transforms.functional as F
 from torchvision.ops import masks_to_boxes
 from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
+import numpy as np
 
 
 def draw_things(img, masks, draw_masks=True, draw_boxes=False):

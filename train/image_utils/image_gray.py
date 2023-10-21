@@ -274,7 +274,7 @@ def grayscale_to_rgb(gray, save=False):
 
 
 def binarize_grayscale(gray, threshold=127):
-    return np.where(gray > threshold, 1, 0)
+    return np.where(gray > threshold, 1.0, 0.0).astype(np.float32)
 
 
 def grayscale_resize_nearest_uint8(img, new_w, new_h):

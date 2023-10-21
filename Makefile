@@ -17,7 +17,7 @@ inria_train:
 	python -m train.train inria
 
 inria_sample:
-	python -m test.inria.inria_detector
+	python -m detectors.inria_detector
 
 format:
 	isort train
