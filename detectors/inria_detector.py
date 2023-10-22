@@ -12,10 +12,10 @@ from train.image_utils.image_io import read_image, show_image, save_image
 from train.segmentation.inria.dataset_inria import VAL_TRANSFORMS
 
 SAMPLE_PATH = (
-    "/Users/cristianion/Desktop/visual_recognition_train/inria/sample_color.jpg"
+    "/Users/cristianion/Desktop/img_sat_mdoel/inria/sample_color.jpg"
 )
-OUT_PATH = "/Users/cristianion/Desktop/visual_recognition_train/inria/sample_color_out.png"
-MODEL_PATH = "/Users/cristianion/Desktop/visual_recognition_train/models/inria/inria_model_1_0_1.pt"
+OUT_PATH = "/Users/cristianion/Desktop/img_sat_mdoel/inria/sample_color_out.png"
+MODEL_PATH = "/Users/cristianion/Desktop/img_sat_mdoel/models/inria/inria_model_1_0_1.pt"
 
 
 def get_device():

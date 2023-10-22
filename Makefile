@@ -8,13 +8,13 @@ ucm21_train:
 	python -m train.classification.train_val train/classification/config_ucm21.yaml
 
 mub_train:
-	python -m train.train mu_buildings
+	python -m train.main mu_buildings
 
 dstl_train:
-	python -m train.train dstl
+	python -m train.main dstl
 
 inria_train:
-	python -m train.train inria
+	python -m train.main inria
 
 inria_sample:
 	python -m detectors.inria_detector

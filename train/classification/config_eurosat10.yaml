@@ -6,7 +6,7 @@ model:
     type: image
     train:
       batch_size: 32
-      file: /Users/cristianion/Desktop/visual_recognition_train/eurosat_dataset.csv
+      file: /Users/cristianion/Desktop/img_sat_mdoel/eurosat_dataset.csv
       folds:
         - 0
         - 1
@@ -21,7 +21,7 @@ model:
         - normalize
     val:
       batch_size: 32
-      file: /Users/cristianion/Desktop/visual_recognition_train/eurosat_dataset.csv
+      file: /Users/cristianion/Desktop/img_sat_mdoel/eurosat_dataset.csv
       folds:
         - 6
         - 7
@@ -31,7 +31,7 @@ model:
         - normalize
     test:
       batch_size: 32
-      file: /Users/cristianion/Desktop/visual_recognition_train/eurosat_dataset.csv
+      file: /Users/cristianion/Desktop/img_sat_mdoel/eurosat_dataset.csv
       folds:
         - 8
         - 9

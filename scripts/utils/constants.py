@@ -1,4 +1,4 @@
-RESISC45_DIRPATH = "/Users/cristianion/Desktop/satimg_data/NWPU-RESISC45"
+RESISC45_DIRPATH = "/Users/cristianion/Desktop/img_sat_data/NWPU-RESISC45"
 
 RESISC45_LABELS = [
     "forest",
@@ -49,7 +49,7 @@ RESISC45_LABELS = [
 ]
 
 UCMERCED_LANDUSE_DIRPATH = (
-    "/Users/cristianion/Desktop/satimg_data/UCMerced_LandUse/Images"
+    "/Users/cristianion/Desktop/img_sat_data/UCMerced_LandUse/Images"
 )
 UCMERCED_LANDUSE_LABELS = [
     "forest",

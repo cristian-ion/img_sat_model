@@ -15,7 +15,7 @@ print("PyTorch Version: ", torch.__version__)
 print("Torchvision Version: ", torchvision.__version__)
 
 
-RESISC45_DIRPATH = "/Users/cristianion/Desktop/satimg_data/NWPU-RESISC45"
+RESISC45_DIRPATH = "/Users/cristianion/Desktop/img_sat_data/NWPU-RESISC45"
 
 RESISC45_LABELS = [
     "forest",
@@ -66,7 +66,7 @@ RESISC45_LABELS = [
 ]
 
 UCMERCED_LANDUSE_DIRPATH = (
-    "/Users/cristianion/Desktop/satimg_data/UCMerced_LandUse/Images"
+    "/Users/cristianion/Desktop/img_sat_data/UCMerced_LandUse/Images"
 )
 UCMERCED_LANDUSE_LABELS = [
     "forest",
@@ -92,7 +92,7 @@ UCMERCED_LANDUSE_LABELS = [
     "storagetanks",
 ]
 
-EUROSAT_DIRPATH = "/Users/cristianion/Desktop/satimg_data/EuroSAT_RGB"
+EUROSAT_DIRPATH = "/Users/cristianion/Desktop/img_sat_data/EuroSAT_RGB"
 EUROSAT_LABELS = [
     "AnnualCrop",
     "Forest",

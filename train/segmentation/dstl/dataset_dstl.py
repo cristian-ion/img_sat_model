@@ -11,7 +11,7 @@ from albumentations.pytorch import ToTensorV2
 from shapely.wkt import loads as wkt_loads
 
 MAJOR_VERSION = 1
-DSTL_ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/DSTL"
+DSTL_ROOT_PATH = "/Users/cristianion/Desktop/img_sat_data/DSTL"
 DEBUG_PATH = "imgdetection/debug"
 
 TRAIN_WKT_FILE = os.path.join(DSTL_ROOT_PATH, "train_wkt_v4.csv")

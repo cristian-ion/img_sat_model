@@ -7,6 +7,8 @@ import torchvision
 import torchvision.transforms.functional as F
 from torch.utils.data.dataloader import DataLoader
 
+from train.helpers.gen_model_id import gen_model_id
+from train.helpers.get_device import get_device
 from train.image_utils.segm_utils import draw_things, plot_img
 from train.segmentation import (
     INRIA_NAMECODE,
@@ -14,8 +16,6 @@ from train.segmentation import (
     train_config_by_namecode,
 )
 from train.segmentation.convnet.unet import UNet
-from train.segmentation.gen_model_id import gen_model_id
-from train.segmentation.get_device import get_device
 
 NUM_EPOCHS = 25
 VALIDATION_COLUMNS = [
@@ -25,8 +25,6 @@ VALIDATION_COLUMNS = [
     "train_error_rate",
     "val_error_rate",
 ]
-
-
 UNSQUEEZE_GT_ACTIVATED = [MU_BUILDINGS_NAMECODE, INRIA_NAMECODE]
 
 

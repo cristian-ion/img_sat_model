@@ -14,15 +14,15 @@ BATCH_SIZE = 8
 MU_BUILDINGS_NAMECODE = "mu_buildings"
 IMAGE_HEIGHT = 572
 IMAGE_WIDTH = 572
-ROOT_PATH = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset"
+ROOT_PATH = "/Users/cristianion/Desktop/img_sat_data/Massachusetts Buildings Dataset"
 TRAIN_IMG_DIR = (
-    "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train"
+    "/Users/cristianion/Desktop/img_sat_data/Massachusetts Buildings Dataset/png/train"
 )
 VAL_IMG_DIR = (
-    "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val"
+    "/Users/cristianion/Desktop/img_sat_data/Massachusetts Buildings Dataset/png/val"
 )
-TRAIN_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/train_labels"
-VAL_MASK_DIR = "/Users/cristianion/Desktop/satimg_data/Massachusetts Buildings Dataset/png/val_labels"
+TRAIN_MASK_DIR = "/Users/cristianion/Desktop/img_sat_data/Massachusetts Buildings Dataset/png/train_labels"
+VAL_MASK_DIR = "/Users/cristianion/Desktop/img_sat_data/Massachusetts Buildings Dataset/png/val_labels"
 
 
 TRAIN_TRANSFORM = A.Compose(

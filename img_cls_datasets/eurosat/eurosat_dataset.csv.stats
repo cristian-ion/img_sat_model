@@ -1,9 +1,9 @@
                                              imgpath   label  label_index
-0  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1
-1  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1
-2  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1
-3  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1
-4  /Users/cristianion/Desktop/satimg_data/EuroSAT...  Forest            1Nonelabel
+0  /Users/cristianion/Desktop/img_sat_data/EuroSAT...  Forest            1
+1  /Users/cristianion/Desktop/img_sat_data/EuroSAT...  Forest            1
+2  /Users/cristianion/Desktop/img_sat_data/EuroSAT...  Forest            1
+3  /Users/cristianion/Desktop/img_sat_data/EuroSAT...  Forest            1
+4  /Users/cristianion/Desktop/img_sat_data/EuroSAT...  Forest            1Nonelabel
 Forest                  3000
 AnnualCrop              3000
 SeaLake                 3000

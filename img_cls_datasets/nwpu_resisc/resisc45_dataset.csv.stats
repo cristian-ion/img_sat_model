@@ -1,9 +1,9 @@
                                              imgpath   label  label_index
-0  /Users/cristianion/Desktop/satimg_data/NWPU-RE...  forest            0
-1  /Users/cristianion/Desktop/satimg_data/NWPU-RE...  forest            0
-2  /Users/cristianion/Desktop/satimg_data/NWPU-RE...  forest            0
-3  /Users/cristianion/Desktop/satimg_data/NWPU-RE...  forest            0
-4  /Users/cristianion/Desktop/satimg_data/NWPU-RE...  forest            0Nonelabel
+0  /Users/cristianion/Desktop/img_sat_data/NWPU-RE...  forest            0
+1  /Users/cristianion/Desktop/img_sat_data/NWPU-RE...  forest            0
+2  /Users/cristianion/Desktop/img_sat_data/NWPU-RE...  forest            0
+3  /Users/cristianion/Desktop/img_sat_data/NWPU-RE...  forest            0
+4  /Users/cristianion/Desktop/img_sat_data/NWPU-RE...  forest            0Nonelabel
 forest                   700
 intersection             700
 palace                   700
