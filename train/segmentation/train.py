@@ -28,7 +28,7 @@ VALIDATION_COLUMNS = [
 UNSQUEEZE_GT_ACTIVATED = [MU_BUILDINGS_NAMECODE, INRIA_NAMECODE]
 
 
-class BackpropImageLabel:
+class Train:
     """
     Trains a models for image labeling.
     class = template of common attributes,properties (car, building, airplane, etc.)
@@ -38,6 +38,8 @@ class BackpropImageLabel:
     - instance segmentation (pixel object labeling)
     - object detection
     - image labeling (image classification)
+    ...
+    This class will later replace the classification class, so we will do classification also here.
     """
 
     def __init__(self, dataset_namecode: str) -> None:
