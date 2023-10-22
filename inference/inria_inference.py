@@ -37,7 +37,7 @@ def load_eval_model():
     return model
 
 
-class InriaDetector:
+class InriaInference:
     def __init__(self) -> None:
         self.model = load_eval_model()
         self.sigmoid = nn.Sigmoid()
@@ -74,5 +74,5 @@ class InriaDetector:
 
 
 if __name__ == "__main__":
-    detector = InriaDetector()
+    detector = InriaInference()
     detector.detect_image_file(SAMPLE_PATH)
