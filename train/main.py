@@ -3,7 +3,7 @@ import sys
 from train.segmentation.dstl.dataset_dstl import DSTL_NAMECODE
 from train.segmentation.inria.dataset_inria import INRIA_NAMECODE
 from train.segmentation.mu_buildings.dataset_mu_buildings import MU_BUILDINGS_NAMECODE
-from train.segmentation.train import Train
+from train.segmentation.img_train import ImgTrain
 
 
 def train():
@@ -14,8 +14,8 @@ def train():
         )
         sys.exit(0)
 
-    backprop = Train(sys.argv[1])
-    backprop.train()
+    img_train = ImgTrain(sys.argv[1])
+    img_train.train()
 
 
 if __name__ == "__main__":

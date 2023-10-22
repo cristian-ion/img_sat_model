@@ -28,7 +28,7 @@ VALIDATION_COLUMNS = [
 UNSQUEEZE_GT_ACTIVATED = [MU_BUILDINGS_NAMECODE, INRIA_NAMECODE]
 
 
-class Train:
+class ImgTrain:
     """
     Trains a models for image labeling.
     class = template of common attributes,properties (car, building, airplane, etc.)
