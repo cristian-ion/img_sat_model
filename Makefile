@@ -16,8 +16,8 @@ dstl_train:
 inria_train:
 	python -m train.main inria
 
-inria_sample:
-	python -m inference.inria_inference
+inference_inria:
+	python -m inference.inference_inria
 
 format:
 	isort train

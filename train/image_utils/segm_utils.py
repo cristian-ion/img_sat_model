@@ -8,12 +8,12 @@ from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
 def draw_things(img, masks, draw_masks=True, draw_boxes=False):
     """
     Known problems:
-    File "/Users/cristianion/Desktop/img_sat_mdoel/train/segmentation/train_val.py", line 279, in <listcomp>
+    File "/Users/cristianion/Desktop/img_sat_model/train/segmentation/train_val.py", line 279, in <listcomp>
         draw_things(img, tmp)
-    File "/Users/cristianion/Desktop/img_sat_mdoel/train/segmentation/train_val.py", line 43, in draw_things
+    File "/Users/cristianion/Desktop/img_sat_model/train/segmentation/train_val.py", line 43, in draw_things
         boxes=masks_to_boxes(mask),
             ^^^^^^^^^^^^^^^^^^^^
-    File "/Users/cristianion/Desktop/img_sat_mdoel/.venv/lib/python3.11/site-packages/torchvision/ops/boxes.py", line 412, in masks_to_boxes
+    File "/Users/cristianion/Desktop/img_sat_model/.venv/lib/python3.11/site-packages/torchvision/ops/boxes.py", line 412, in masks_to_boxes
         bounding_boxes[index, 0] = torch.min(x)
                                 ^^^^^^^^^^^^
     """

@@ -73,8 +73,8 @@ class DstlPredict:
 
 
 def test_predict():
-    model_path = "/Users/cristianion/Desktop/img_sat_mdoel/models/dstl/dstl_model_1_2023_09_08_10_15_26.pt"
-    image_path = "/Users/cristianion/Desktop/img_sat_mdoel/samples/sample_dstl.tif"
+    model_path = "/Users/cristianion/Desktop/img_sat_model/models/dstl/dstl_model_1_2023_09_08_10_15_26.pt"
+    image_path = "/Users/cristianion/Desktop/img_sat_model/samples/sample_dstl.tif"
 
     dstl_predict = DstlPredict(path=model_path)
 
@@ -93,7 +93,7 @@ def test_predict():
 
 def test_multiple_predict():
     model_id = "dstl_model_1_2023_09_08_10_15_26"
-    model_path = "/Users/cristianion/Desktop/img_sat_mdoel/models/dstl/dstl_model_1_2023_09_08_10_15_26.pt"
+    model_path = "/Users/cristianion/Desktop/img_sat_model/models/dstl/dstl_model_1_2023_09_08_10_15_26.pt"
     path = "/Users/cristianion/Desktop/img_sat_data/DSTL/three_band"
 
     files = [

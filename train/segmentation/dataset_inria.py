@@ -17,18 +17,18 @@ INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1
 IMAGE_HEIGHT = 572
 IMAGE_WIDTH = 572
-ROOT_PATH = "/Users/cristianion/Desktop/img_sat_mdoel/inria/AerialImageDataset"
+ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
 TRAIN_IMG_DIR = (
-    "/Users/cristianion/Desktop/img_sat_mdoel/inria/AerialImageDataset/train/images"
+    "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/train/images"
 )
 TRAIN_MASK_DIR = (
-    "/Users/cristianion/Desktop/img_sat_mdoel/inria/AerialImageDataset/train/gt"
+    "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/train/gt"
 )
 VAL_IMG_DIR = (
-    "/Users/cristianion/Desktop/img_sat_mdoel/inria/AerialImageDataset/val/images"
+    "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/images"
 )
 VAL_MASK_DIR = (
-    "/Users/cristianion/Desktop/img_sat_mdoel/inria/AerialImageDataset/val/gt"
+    "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/gt"
 )
 IMG_EXT = "tif"
 MASK_EXT = "tif"

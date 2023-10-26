@@ -1,8 +1,8 @@
 import sys
 
-from train.segmentation.dstl.dataset_dstl import DSTL_NAMECODE
-from train.segmentation.inria.dataset_inria import INRIA_NAMECODE
-from train.segmentation.mu_buildings.dataset_mu_buildings import MU_BUILDINGS_NAMECODE
+from train.segmentation.dataset_dstl import DSTL_NAMECODE
+from train.segmentation.dataset_inria import INRIA_NAMECODE
+from train.segmentation.dataset_mu_buildings import MU_BUILDINGS_NAMECODE
 from train.segmentation.train import Train
 
 

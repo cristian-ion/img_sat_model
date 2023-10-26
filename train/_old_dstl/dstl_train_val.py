@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 
 from train.segmentation.convnet.unet import UNet
 
-from ..segmentation.dstl.dataset_dstl import DstlDataset
+from ..segmentation.dataset_dstl import DstlDataset
 from .dstl_constants import (
     CLASSES,
     GRID_SIZES_FILE,
