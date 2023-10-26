@@ -16,7 +16,7 @@ train_dstl:
 train_inria:
 	python -m train.main inria
 
-inference_inria:
+sample_inria:
 	python -m inference.inference_inria
 
 infer_inria:
