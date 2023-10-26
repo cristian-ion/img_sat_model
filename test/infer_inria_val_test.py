@@ -23,23 +23,20 @@ def create_filelist(dir):
     return filelist
 
 
-class EvaluateInria:
-    def __init__(self, dir_out) -> None:
-        assert dir_out is not None
-        self.infer = InferenceInria(debug=False, save_out=True, dir_out=dir_out)
+def inference_inria_val():
+    filelist = create_filelist(DIR_VAL)
+    infer = InferenceInria(debug=False, save_out=True, dir_out=filelist)
+    infer.evaluate(filelist)
+    print("Done val.")
 
-    def evaluate(self, filelist):
-        for file in filelist:
-            self.infer.image_segment_file(file)
+
+def inference_inria_test():
+    filelist = create_filelist(DIR_TEST)
+    infer = InferenceInria(dir_out=DIR_TEST_OUT)
+    infer.image_segment_filelist(filelist)
+    print("Done test.")
 
 
 if __name__ == "__main__":
-    eval = EvaluateInria(dir_out=DIR_VAL_OUT)
-    filelist = create_filelist(DIR_VAL)
-    eval.evaluate(filelist)
-    print("Done val.")
-
-    eval = EvaluateInria(dir_out=DIR_TEST_OUT)
-    filelist = create_filelist(DIR_TEST)
-    eval.evaluate(filelist)
-    print("Done test.")
+    inference_inria_val()
+    inference_inria_test()

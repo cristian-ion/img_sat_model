@@ -53,6 +53,10 @@ class InferenceInria:
         self.model = torch.load(MODEL_PATH)
         self.model.eval()
 
+    def image_segment_filelist(self, filelist):
+        for file in filelist:
+            self.image_segment_file(file)
+
     def image_segment_file(self, filepath):
         image = np.array(Image.open(filepath).convert("RGB"))
         if self._debug:

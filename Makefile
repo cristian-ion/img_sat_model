@@ -19,8 +19,11 @@ train_inria:
 inference_inria:
 	python -m inference.inference_inria
 
-evaluate_inria:
-	python -m test.evaluate_inria
+infer_inria:
+	python -m test.infer_inria_val_test
+
+compare_inria:
+	python -m test.compare_inria
 
 format:
 	isort train
