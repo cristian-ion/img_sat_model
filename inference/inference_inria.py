@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torch import nn
+from os.path import basename, join
 
 from train.image_utils.image_gray import (
     grayscale_resize_nearest_uint8,
@@ -39,10 +40,13 @@ def load_eval_model():
 
 class InferenceInria:
     """Segment buildings"""
-    def __init__(self) -> None:
+    def __init__(self, debug=False, save_out=False, dir_out=None) -> None:
         self.nn_sigmoid = nn.Sigmoid()
         self.model = None
         self._load_model()
+        self._debug = debug
+        self._save_out = save_out
+        self._dir_out = dir_out
 
     def _load_model(self):
         assert self.model is None
@@ -51,11 +55,19 @@ class InferenceInria:
 
     def image_segment_file(self, filepath):
         image = np.array(Image.open(filepath).convert("RGB"))
-        image_show(image)
+        if self._debug:
+            image_show(image)
         segm = self.image_segment(image)
         print(segm.shape)
-        image_save(OUT_PATH, segm)
-        image_show(segm)
+        if self._save_out:
+            if self._dir_out:
+                name = basename(filepath)
+                image_save(join(self._dir_out, f"{name}.out.png"), segm)
+            else:
+                image_save(f"{filepath}.out.png", segm)
+        if self._debug:
+            image_show(segm)
+        return segm
 
     def image_segment(self, image):
         orig_w = image.shape[1]
@@ -90,5 +102,5 @@ class InferenceInria:
 
 
 if __name__ == "__main__":
-    inference = InferenceInria()
+    inference = InferenceInria(debug=True, save_out=True)
     inference.image_segment_file(SAMPLE_PATH)

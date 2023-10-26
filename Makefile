@@ -1,23 +1,26 @@
-eurosat_train:
+train_eurosat:
 	python -m train.classification.train_val train/classification/config_eurosat.yaml
 
-resisc_train:
+train_resisc:
 	python -m train.classification.train_val train/classification/config_resisc45.yaml
 
-ucm21_train:
+train_ucm21:
 	python -m train.classification.train_val train/classification/config_ucm21.yaml
 
-mub_train:
+train_mub:
 	python -m train.main mu_buildings
 
-dstl_train:
+train_dstl:
 	python -m train.main dstl
 
-inria_train:
+train_inria:
 	python -m train.main inria
 
 inference_inria:
 	python -m inference.inference_inria
+
+evaluate_inria:
+	python -m test.evaluate_inria
 
 format:
 	isort train
