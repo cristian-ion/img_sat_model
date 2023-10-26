@@ -8,7 +8,7 @@ from train.image_utils.image_gray import (
     probability_to_black_and_white_uint8,
     gray_nearest_black_and_white_uint8,
 )
-from train.image_utils.image_io import read_image, show_image, save_image
+from train.image_utils.image_io import image_read, image_show, image_save
 from train.segmentation.inria.dataset_inria import VAL_TRANSFORMS
 
 SAMPLE_PATH = (
@@ -44,9 +44,10 @@ class InriaInference:
 
     def detect_image_file(self, filepath):
         image = np.array(Image.open(filepath).convert("RGB"))
+        image_show(image)
         object_masks = self.detect_object_mask(image)
         print(object_masks.shape)
-        save_image(OUT_PATH, object_masks)
+        image_save(OUT_PATH, object_masks)
 
     def detect_object_mask(self, image):
         orig_w = image.shape[1]

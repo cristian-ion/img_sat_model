@@ -6,12 +6,12 @@ from train.image_utils.image_gray import (
     extract_red_color_channel,
     rgb_to_gray_simple_average,
 )
-from train.image_utils.image_io import read_image
+from train.image_utils.image_io import image_read
 
 
 def test_read(images_filelist):
     for image in images_filelist.values():
-        img = read_image(image)
+        img = image_read(image)
         assert img.size > 0
 
 
@@ -22,13 +22,13 @@ def test_convert_numbers_to_bucket():
 
 
 def test_simple_average(images_filelist: dict):
-    img = read_image(images_filelist["lena.tif"])
+    img = image_read(images_filelist["lena.tif"])
     out = rgb_to_gray_simple_average(img)
     assert out[0][0] == (img[0][0][0] / 3 + img[0][0][1] / 3 + img[0][0][2] / 3)
 
 
 def test_extract_red_color_channel(images_filelist: dict):
-    img = read_image(images_filelist["sample_gt_austin1.tif"])
+    img = image_read(images_filelist["sample_gt_austin1.tif"])
     out = extract_red_color_channel(img)
     assert np.array_equal(out, img[:, :, 2])
 

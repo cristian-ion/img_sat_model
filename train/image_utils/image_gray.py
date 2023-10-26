@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from train.image_utils.image_io import save_image
+from train.image_utils.image_io import image_save
 
 SAMPLE_IMAGE = "lena.tif"
 OUTDIR = "l2_out"
@@ -31,7 +31,7 @@ def rgb_to_gray_simple_average(img, save=False):
     out = np.mean(img, axis=2)
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_simple_average.png", out)
+        image_save(OUTDIR + "/lena_simple_average.png", out)
     return out
 
 
@@ -40,7 +40,7 @@ def weighted_average_1(img, save=False):
     out = np.average(img, axis=2, weights=average_weights[1])
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_weighted_average_1.png", out)
+        image_save(OUTDIR + "/lena_weighted_average_1.png", out)
     return out
 
 
@@ -49,7 +49,7 @@ def weighted_average_2(img, save=False):
     out = np.average(img, axis=2, weights=average_weights[2])
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_weighted_average_2.png", out)
+        image_save(OUTDIR + "/lena_weighted_average_2.png", out)
     return out
 
 
@@ -58,7 +58,7 @@ def weighted_average_3(img, save=False):
     out = np.average(img, axis=2, weights=average_weights[3])
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_weighted_average_3.png", out)
+        image_save(OUTDIR + "/lena_weighted_average_3.png", out)
     return out
 
 
@@ -72,7 +72,7 @@ def desaturation(img, save=False):
     out = np.min(img, axis=2) / 2 + np.max(img, axis=2) / 2
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_desaturation.png", out)
+        image_save(OUTDIR + "/lena_desaturation.png", out)
     return out
 
 
@@ -81,7 +81,7 @@ def decomposition_min(img, save=False):
     out = np.min(img, axis=2)
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_decomposition_min.png", out)
+        image_save(OUTDIR + "/lena_decomposition_min.png", out)
     return out
 
 
@@ -90,7 +90,7 @@ def decomposition_max(img, save=False):
     out = np.max(img, axis=2)
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_decomposition_max.png", out)
+        image_save(OUTDIR + "/lena_decomposition_max.png", out)
     return out
 
 
@@ -99,7 +99,7 @@ def extract_red_color_channel(img, save=False):
     out = img[:, :, 2]
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_single_colour_channel_r.png", out)
+        image_save(OUTDIR + "/lena_single_colour_channel_r.png", out)
     return out
 
 
@@ -108,7 +108,7 @@ def single_colour_channel_g(img, save=False):
     out = img[:, :, 1]
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_single_colour_channel_g.png", out)
+        image_save(OUTDIR + "/lena_single_colour_channel_g.png", out)
     return out
 
 
@@ -117,7 +117,7 @@ def single_colour_channel_b(img, save=False):
     out = img[:, :, 0]
     print(out.shape)
     if save:
-        save_image(OUTDIR + "/lena_single_colour_channel_b.png", out)
+        image_save(OUTDIR + "/lena_single_colour_channel_b.png", out)
     return out
 
 
@@ -145,7 +145,7 @@ def custom_number_of_grey_shades(img, p, save=False):
     print(out.shape)
     print(out.dtype)
     if save:
-        save_image(OUTDIR + "/lena_custom_number_of_grey_channels.png", out)
+        image_save(OUTDIR + "/lena_custom_number_of_grey_channels.png", out)
     return out
 
 
@@ -233,7 +233,7 @@ def custom_number_of_grey_shades_with_error_diffusion_dithering(
 
     print(out.shape)
     if save:
-        save_image(
+        image_save(
             OUTDIR
             + f"/lena_custom_number_of_grey_shades_with_error_diffusion_dithering_{error_prop.__name__}_p{p}.png",
             out,
@@ -269,7 +269,7 @@ def grayscale_to_rgb(gray, save=False):
             img[i][j][2] = w[2] * gray[i][j]
 
     if save:
-        save_image(OUTDIR + "/lena_grayscale_to_rgb.png", img)
+        image_save(OUTDIR + "/lena_grayscale_to_rgb.png", img)
     return img
 
 

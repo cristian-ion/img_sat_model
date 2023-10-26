@@ -2,14 +2,14 @@ import os
 
 import pytest
 
-from train.image_utils.image_io import read_image
+from train.image_utils.image_io import image_read
 
 
 TEST_IMAGES_DIR = "tests/test_images"
 
 
 def read_image_help(path):
-    return read_image(path)
+    return image_read(path)
 
 
 @pytest.fixture()

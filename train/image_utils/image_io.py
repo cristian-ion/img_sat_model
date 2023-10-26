@@ -1,7 +1,7 @@
 import cv2
 
 
-def read_image(filepath):
+def image_read(filepath):
     img = cv2.imread(filepath)
     if img is None:
         return None
@@ -9,11 +9,11 @@ def read_image(filepath):
     return img
 
 
-def save_image(filepath, img):
+def image_save(filepath, img):
     cv2.imwrite(filepath, img)
     print(f"Saved image {filepath}")
 
 
-def show_image(img, title=""):
+def image_show(img, title=""):
     cv2.imshow(title, img)
     cv2.waitKey()
