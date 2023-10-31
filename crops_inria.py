@@ -54,7 +54,7 @@ def padding(img):
 
 
 def crop(img, y, x, h, w):
-    return img[y:(y+h-1), x:(x+w-1)]
+    return img[y:(y+h), x:(x+w)]
 
 
 class CropsInria:

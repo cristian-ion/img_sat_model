@@ -15,28 +15,56 @@ BATCH_SIZE = 1
 VAL_BATCH_SIZE = 1
 INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1
-IMAGE_HEIGHT = 578
-IMAGE_WIDTH = 578
+IMAGE_HEIGHT = 512
+IMAGE_WIDTH = 512
 ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
+
+# TRAIN_IMG_DIR = (
+#     "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/train/images"
+# )
+# TRAIN_MASK_DIR = (
+#     "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/train/gt"
+# )
+# VAL_IMG_DIR = (
+#     "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/images"
+# )
+# VAL_MASK_DIR = (
+#     "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/gt"
+# )
+
 TRAIN_IMG_DIR = (
-    "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/train/images"
+    "/Users/cristianion/Desktop/img_sat_model/_inria_train_images/train/img"
 )
 TRAIN_MASK_DIR = (
-    "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/train/gt"
+    "/Users/cristianion/Desktop/img_sat_model/_inria_train_images/train/gt"
 )
 VAL_IMG_DIR = (
-    "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/images"
+    "/Users/cristianion/Desktop/img_sat_model/_inria_train_images/val/img"
 )
 VAL_MASK_DIR = (
-    "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/gt"
+    "/Users/cristianion/Desktop/img_sat_model/_inria_train_images/val/gt"
 )
-IMG_EXT = "tif"
-MASK_EXT = "tif"
 
+IMG_EXT = "png"
+MASK_EXT = "png"
+
+
+
+#
+# https://albumentations.ai/docs/api_reference/augmentations/dropout/mask_dropout/
+# https://albumentations.ai/docs/examples/pytorch_semantic_segmentation/
+#
 TRAIN_TRANSFORMS = A.Compose(
     [
-        A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.ShiftScaleRotate(shift_limit=0.01, scale_limit=0.01, rotate_limit=5, p=0.5),
+        A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.1),
+        A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.5),
+        A.Transpose(p=0.1),
+        A.RandomRotate90(p=0.1),
+        A.VerticalFlip(p=0.1),
+        A.HorizontalFlip(p=0.1),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
             std=[1.0, 1.0, 1.0],
@@ -48,7 +76,7 @@ TRAIN_TRANSFORMS = A.Compose(
 
 VAL_TRANSFORMS = A.Compose(
     [
-        A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
