@@ -25,6 +25,9 @@ infer_inria:
 compare_inria:
 	python -m test.compare_inria
 
+crops_inria:
+	python -m crops_inria
+
 format:
 	isort train
 	black train
