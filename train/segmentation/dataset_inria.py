@@ -15,8 +15,8 @@ BATCH_SIZE = 1
 VAL_BATCH_SIZE = 1
 INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1
-IMAGE_HEIGHT = 572
-IMAGE_WIDTH = 572
+IMAGE_HEIGHT = 578
+IMAGE_WIDTH = 578
 ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
 TRAIN_IMG_DIR = (
     "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/train/images"
@@ -35,8 +35,8 @@ MASK_EXT = "tif"
 
 TRAIN_TRANSFORMS = A.Compose(
     [
-        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
             std=[1.0, 1.0, 1.0],
@@ -48,8 +48,8 @@ TRAIN_TRANSFORMS = A.Compose(
 
 VAL_TRANSFORMS = A.Compose(
     [
-        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+        # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
             mean=[0.0, 0.0, 0.0],
             std=[1.0, 1.0, 1.0],
@@ -110,6 +110,7 @@ class InriaTrainConfig:
         )
 
         self._criterion = torch.nn.BCEWithLogitsLoss()
+        self.num_epochs = 100
 
     @property
     def trainset(self):

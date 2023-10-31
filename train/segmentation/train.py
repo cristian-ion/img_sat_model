@@ -6,6 +6,8 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms.functional as F
 from torch.utils.data.dataloader import DataLoader
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim import SGD
 
 from train.helpers.gen_model_id import gen_model_id
 from train.helpers.get_device import get_device
@@ -16,8 +18,9 @@ from train.segmentation import (
     train_config_by_namecode,
 )
 from train.segmentation.convnet.unet import UNet
+from train.helpers.early_stopper import EarlyStopper
 
-NUM_EPOCHS = 25
+DEFAULT_NUM_EPOCHS = 25
 VALIDATION_COLUMNS = [
     "epoch",
     "train_loss",
@@ -48,6 +51,7 @@ class Train:
         train_config = train_config_by_namecode(dataset_namecode)
 
         self.criterion = train_config.criterion
+        self.num_epochs = train_config.num_epochs or DEFAULT_NUM_EPOCHS
 
         self.train_loader = DataLoader(
             train_config.trainset, batch_size=train_config.batch_size, shuffle=True
@@ -60,11 +64,17 @@ class Train:
         self.model = UNet(
             in_channels=3, n_classes=train_config.num_classes, bilinear=True
         )
-        self.optimizer = torch.optim.SGD(
+
+        # optimizer settings
+        self.optimizer = SGD(
             params=self.model.parameters(),
             lr=0.01,
             momentum=0.9,
         )
+        self.scheduler = ReduceLROnPlateau(self.optimizer, 'min', factor=0.1, patience=5)
+        self.early_stopper = EarlyStopper(patience=3, min_delta=1)
+
+        # activation unit
         self.sigmoid_op = nn.Sigmoid()
 
         self.out_dir = f"models/{dataset_namecode}"
@@ -76,10 +86,33 @@ class Train:
             major_version=train_config.major_version,
             out_dir=self.out_dir,
         )
-        self.val_file = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
+        self.val_file_path = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
         self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
         self.min_error_rate = 1.0
-        self.h_val_file = None
+        self.val_file_handle = None
+
+    def train(self):
+        print("Train start.")
+
+        self.model.to(self.device)
+
+        self.val_file_handle = open(self.val_file_path, "w")
+        val_file_header = "\t".join(VALIDATION_COLUMNS)
+        self.val_file_handle.write(f"{val_file_header}\n")
+        self.val_file_handle.flush()
+
+        self.validate_epoch(epoch=0)
+
+        for epoch in range(1, self.num_epochs + 1):
+            print(f"Epoch {epoch}\n-------------------------------")
+            self.train_epoch(epoch=epoch)
+            val_loss = self.validate_epoch(epoch=epoch)
+            self.scheduler.step(val_loss)
+            if self.early_stopper.step(val_loss):
+                break
+
+        self.val_file_handle.close()
+        print("Train end.")
 
     @staticmethod
     def _get_device():
@@ -110,7 +143,7 @@ class Train:
     def _torch_not_equal(self, preds, target):
         return preds != target
 
-    def _evaluate_dataset(
+    def _validate_on_dataset(
         self, dataset_name: str, data_loader: DataLoader
     ) -> tuple[float, float]:
         num_batches = len(data_loader)
@@ -212,20 +245,14 @@ class Train:
             self.min_error_rate = val_error_rate
             torch.save(self.model, self.model_file)
 
-    def evaluate_epoch(self, epoch: int):
-        if epoch == 0:
-            self.h_val_file = open(self.val_file, "w")
-            val_file_header = "\t".join(VALIDATION_COLUMNS)
-            self.h_val_file.write(f"{val_file_header}\n")
-            self.h_val_file.flush()
-
+    def validate_epoch(self, epoch: int):
         self.save_predictions_as_imgs(self.val_loader, folder=f"figures_{epoch}")
 
         print("Started epoch validation.")
-        train_error_rate, train_loss = self._evaluate_dataset(
+        train_error_rate, train_loss = self._validate_on_dataset(
             "train", self.train_loader
         )
-        val_error_rate, val_loss = self._evaluate_dataset("val", self.val_loader)
+        val_error_rate, val_loss = self._validate_on_dataset("val", self.val_loader)
         print("Ended epoch validation.")
 
         self._save_min_val_error_rate(val_error_rate=val_error_rate)
@@ -242,24 +269,10 @@ class Train:
                 ],
             )
         )
-        self.h_val_file.write(f"{val_row}\n")
-        self.h_val_file.flush()
+        self.val_file_handle.write(f"{val_row}\n")
+        self.val_file_handle.flush()
+        return val_loss
 
-    def train(self):
-        print("Train start.")
-
-        self.model.to(self.device)
-
-        self.evaluate_epoch(epoch=0)
-
-        for epoch in range(1, NUM_EPOCHS + 1):
-            print(f"Epoch {epoch}\n-------------------------------")
-            self.train_epoch(epoch=epoch)
-            self.evaluate_epoch(epoch=epoch)
-
-        self.h_val_file.close()
-
-        print("Train end.")
 
 
 # References
