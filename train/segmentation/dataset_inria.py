@@ -11,7 +11,7 @@ from train.image_utils.image_gray import binarize_grayscale
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
-BATCH_SIZE = 1
+BATCH_SIZE = 4
 VAL_BATCH_SIZE = 1
 INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1

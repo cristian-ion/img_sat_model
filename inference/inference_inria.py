@@ -3,6 +3,7 @@ import torch
 from PIL import Image
 from torch import nn
 from os.path import basename, join
+import cv2
 
 from train.image_utils.image_gray import (
     grayscale_resize_nearest_uint8,
@@ -12,11 +13,12 @@ from train.image_utils.image_gray import (
 from train.image_utils.image_io import image_read, image_show, image_save
 from train.segmentation.dataset_inria import VAL_TRANSFORMS
 
+# "/Users/cristianion/Desktop/img_sat_model/inria/sample_color.jpg"
 SAMPLE_PATH = (
     "/Users/cristianion/Desktop/img_sat_model/inria/sample_color.jpg"
 )
 OUT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/sample_color_out.png"
-MODEL_PATH = "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_1.pt"
+MODEL_PATH = "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_4.pt"
 
 
 def get_device():
@@ -74,26 +76,33 @@ class InferenceInria:
         return segm
 
     def image_segment(self, image):
-        orig_w = image.shape[1]
-        orig_h = image.shape[0]
         print(image.shape)
-        image = VAL_TRANSFORMS(image=image)["image"]
-        image = image[None, :]
-        image = image.to(get_device())
 
-        with torch.no_grad():
-            pred = self.model(image)
-            pred = self.nn_sigmoid(pred)
+        h, w, _ = image.shape
+        CROP_HEIGHT = 512
+        CROP_WIDTH = 512
 
-        print(pred.shape)
-        pred = pred.to("cpu")
-        pred = np.array(pred)[0][0]
-        print(pred.shape)
+        out = np.zeros((h, w), dtype=np.uint8)
 
-        pred = self._threshold(pred)
-        pred = self._resize(pred, orig_w, orig_h)
-        pred = self._threshold_2(pred)
-        return pred
+        for y in range(0, h, CROP_HEIGHT):
+            for x in range(0, w, CROP_WIDTH):
+                crop = image[y:(y+CROP_HEIGHT), x:(x+CROP_WIDTH)]
+                crop = VAL_TRANSFORMS(image=crop)["image"]
+                crop = crop[None, :]
+                crop = crop.to(get_device())
+
+                with torch.no_grad():
+                    pred = self.model(crop)
+                    pred = self.nn_sigmoid(pred)
+
+                print(pred.shape)
+                pred = pred.to("cpu")
+                pred = np.array(pred)[0][0]
+                print(pred.shape)
+                pred = np.where(pred > 0.5, 255, 0).astype(np.uint8)
+
+                out[y:(y+CROP_HEIGHT), x:(x+CROP_WIDTH)] = pred
+        return out
 
     def _resize(self, mask, new_w, new_h):
         return grayscale_resize_nearest_uint8(mask, new_w=new_w, new_h=new_h)

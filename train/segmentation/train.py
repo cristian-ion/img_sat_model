@@ -101,12 +101,12 @@ class Train:
         self.val_file_handle.write(f"{val_file_header}\n")
         self.val_file_handle.flush()
 
-        self.validate_epoch(epoch=0)
+        self.validate_epoch(epoch=0, train_loss=1.0)
 
         for epoch in range(1, self.num_epochs + 1):
             print(f"Epoch {epoch}\n-------------------------------")
-            self.train_epoch(epoch=epoch)
-            val_loss = self.validate_epoch(epoch=epoch)
+            train_loss = self.train_epoch(epoch=epoch)
+            val_loss = self.validate_epoch(epoch=epoch, train_loss=train_loss)
             self.scheduler.step(val_loss)
             if self.early_stopper.step(val_loss):
                 break
@@ -136,6 +136,7 @@ class Train:
 
         train_loss /= num_batches
         print(f"Done train epoch {epoch}; AvgLoss: {train_loss}.")
+        return train_loss
 
     def _torch_binarize(self, preds):
         return (preds > 0.5).float()
@@ -239,19 +240,24 @@ class Train:
                     drawn_masks_and_boxes,
                     f"{self.out_dir}/{folder}/mask_{batch_index}.jpg",
                 )
+            break
 
     def _save_min_val_error_rate(self, val_error_rate):
         if val_error_rate < self.min_error_rate:
             self.min_error_rate = val_error_rate
             torch.save(self.model, self.model_file)
 
-    def validate_epoch(self, epoch: int):
-        self.save_predictions_as_imgs(self.val_loader, folder=f"figures_{epoch}")
+    def validate_epoch(self, epoch: int, train_loss: float = None):
+        if epoch % 10 == 0:
+            self.save_predictions_as_imgs(self.val_loader, folder=f"figures_{epoch}")
 
         print("Started epoch validation.")
-        train_error_rate, train_loss = self._validate_on_dataset(
-            "train", self.train_loader
-        )
+        if not train_loss:
+            train_error_rate, train_loss = self._validate_on_dataset(
+                "train", self.train_loader
+            )
+        else:
+            train_error_rate = "nan"
         val_error_rate, val_loss = self._validate_on_dataset("val", self.val_loader)
         print("Ended epoch validation.")
 
