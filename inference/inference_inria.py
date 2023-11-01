@@ -139,7 +139,7 @@ class InferenceInria:
             out_sigmoid = np.clip(out_sigmoid, a_min=0, a_max=1.0) * 255.0
             out_sigmoid = np.round(out_sigmoid).astype(np.uint8)
             out_sigmoid = cv2.applyColorMap(out_sigmoid, cv2.COLORMAP_JET)
-            image_show(out_sigmoid, "prob")
+            image_save("sigmoid.png", out_sigmoid)
 
         out[:, :] = np.clip(out, a_min=0, a_max=255)
         return out.astype(np.uint8)
