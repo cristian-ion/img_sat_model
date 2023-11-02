@@ -19,7 +19,19 @@ SAMPLE_PATH = (
     "/Users/cristianion/Desktop/img_sat_model/inria/sample_color.jpg"
 )
 OUT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/sample_color_out.png"
-MODEL_PATH = "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_4.pt"
+
+MODEL_1_0_4_PATH = "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_4.pt"
+MODEL_1_0_3_PATH = "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_3.pt"
+
+INRIA_MODEL_1_0_4_NAME = "inria_model_1_0_4"
+INRIA_MODEL_1_0_3_NAME = "inria_model_1_0_3"
+
+MODELS = {
+    INRIA_MODEL_1_0_4_NAME: MODEL_1_0_4_PATH,
+    INRIA_MODEL_1_0_3_NAME: MODEL_1_0_3_PATH,
+}
+
+MODEL_PATH = MODEL_1_0_4_PATH
 
 
 def get_device():
@@ -43,17 +55,19 @@ def load_eval_model():
 
 class InferenceInria:
     """Segment buildings"""
-    def __init__(self, debug=False, save_out=False, dir_out=None) -> None:
-        self.nn_sigmoid = nn.Sigmoid()
+    def __init__(self, model_name, debug=False, save_out=False, dir_out=None) -> None:
         self.model = None
-        self._load_model()
+        self.nn_sigmoid = nn.Sigmoid()
+        self.model_name = model_name
+        model_path = MODELS[model_name]
+        self._load_model(model_path)
         self._debug = debug
         self._save_out = save_out
         self._dir_out = dir_out
 
-    def _load_model(self):
+    def _load_model(self, model_path):
         assert self.model is None
-        self.model = torch.load(MODEL_PATH)
+        self.model = torch.load(model_path)
         self.model.eval()
 
     def image_segment_filelist(self, filelist):

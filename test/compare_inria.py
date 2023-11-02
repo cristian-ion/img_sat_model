@@ -65,9 +65,15 @@ class CompareInria:
                 elif (gt[y,x] == POS_VALUE) and (segm[y,x] == NEG_VALUE):
                     self._fn += 1
 
-        print(self.accuracy)
-        print(self.error_rate)
-        print(self.iou)
+        print(self.metric_row)
+
+    @property
+    def metric_names(self):
+        return ("iou", "dice", "accuracy", "error_rate")
+
+    @property
+    def metric_row(self):
+        return (self.iou, self.dice, self.accuracy, self.error_rate)
 
     @property
     def accuracy(self):
@@ -108,7 +114,5 @@ if __name__ == "__main__":
     fl_gt = create_filelist(DIR_VAL_GT, EXT_TIF)
     compare.compare_dir(fl_out, fl_gt)
 
-    print(compare.accuracy)
-    print(compare.error_rate)
-    print(compare.iou)
-    print(compare.dice)
+    print(compare.metric_names)
+    print(compare.metric_row)
