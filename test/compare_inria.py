@@ -85,6 +85,22 @@ class CompareInria:
     def dice(self):
         return (2 * self._tp) / (2 * self._tp + self._fn + self._fp)
 
+    @property
+    def tpr(self):
+        return self._tp / (self._tp + self._fn)
+
+    @property
+    def fpr(self):
+        return self._fp / (self._fp + self._tn)
+
+    @property
+    def sensitivity(self):
+        return self.tpr
+
+    @property
+    def specificity(self):
+        return 1 - self.fpr
+
 
 if __name__ == "__main__":
     compare = CompareInria()
