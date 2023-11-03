@@ -13,25 +13,19 @@ from train.image_utils.image_gray import (
 from train.image_utils.image_io import image_read, image_show, image_save
 from train.segmentation.dataset_inria import VAL_TRANSFORMS
 
-# "/Users/cristianion/Desktop/img_sat_model/inria/sample_color.jpg"
-SAMPLE_PATH = (
-    # "/Users/cristianion/Desktop/img_sat_model/austin1.tif"
-    "/Users/cristianion/Desktop/img_sat_model/inria/sample_color.jpg"
-)
-OUT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/sample_color_out.png"
 
-MODEL_1_0_4_PATH = "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_4.pt"
-MODEL_1_0_3_PATH = "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_3.pt"
-
+REPO_DIR = "/Users/cristianion/Desktop/img_sat_model"
+SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
+OUT_PATH = f"{REPO_DIR}/inria/sample_color_out.png"
+MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
+MODEL_1_0_3_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_3.pt"
 INRIA_MODEL_1_0_4_NAME = "inria_model_1_0_4"
 INRIA_MODEL_1_0_3_NAME = "inria_model_1_0_3"
-
 MODELS = {
     INRIA_MODEL_1_0_4_NAME: MODEL_1_0_4_PATH,
     INRIA_MODEL_1_0_3_NAME: MODEL_1_0_3_PATH,
 }
-
-MODEL_PATH = MODEL_1_0_4_PATH
+LATEST_MODEL_NAME = INRIA_MODEL_1_0_4_NAME
 
 
 def get_device():
@@ -47,15 +41,9 @@ def get_device():
     return device
 
 
-def load_eval_model():
-    model = torch.load(MODEL_PATH)
-    model.eval()
-    return model
-
-
 class InferenceInria:
     """Segment buildings"""
-    def __init__(self, model_name, debug=False, save_out=False, dir_out=None) -> None:
+    def __init__(self, model_name=LATEST_MODEL_NAME, debug=False, save_out=False, dir_out=None) -> None:
         self.model = None
         self.nn_sigmoid = nn.Sigmoid()
         self.model_name = model_name

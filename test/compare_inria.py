@@ -8,9 +8,11 @@ from os import listdir
 from os.path import isfile, join
 import cv2
 
+from inference.inference_inria import LATEST_MODEL_NAME
 
-DIR_VAL_SEGM = "/Users/cristianion/Desktop/img_sat_model/inria_val_out"
-DIR_VAL_GT = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/gt"
+REPO_PATH = "/Users/cristianion/Desktop/img_sat_model"
+DIR_VAL_GT = f"{REPO_PATH}/inria/AerialImageDataset/val/gt"
+DIR_VAL_SEGM = f"{REPO_PATH}/inria_out/{LATEST_MODEL_NAME}/inria_val_out"
 EXT_PNG = ".png"
 EXT_TIF = ".tif"
 
