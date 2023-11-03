@@ -71,7 +71,8 @@ class InferenceInria:
             self.image_segment_file(file)
 
     def image_segment_file(self, filepath):
-        image = np.array(Image.open(filepath).convert("RGB"))
+        image = cv2.imread(filepath)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if self._debug:
             image_show(image)
 

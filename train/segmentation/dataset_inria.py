@@ -6,6 +6,7 @@ import torch
 from albumentations.pytorch import ToTensorV2
 from PIL import Image
 from torch.utils.data import Dataset
+import cv2
 
 from train.image_utils.image_gray import binarize_grayscale
 
@@ -59,8 +60,8 @@ TRAIN_TRANSFORMS = A.Compose(
         # A.VerticalFlip(p=0.1),
         # A.HorizontalFlip(p=0.1),
         A.Normalize(
-            mean=(0.485, 0.456, 0.406),
-            std=(0.229, 0.224, 0.225),
+            mean=(0, 0, 0),
+            std=(1, 1, 1),
             max_pixel_value=255.0,
             always_apply=True,
         ),
@@ -74,8 +75,8 @@ VAL_TRANSFORMS = A.Compose(
         # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
-            mean=(0.485, 0.456, 0.406),
-            std=(0.229, 0.224, 0.225),
+            mean=(0, 0, 0),
+            std=(1, 1, 1),
             max_pixel_value=255.0,
             always_apply=True,
         ),
@@ -105,8 +106,10 @@ class InriaDataset(Dataset):
         image_path = os.path.join(self.image_dir, self.images[index])
         mask_path = os.path.join(self.mask_dir, self.images[index])
 
-        image = np.array(Image.open(image_path).convert("RGB"))
-        mask = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)
+        # image = np.array(Image.open(image_path).convert("RGB"))
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
         mask = binarize_grayscale(mask)
 
         if self.transform:
