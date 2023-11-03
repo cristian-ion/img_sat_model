@@ -78,7 +78,7 @@ class InferenceInria:
         if self.model_name == INRIA_MODEL_1_0_4_NAME:
             segm = self.image_segment(image)
         if self.model_name == INRIA_MODEL_1_0_5_NAME:
-            segm = self.image_segment_v1(image)
+            segm = self.image_segment_v2(image)
 
         if self._save_out:
             if self._dir_out:
@@ -182,6 +182,50 @@ class InferenceInria:
         out = np.where(out > 0.5, 255, 0).astype(np.uint32)
         out[:, :] = np.clip(out, a_min=0, a_max=255)
         out = out[gt_border_size_y:-gt_border_size_y, gt_border_size_x:-gt_border_size_x]
+        print(out.shape)
+        return out.astype(np.uint8)
+
+    def image_segment_v2(self, image):
+        print(image.shape)
+        img_height = image.shape[0]
+        img_width = image.shape[1]
+        GT_CROP_HEIGHT = 388
+        IMG_CROP_HEIGHT = 572
+
+        gt_border_size_y = abs(img_height - (math.ceil(img_height / GT_CROP_HEIGHT) * GT_CROP_HEIGHT))//2
+        img_border_size_y = gt_border_size_y + (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
+        print(gt_border_size_y)
+        print(img_border_size_y)
+
+        gt_border_size_x = abs(img_width - (math.ceil(img_width / GT_CROP_HEIGHT) * GT_CROP_HEIGHT))//2
+        img_border_size_x = gt_border_size_x + (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
+        print(gt_border_size_x)
+        print(img_border_size_x)
+
+        # image = self._padding(image, border_size_y=img_border_size_y, border_size_x=img_border_size_x)
+        # image_show(image, "padding")
+        print(image.shape)
+
+        height = image.shape[0]
+        width = image.shape[1]
+
+        out = np.zeros((height, width), dtype=np.uint32)
+
+        df = (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
+
+        for y in range(0, height-IMG_CROP_HEIGHT, IMG_CROP_HEIGHT):
+            for x in range(0, width-IMG_CROP_HEIGHT, IMG_CROP_HEIGHT):
+                crop = image[y:(y+IMG_CROP_HEIGHT), x:(x+IMG_CROP_HEIGHT)]
+                # image_show(crop, "crop")
+                pred = self.infer(crop)
+                pred = np.where(pred > 0.5, 255, 0).astype(np.uint8)
+                # image_show(pred, "pred")
+                # cv2.waitKey()
+                print(pred.shape)
+                if (y+GT_CROP_HEIGHT) <= height and (x+GT_CROP_HEIGHT) <= width:
+                    out[y:(y+GT_CROP_HEIGHT), x:(x+GT_CROP_HEIGHT)] = pred
+
+        out[:, :] = np.clip(out, a_min=0, a_max=255)
         print(out.shape)
         return out.astype(np.uint8)
 
