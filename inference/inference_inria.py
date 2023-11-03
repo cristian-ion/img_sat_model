@@ -4,6 +4,7 @@ from PIL import Image
 from torch import nn
 from os.path import basename, join
 import cv2
+import math
 
 from train.image_utils.image_gray import (
     grayscale_resize_nearest_uint8,
@@ -17,15 +18,22 @@ from train.segmentation.dataset_inria import VAL_TRANSFORMS
 REPO_DIR = "/Users/cristianion/Desktop/img_sat_model"
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
 OUT_PATH = f"{REPO_DIR}/inria/sample_color_out.png"
+
+MODEL_1_0_5_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_5.pt"
 MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
 MODEL_1_0_3_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_3.pt"
+
+INRIA_MODEL_1_0_5_NAME = "inria_model_1_0_5"
 INRIA_MODEL_1_0_4_NAME = "inria_model_1_0_4"
 INRIA_MODEL_1_0_3_NAME = "inria_model_1_0_3"
+
 MODELS = {
+    INRIA_MODEL_1_0_5_NAME: MODEL_1_0_5_PATH,
     INRIA_MODEL_1_0_4_NAME: MODEL_1_0_4_PATH,
     INRIA_MODEL_1_0_3_NAME: MODEL_1_0_3_PATH,
 }
-LATEST_MODEL_NAME = INRIA_MODEL_1_0_4_NAME
+
+LATEST_MODEL_NAME = INRIA_MODEL_1_0_5_NAME
 
 
 def get_device():
@@ -66,8 +74,12 @@ class InferenceInria:
         image = np.array(Image.open(filepath).convert("RGB"))
         if self._debug:
             image_show(image)
-        segm = self.image_segment(image)
-        print(segm.shape)
+
+        if self.model_name == INRIA_MODEL_1_0_4_NAME:
+            segm = self.image_segment(image)
+        if self.model_name == INRIA_MODEL_1_0_5_NAME:
+            segm = self.image_segment_v1(image)
+
         if self._save_out:
             if self._dir_out:
                 name = basename(filepath)
@@ -146,6 +158,33 @@ class InferenceInria:
         out[:, :] = np.clip(out, a_min=0, a_max=255)
         return out.astype(np.uint8)
 
+    def image_segment_v1(self, image):
+        print(image.shape)
+        img_height = image.shape[0]
+        img_width = image.shape[1]
+        GT_CROP_HEIGHT = 388
+        IMG_CROP_HEIGHT = 572
+
+        gt_border_size_y = abs(img_height - (math.ceil(img_height / GT_CROP_HEIGHT) * GT_CROP_HEIGHT))//2
+        img_border_size_y = gt_border_size_y + (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
+        print(gt_border_size_y)
+        print(img_border_size_y)
+
+        gt_border_size_x = abs(img_width - (math.ceil(img_width / GT_CROP_HEIGHT) * GT_CROP_HEIGHT))//2
+        img_border_size_x = gt_border_size_x + (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
+        print(gt_border_size_x)
+        print(img_border_size_x)
+
+        image = self._padding(image, border_size_y=img_border_size_y, border_size_x=img_border_size_x)
+        # image_show(image, "padding")
+        print(image.shape)
+        out = self.infer(image)
+        out = np.where(out > 0.5, 255, 0).astype(np.uint32)
+        out[:, :] = np.clip(out, a_min=0, a_max=255)
+        out = out[gt_border_size_y:-gt_border_size_y, gt_border_size_x:-gt_border_size_x]
+        print(out.shape)
+        return out.astype(np.uint8)
+
     def _resize(self, mask, new_w, new_h):
         return grayscale_resize_nearest_uint8(mask, new_w=new_w, new_h=new_h)
 
@@ -155,7 +194,10 @@ class InferenceInria:
     def _threshold_2(self, pred):
         return gray_nearest_black_and_white_uint8(pred)
 
+    def _padding(self, img, border_size_y, border_size_x, value=0):
+        return cv2.copyMakeBorder(img, border_size_y, border_size_y, border_size_x, border_size_x, cv2.BORDER_CONSTANT, value=value)
+
 
 if __name__ == "__main__":
-    inference = InferenceInria(debug=True, save_out=True)
+    inference = InferenceInria(debug=True, save_out=False)
     inference.image_segment_file(SAMPLE_PATH)

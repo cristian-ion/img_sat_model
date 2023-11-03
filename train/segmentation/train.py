@@ -18,6 +18,7 @@ from train.segmentation import (
     train_config_by_namecode,
 )
 from train.convnet.unet import UNet
+from train.convnet.unet_valid import UNetValid
 from train.helpers.early_stopper import EarlyStopper
 
 DEFAULT_NUM_EPOCHS = 25
@@ -61,7 +62,7 @@ class Train:
             batch_size=train_config.val_batch_size,
             shuffle=False,
         )
-        self.model = UNet(
+        self.model = UNetValid(
             in_channels=3, n_classes=train_config.num_classes, bilinear=True
         )
 
@@ -248,8 +249,8 @@ class Train:
             torch.save(self.model, self.model_file)
 
     def validate_epoch(self, epoch: int, train_loss: float = None):
-        if epoch % 10 == 0:
-            self.save_predictions_as_imgs(self.val_loader, folder=f"figures_{epoch}")
+        # if epoch % 10 == 0:
+        #     self.save_predictions_as_imgs(self.val_loader, folder=f"figures_{epoch}")
 
         print("Started epoch validation.")
         if not train_loss:

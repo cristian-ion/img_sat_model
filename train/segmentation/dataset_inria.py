@@ -32,22 +32,15 @@ ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
 #     "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/gt"
 # )
 
-TRAIN_IMG_DIR = (
-    "/Users/cristianion/Desktop/img_sat_model/_inria_train_images/train/img"
-)
-TRAIN_MASK_DIR = (
-    "/Users/cristianion/Desktop/img_sat_model/_inria_train_images/train/gt"
-)
-VAL_IMG_DIR = (
-    "/Users/cristianion/Desktop/img_sat_model/_inria_train_images/val/img"
-)
-VAL_MASK_DIR = (
-    "/Users/cristianion/Desktop/img_sat_model/_inria_train_images/val/gt"
-)
+CROP_SIZE = "572_388"
+REPO_DIR = "/Users/cristianion/Desktop/img_sat_model"
+TRAIN_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/train/img"
+TRAIN_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/train/gt"
+VAL_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/val/img"
+VAL_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/val/gt"
 
 IMG_EXT = "png"
 MASK_EXT = "png"
-
 
 
 #
@@ -55,36 +48,40 @@ MASK_EXT = "png"
 # https://albumentations.ai/docs/examples/pytorch_semantic_segmentation/
 #
 TRAIN_TRANSFORMS = A.Compose(
-    [
+    transforms=[
         # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        A.ShiftScaleRotate(shift_limit=0.01, scale_limit=0.01, rotate_limit=5, p=0.5),
-        A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.1),
-        A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.5),
-        A.Transpose(p=0.1),
-        A.RandomRotate90(p=0.1),
-        A.VerticalFlip(p=0.1),
-        A.HorizontalFlip(p=0.1),
+        # A.ShiftScaleRotate(shift_limit=0.01, scale_limit=0.01, rotate_limit=5, p=0.5),
+        # A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.1),
+        # A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.5),
+        # A.Transpose(p=0.1),
+        # A.RandomRotate90(p=0.1),
+        # A.VerticalFlip(p=0.1),
+        # A.HorizontalFlip(p=0.1),
         A.Normalize(
-            mean=[0.0, 0.0, 0.0],
-            std=[1.0, 1.0, 1.0],
+            mean=(0.485, 0.456, 0.406),
+            std=(0.229, 0.224, 0.225),
             max_pixel_value=255.0,
+            always_apply=True,
         ),
         ToTensorV2(),
-    ]
+    ],
+    is_check_shapes=False,
 )
 
 VAL_TRANSFORMS = A.Compose(
-    [
+    transforms=[
         # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
-            mean=[0.0, 0.0, 0.0],
-            std=[1.0, 1.0, 1.0],
+            mean=(0.485, 0.456, 0.406),
+            std=(0.229, 0.224, 0.225),
             max_pixel_value=255.0,
+            always_apply=True,
         ),
         ToTensorV2(),
-    ]
+    ],
+    is_check_shapes=False,
 )
 
 
