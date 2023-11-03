@@ -18,8 +18,8 @@ from train.segmentation import (
     MU_BUILDINGS_NAMECODE,
     train_config_by_namecode,
 )
-from train.convnet.unet import UNet
-from train.convnet.unet_valid import UNetValid
+from train.segmentation.convnet.unet import UNet
+from train.segmentation.convnet.unet_valid import UNetValid
 from train.helpers.early_stopper import EarlyStopper
 
 DEFAULT_NUM_EPOCHS = 25
