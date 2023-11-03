@@ -75,8 +75,6 @@ class CropsInria:
             img, gt = self.read_img_gt(img, gt)
             self.process_img_gt(img, gt, name)
             count += 1
-            if count == 10:
-                break
 
     def process_img_gt(self, img, gt, name):
         img_size = (img.shape[0], img.shape[1])

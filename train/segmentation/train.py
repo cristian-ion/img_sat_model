@@ -55,12 +55,18 @@ class Train:
         self.num_epochs = train_config.num_epochs or DEFAULT_NUM_EPOCHS
 
         self.train_loader = DataLoader(
-            train_config.trainset, batch_size=train_config.batch_size, shuffle=True
+            train_config.trainset,
+            batch_size=train_config.batch_size,
+            shuffle=True,
+            prefetch_factor=2,
+            num_workers=2,
         )
         self.val_loader = DataLoader(
             train_config.valset,
             batch_size=train_config.val_batch_size,
             shuffle=False,
+            prefetch_factor=2,
+            num_workers=2,
         )
         self.model = UNetValid(
             in_channels=3, n_classes=train_config.num_classes, bilinear=True
@@ -102,7 +108,7 @@ class Train:
         self.val_file_handle.write(f"{val_file_header}\n")
         self.val_file_handle.flush()
 
-        self.validate_epoch(epoch=0, train_loss=1.0)
+        # self.validate_epoch(epoch=0, train_loss=1.0)
 
         for epoch in range(1, self.num_epochs + 1):
             print(f"Epoch {epoch}\n-------------------------------")
@@ -134,6 +140,7 @@ class Train:
 
             loss = self.backprop(X, y)
             train_loss += loss.item()
+            print(f"{batch_index} / {num_batches}")
 
         train_loss /= num_batches
         print(f"Done train epoch {epoch}; AvgLoss: {train_loss}.")
