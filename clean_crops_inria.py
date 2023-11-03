@@ -12,10 +12,10 @@ CROP_WIDTH = 512
 IMG_EXT = "png"
 GT_EXT = "png"
 
-OUT_TRAIN_IMG = "./_inria_train_images/train/img"
-OUT_TRAIN_GT = "./_inria_train_images/train/gt"
-OUT_VAL_IMG = "./_inria_train_images/val/img"
-OUT_VAL_GT = "./_inria_train_images/val/gt"
+OUT_TRAIN_IMG = "./_inria_train_images/572_388/train/img"
+OUT_TRAIN_GT = "./_inria_train_images/572_388/train/gt"
+OUT_VAL_IMG = "./_inria_train_images/572_388/val/img"
+OUT_VAL_GT = "./_inria_train_images/572_388/val/gt"
 
 class CleanCropsInria:
     def __init__(self, out_img: str, out_neg_gt: str) -> None:

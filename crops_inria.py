@@ -2,6 +2,8 @@ import cv2
 import os
 import math
 
+from constants import REPO_DIR
+
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
@@ -12,8 +14,7 @@ GT_CROP_WIDTH = 388
 IMG_EXT = "tif"
 GT_EXT = "tif"
 
-REPO_PATH = "/Users/cristianion/Desktop/img_sat_model"
-INRIA_PATH = f"{REPO_PATH}/inria/AerialImageDataset"
+INRIA_PATH = f"{REPO_DIR}/inria/AerialImageDataset"
 IN_TRAIN_IMG = f"{INRIA_PATH}/train/images"
 IN_TRAIN_GT = f"{INRIA_PATH}/train/gt"
 IN_VAL_IMG = f"{INRIA_PATH}/val/images"

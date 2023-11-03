@@ -59,15 +59,15 @@ class Train:
             train_config.trainset,
             batch_size=train_config.batch_size,
             shuffle=True,
-            prefetch_factor=2,
-            num_workers=2,
+            # prefetch_factor=2,
+            # num_workers=2,
         )
         self.val_loader = DataLoader(
             train_config.valset,
             batch_size=train_config.val_batch_size,
             shuffle=False,
-            prefetch_factor=2,
-            num_workers=2,
+            # prefetch_factor=2,
+            # num_workers=2,
         )
         self.model = UNetValid(
             in_channels=3, n_classes=train_config.num_classes, bilinear=True
