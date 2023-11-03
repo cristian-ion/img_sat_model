@@ -25,7 +25,7 @@ class DoubleConv(nn.Module):
         return self.double_conv(x)
 
 
-class DownConv(nn.Module):
+class Down(nn.Module):
     """Downscaling with maxpool then double conv"""
 
     def __init__(self, in_channels, out_channels):
@@ -38,7 +38,7 @@ class DownConv(nn.Module):
         return self.maxpool_conv(x)
 
 
-class UpConv(nn.Module):
+class Up(nn.Module):
     """Upscaling then double conv"""
 
     def __init__(self, in_channels, out_channels, bilinear=True):
@@ -85,15 +85,15 @@ class UNet(nn.Module):
         self.bilinear = bilinear
 
         self.inc = DoubleConv(in_channels, 64)
-        self.down1 = DownConv(64, 128)
-        self.down2 = DownConv(128, 256)
-        self.down3 = DownConv(256, 512)
+        self.down1 = Down(64, 128)
+        self.down2 = Down(128, 256)
+        self.down3 = Down(256, 512)
         factor = 2 if bilinear else 1
-        self.down4 = DownConv(512, 1024 // factor)
-        self.up1 = UpConv(1024, 512 // factor, bilinear)
-        self.up2 = UpConv(512, 256 // factor, bilinear)
-        self.up3 = UpConv(256, 128 // factor, bilinear)
-        self.up4 = UpConv(128, 64, bilinear)
+        self.down4 = Down(512, 1024 // factor)
+        self.up1 = Up(1024, 512 // factor, bilinear)
+        self.up2 = Up(512, 256 // factor, bilinear)
+        self.up3 = Up(256, 128 // factor, bilinear)
+        self.up4 = Up(128, 64, bilinear)
         self.outc = OutConv(64, n_classes)
 
     def forward(self, x):

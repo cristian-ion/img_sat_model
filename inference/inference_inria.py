@@ -32,8 +32,7 @@ MODELS = {
     INRIA_MODEL_1_0_4_NAME: MODEL_1_0_4_PATH,
     INRIA_MODEL_1_0_3_NAME: MODEL_1_0_3_PATH,
 }
-
-LATEST_MODEL_NAME = INRIA_MODEL_1_0_5_NAME
+LATEST_MODEL_NAME = INRIA_MODEL_1_0_4_NAME
 
 
 def get_device():
@@ -45,7 +44,7 @@ def get_device():
         if torch.backends.mps.is_available()
         else "cpu"
     )
-    print(f"Using {device} device")
+    # print(f"Using {device} device")
     return device
 
 
@@ -77,7 +76,7 @@ class InferenceInria:
             image_show(image)
 
         if self.model_name == INRIA_MODEL_1_0_4_NAME:
-            segm = self.image_segment(image)
+            segm = self.image_segment_v2(image)
         if self.model_name == INRIA_MODEL_1_0_5_NAME:
             segm = self.image_segment_v2(image)
 
@@ -100,14 +99,14 @@ class InferenceInria:
             prob = self.model(img)
             prob = self.nn_sigmoid(prob)
 
-        print(prob.shape)
+        # print(prob.shape)
         prob = prob.to("cpu")
         prob = np.array(prob)[0][0]
-        print(prob.shape)
+        # print(prob.shape)
         return prob
 
     def image_segment(self, image):
-        print(image.shape)
+        # print(image.shape)
 
         h, w, _ = image.shape
         CROP_HEIGHT = 1024
@@ -187,7 +186,7 @@ class InferenceInria:
         return out.astype(np.uint8)
 
     def image_segment_v2(self, image):
-        print(image.shape)
+        # print(image.shape)
         img_height = image.shape[0]
         img_width = image.shape[1]
         GT_CROP_HEIGHT = 388
@@ -195,17 +194,16 @@ class InferenceInria:
 
         gt_border_size_y = abs(img_height - (math.ceil(img_height / GT_CROP_HEIGHT) * GT_CROP_HEIGHT))//2
         img_border_size_y = gt_border_size_y + (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
-        print(gt_border_size_y)
-        print(img_border_size_y)
+        # print(gt_border_size_y)
+        # print(img_border_size_y)
 
         gt_border_size_x = abs(img_width - (math.ceil(img_width / GT_CROP_HEIGHT) * GT_CROP_HEIGHT))//2
         img_border_size_x = gt_border_size_x + (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
-        print(gt_border_size_x)
-        print(img_border_size_x)
+        # print(gt_border_size_x)
+        # print(img_border_size_x)
 
-        # image = self._padding(image, border_size_y=img_border_size_y, border_size_x=img_border_size_x)
-        # image_show(image, "padding")
-        print(image.shape)
+        image = self._padding(image, border_size_y=img_border_size_y, border_size_x=img_border_size_x)
+        # print(image.shape)
 
         height = image.shape[0]
         width = image.shape[1]
@@ -214,20 +212,21 @@ class InferenceInria:
 
         df = (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
 
-        for y in range(0, height-IMG_CROP_HEIGHT, IMG_CROP_HEIGHT):
-            for x in range(0, width-IMG_CROP_HEIGHT, IMG_CROP_HEIGHT):
-                crop = image[y:(y+IMG_CROP_HEIGHT), x:(x+IMG_CROP_HEIGHT)]
-                # image_show(crop, "crop")
+        for y in range(df, height-img_border_size_y, GT_CROP_HEIGHT):
+            for x in range(df, width-img_border_size_x, GT_CROP_HEIGHT):
+                crop = image[y-df:(y-df+IMG_CROP_HEIGHT), (x-df):(x-df+IMG_CROP_HEIGHT)]
                 pred = self.infer(crop)
                 pred = np.where(pred > 0.5, 255, 0).astype(np.uint8)
-                # image_show(pred, "pred")
-                # cv2.waitKey()
-                print(pred.shape)
-                if (y+GT_CROP_HEIGHT) <= height and (x+GT_CROP_HEIGHT) <= width:
-                    out[y:(y+GT_CROP_HEIGHT), x:(x+GT_CROP_HEIGHT)] = pred
+                # image_show(pred, title=f"pred {pred.shape} df {df}")
+                assert pred.shape[0] == IMG_CROP_HEIGHT, pred.shape
+                assert pred.shape[1] == IMG_CROP_HEIGHT, pred.shape
+                pred = pred[df:(df+GT_CROP_HEIGHT), df:(df+GT_CROP_HEIGHT)]
+                # image_show(pred, title=f"pred {pred.shape} df {df}")
+                out[y:(y+GT_CROP_HEIGHT), x:(x+GT_CROP_HEIGHT)] = pred
 
         out[:, :] = np.clip(out, a_min=0, a_max=255)
         print(out.shape)
+        out = out[img_border_size_y:-img_border_size_y, img_border_size_x:-img_border_size_x]
         return out.astype(np.uint8)
 
     def _resize(self, mask, new_w, new_h):
@@ -244,5 +243,5 @@ class InferenceInria:
 
 
 if __name__ == "__main__":
-    inference = InferenceInria(debug=True, save_out=False)
+    inference = InferenceInria(debug=False, save_out=True)
     inference.image_segment_file(SAMPLE_PATH)
