@@ -8,6 +8,7 @@ import torchvision.transforms.functional as F
 from torch.utils.data.dataloader import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim import SGD
+from time import time
 
 from train.helpers.gen_model_id import gen_model_id
 from train.helpers.get_device import get_device
@@ -133,6 +134,7 @@ class Train:
 
         train_loss = 0
         for batch_index, (X, y) in enumerate(self.train_loader):
+            ts = time()
             X, y = X.to(self.device), y.to(self.device)
 
             if self.dataset_namecode in UNSQUEEZE_GT_ACTIVATED:
@@ -140,7 +142,8 @@ class Train:
 
             loss = self.backprop(X, y)
             train_loss += loss.item()
-            print(f"{batch_index} / {num_batches}")
+            te = time() - ts
+            print(f"{batch_index} / {num_batches}, duration: {te}s")
 
         train_loss /= num_batches
         print(f"Done train epoch {epoch}; AvgLoss: {train_loss}.")

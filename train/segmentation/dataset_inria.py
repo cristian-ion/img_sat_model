@@ -9,6 +9,7 @@ from torch.utils.data import Dataset
 import cv2
 
 from train.image_utils.image_gray import binarize_grayscale
+from constants import REPO_DIR
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
@@ -34,7 +35,6 @@ ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
 # )
 
 CROP_SIZE = "572_388"
-REPO_DIR = "/Users/cristianion/Desktop/img_sat_model"
 TRAIN_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/train/img"
 TRAIN_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/train/gt"
 VAL_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/val/img"

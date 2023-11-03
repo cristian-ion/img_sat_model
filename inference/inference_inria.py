@@ -13,9 +13,9 @@ from train.image_utils.image_gray import (
 )
 from train.image_utils.image_io import image_read, image_show, image_save
 from train.segmentation.dataset_inria import VAL_TRANSFORMS
+from constants import REPO_DIR
 
 
-REPO_DIR = "/Users/cristianion/Desktop/img_sat_model"
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
 OUT_PATH = f"{REPO_DIR}/inria/sample_color_out.png"
 
