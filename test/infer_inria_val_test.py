@@ -9,8 +9,8 @@ from os import listdir
 from os.path import isfile, join
 
 
-DIR_VAL_OUT = f"/Users/cristianion/Desktop/img_sat_model/inria_val_out/{INRIA_MODEL_1_0_4_NAME}"
-DIR_TEST_OUT = f"/Users/cristianion/Desktop/img_sat_model/inria_test_out/{INRIA_MODEL_1_0_4_NAME}"
+DIR_VAL_OUT = f"/Users/cristianion/Desktop/img_sat_model/inria_out/{INRIA_MODEL_1_0_4_NAME}/inria_val_out"
+DIR_TEST_OUT = f"/Users/cristianion/Desktop/img_sat_model/inria_out/{INRIA_MODEL_1_0_4_NAME}/inria_test_out"
 
 DIR_VAL = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/images"
 DIR_TEST = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/test/images"
