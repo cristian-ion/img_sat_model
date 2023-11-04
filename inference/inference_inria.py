@@ -34,6 +34,8 @@ MODELS = {
 LATEST_MODEL_NAME = INRIA_MODEL_1_0_6_NAME
 LATEST_MODEL_PATH = MODELS[LATEST_MODEL_NAME]
 
+COLOR_MEAN = [math.ceil(0.485 * 255), math.ceil(0.456 * 255), math.ceil(0.406 * 255)]
+
 
 def get_device():
     # find CUDA / MPS / CPU device
@@ -266,7 +268,7 @@ class InferenceInria:
         bd_thick_x = (cols * STRIDE_X - width)//2 + 92
         border_size = (bd_thick_y, bd_thick_y, bd_thick_x, bd_thick_x)
         print(border_size)
-        img = padding(img, border_size=border_size)
+        img = padding(img, border_size=border_size, value=COLOR_MEAN)
         out = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8) + 127
         count = 0
         for i in range(0, rows, 1):
