@@ -86,7 +86,7 @@ class CropsInria:
         width = img.shape[1]
 
         rows = math.ceil(height / STRIDE_Y)
-        cols = math.ceil(height / STRIDE_X)
+        cols = math.ceil(width / STRIDE_X)
         bd_thick_y = (rows * STRIDE_Y - height)//2 + 92
         bd_thick_x = (cols * STRIDE_X - width)//2 + 92
         border_size = (bd_thick_y, bd_thick_y, bd_thick_x, bd_thick_x)

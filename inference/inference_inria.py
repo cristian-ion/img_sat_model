@@ -18,20 +18,20 @@ from constants import REPO_DIR
 
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
 
-MODEL_1_0_5_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_5.pt"
+MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt"
 MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
 MODEL_1_0_3_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_3.pt"
 
-INRIA_MODEL_1_0_5_NAME = "inria_model_1_0_5"
+INRIA_MODEL_1_0_6_NAME = "inria_model_1_0_6"
 INRIA_MODEL_1_0_4_NAME = "inria_model_1_0_4"
 INRIA_MODEL_1_0_3_NAME = "inria_model_1_0_3"
 
 MODELS = {
-    INRIA_MODEL_1_0_5_NAME: MODEL_1_0_5_PATH,
+    INRIA_MODEL_1_0_6_NAME: MODEL_1_0_6_PATH,
     INRIA_MODEL_1_0_4_NAME: MODEL_1_0_4_PATH,
     INRIA_MODEL_1_0_3_NAME: MODEL_1_0_3_PATH,
 }
-LATEST_MODEL_NAME = INRIA_MODEL_1_0_4_NAME
+LATEST_MODEL_NAME = INRIA_MODEL_1_0_6_NAME
 LATEST_MODEL_PATH = MODELS[LATEST_MODEL_NAME]
 
 
@@ -46,6 +46,22 @@ def get_device():
     )
     # print(f"Using {device} device")
     return device
+
+
+def padding(img, border_size:tuple, value=0):
+    print(img.shape)
+    print(border_size)
+    return cv2.copyMakeBorder(img, border_size[0], border_size[1], border_size[2], border_size[3], cv2.BORDER_CONSTANT, value=value)
+
+
+def crop(img, y=None, x=None, h=None, w=None, border=None):
+    y = y or 0
+    x = x or 0
+    h = h or img.shape[0]
+    w = w or img.shape[1]
+    border = border or 0
+    img = img[y+border:(y+h-border), x+border:(x+w-border)]
+    return img
 
 
 class InferenceInria:
@@ -81,8 +97,8 @@ class InferenceInria:
 
         if self.model_name == INRIA_MODEL_1_0_4_NAME:
             segm = self.image_segment_v2(image)
-        if self.model_name == INRIA_MODEL_1_0_5_NAME:
-            segm = self.image_segment_v2(image)
+        if self.model_name == INRIA_MODEL_1_0_6_NAME:
+            segm = self.image_segment_v3(image)
 
         if self._save_out:
             if self._dir_out:
@@ -232,6 +248,38 @@ class InferenceInria:
         print(out.shape)
         out = out[img_border_size_y:-img_border_size_y, img_border_size_x:-img_border_size_x]
         return out.astype(np.uint8)
+    
+    def image_segment_v3(self, img):
+        height = img.shape[0]
+        width = img.shape[1]
+
+        STRIDE_Y = 388
+        STRIDE_X = 388
+        CROP_HEIGHT = 572
+        CROP_WIDTH = 572
+
+        print(height, width)
+
+        rows = math.ceil(height / STRIDE_Y)
+        cols = math.ceil(width / STRIDE_X)
+        bd_thick_y = (rows * STRIDE_Y - height)//2 + 92
+        bd_thick_x = (cols * STRIDE_X - width)//2 + 92
+        border_size = (bd_thick_y, bd_thick_y, bd_thick_x, bd_thick_x)
+        print(border_size)
+        img = padding(img, border_size=border_size)
+        out = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8) + 127
+        count = 0
+        for i in range(0, rows, 1):
+            for j in range(0, cols, 1):
+                x = j * STRIDE_X
+                y = i * STRIDE_Y
+                crop_img = crop(img, y, x, CROP_HEIGHT, CROP_WIDTH)
+                pred = self._infer(crop_img)
+                pred = np.where(pred > 0.5, 255, 0).astype(np.uint8)
+                out[y+92:(y+CROP_HEIGHT-92),x+92:(x+CROP_HEIGHT-92)] = pred
+                count += 1
+        out = out[bd_thick_y:-bd_thick_y,bd_thick_x:-bd_thick_x]
+        return out
 
     def _resize(self, mask, new_w, new_h):
         return grayscale_resize_nearest_uint8(mask, new_w=new_w, new_h=new_h)
