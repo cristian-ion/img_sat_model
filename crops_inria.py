@@ -20,10 +20,10 @@ IN_VAL_IMG = f"{INRIA_PATH}/val/images"
 IN_VAL_GT = f"{INRIA_PATH}/val/gt"
 
 TRAIN_IMAGES_OUT = "./_inria_train_images"
-OUT_TRAIN_IMG = f"./_inria_train_images/{CROP_HEIGHT}/train/img"
-OUT_TRAIN_GT = f"./_inria_train_images/{CROP_HEIGHT}/train/gt"
-OUT_VAL_IMG = f"./_inria_train_images/{CROP_HEIGHT}/val/img"
-OUT_VAL_GT = f"./_inria_train_images/{CROP_HEIGHT}/val/gt"
+OUT_TRAIN_IMG = f"./_inria_train_images/{CROP_HEIGHT}_2/train/img"
+OUT_TRAIN_GT = f"./_inria_train_images/{CROP_HEIGHT}_2/train/gt"
+OUT_VAL_IMG = f"./_inria_train_images/{CROP_HEIGHT}_2/val/img"
+OUT_VAL_GT = f"./_inria_train_images/{CROP_HEIGHT}_2/val/gt"
 
 OUT_DIRS = [
     TRAIN_IMAGES_OUT,
@@ -33,6 +33,7 @@ OUT_DIRS = [
     OUT_VAL_GT,
 ]
 
+COLOR_MEAN = [math.ceil(0.485 * 255), math.ceil(0.456 * 255), math.ceil(0.406 * 255)]
 
 def make_out_folders():
     for dir in OUT_DIRS:
@@ -90,10 +91,9 @@ class CropsInria:
         bd_thick_y = (rows * STRIDE_Y - height)//2 + 92
         bd_thick_x = (cols * STRIDE_X - width)//2 + 92
         border_size = (bd_thick_y, bd_thick_y, bd_thick_x, bd_thick_x)
-        gt = padding(gt, border_size=border_size)
-        img = padding(img, border_size=border_size)
+        gt = padding(gt, border_size=border_size, value=0)
+        img = padding(img, border_size=border_size, value=COLOR_MEAN)
 
-        h, w, _ = img.shape
         count = 0
         for i in range(0, rows, 1):
             for j in range(0, cols, 1):
@@ -111,7 +111,8 @@ class CropsInria:
     def read_img_gt(self, img_path, gt_path):
         print(img_path)
         img = cv2.imread(img_path)
-        gt = cv2.imread(gt_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        gt = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE)
         return img, gt
 
     def save_img_gt(self, img, gt, name):
