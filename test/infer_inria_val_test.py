@@ -26,14 +26,14 @@ def create_filelist(dir):
 def inference_inria_val():
     filelist = create_filelist(DIR_VAL_IN)
     infer = InferenceInria(model_name=LATEST_MODEL_NAME, debug=False, save_out=True, dir_out=DIR_VAL_OUT)
-    infer.image_segment_filelist(filelist)
+    infer.infer_filelist(filelist)
     print("Done val.")
 
 
 def inference_inria_test():
     filelist = create_filelist(DIR_TEST_IN)
     infer = InferenceInria(model_name=LATEST_MODEL_NAME, debug=False, save_out=True, dir_out=DIR_TEST_OUT)
-    infer.image_segment_filelist(filelist)
+    infer.infer_filelist(filelist)
     print("Done test.")
 
 

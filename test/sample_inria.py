@@ -8,4 +8,4 @@ SAMPLE_PATH = (
 
 if __name__ == "__main__":
     inference = InferenceInria(debug=True, save_out=True)
-    inference.image_segment_file(SAMPLE_PATH)
+    inference.infer_file(SAMPLE_PATH)

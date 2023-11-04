@@ -17,7 +17,6 @@ from constants import REPO_DIR
 
 
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
-OUT_PATH = f"{REPO_DIR}/inria/sample_color_out.png"
 
 MODEL_1_0_5_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_5.pt"
 MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
@@ -33,6 +32,7 @@ MODELS = {
     INRIA_MODEL_1_0_3_NAME: MODEL_1_0_3_PATH,
 }
 LATEST_MODEL_NAME = INRIA_MODEL_1_0_4_NAME
+LATEST_MODEL_PATH = MODELS[LATEST_MODEL_NAME]
 
 
 def get_device():
@@ -51,6 +51,10 @@ def get_device():
 class InferenceInria:
     """Segment buildings"""
     def __init__(self, model_name=LATEST_MODEL_NAME, debug=False, save_out=False, dir_out=None) -> None:
+        """
+        dir_out: is usefull when scanning a directory.
+        save_out: saves the output in out.png file.
+        """
         self.model = None
         self.nn_sigmoid = nn.Sigmoid()
         self.model_name = model_name
@@ -65,11 +69,11 @@ class InferenceInria:
         self.model = torch.load(model_path)
         self.model.eval()
 
-    def image_segment_filelist(self, filelist):
+    def infer_filelist(self, filelist):
         for file in filelist:
-            self.image_segment_file(file)
+            self.infer_file(file)
 
-    def image_segment_file(self, filepath):
+    def infer_file(self, filepath):
         image = cv2.imread(filepath)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if self._debug:
@@ -90,7 +94,7 @@ class InferenceInria:
             image_show(segm, "segm")
         return segm
 
-    def infer(self, img):
+    def _infer(self, img):
         img = VAL_TRANSFORMS(image=img)["image"]
         img = img[None, :]
         img = img.to(get_device())
@@ -144,7 +148,7 @@ class InferenceInria:
         for y in range(0, h, CROP_HEIGHT):
             for x in range(0, w, CROP_WIDTH):
                 crop = image[y:(y+CROP_HEIGHT), x:(x+CROP_WIDTH)]
-                pred = self.infer(crop)
+                pred = self._infer(crop)
                 out_sigmoid[y:(y+CROP_HEIGHT), x:(x+CROP_WIDTH)] = (1.0 - 2*np.abs(0.5 - pred))
                 pred = np.where(pred > 0.5, 255, 0).astype(np.uint32)
                 out[y:(y+CROP_HEIGHT), x:(x+CROP_WIDTH)] += pred
@@ -178,7 +182,7 @@ class InferenceInria:
         image = self._padding(image, border_size_y=img_border_size_y, border_size_x=img_border_size_x)
         # image_show(image, "padding")
         print(image.shape)
-        out = self.infer(image)
+        out = self._infer(image)
         out = np.where(out > 0.5, 255, 0).astype(np.uint32)
         out[:, :] = np.clip(out, a_min=0, a_max=255)
         out = out[gt_border_size_y:-gt_border_size_y, gt_border_size_x:-gt_border_size_x]
@@ -215,7 +219,7 @@ class InferenceInria:
         for y in range(df, height-img_border_size_y, GT_CROP_HEIGHT):
             for x in range(df, width-img_border_size_x, GT_CROP_HEIGHT):
                 crop = image[y-df:(y-df+IMG_CROP_HEIGHT), (x-df):(x-df+IMG_CROP_HEIGHT)]
-                pred = self.infer(crop)
+                pred = self._infer(crop)
                 pred = np.where(pred > 0.5, 255, 0).astype(np.uint8)
                 # image_show(pred, title=f"pred {pred.shape} df {df}")
                 assert pred.shape[0] == IMG_CROP_HEIGHT, pred.shape
@@ -244,4 +248,4 @@ class InferenceInria:
 
 if __name__ == "__main__":
     inference = InferenceInria(debug=False, save_out=True)
-    inference.image_segment_file(SAMPLE_PATH)
+    inference.infer_file(SAMPLE_PATH)
