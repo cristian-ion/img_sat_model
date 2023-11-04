@@ -248,7 +248,7 @@ class InferenceInria:
         print(out.shape)
         out = out[img_border_size_y:-img_border_size_y, img_border_size_x:-img_border_size_x]
         return out.astype(np.uint8)
-    
+
     def image_segment_v3(self, img):
         height = img.shape[0]
         width = img.shape[1]

@@ -53,12 +53,9 @@ class CleanCropsInria:
 
 
 if __name__ == "__main__":
-
     print(OUT_VAL_IMG, OUT_VAL_GT)
     print(OUT_TRAIN_IMG, OUT_TRAIN_GT)
-
     crops_val = CleanCropsInria(OUT_VAL_IMG, OUT_VAL_GT)
     crops_val.process()
-
     crops_train = CleanCropsInria(OUT_TRAIN_IMG, OUT_TRAIN_GT)
     crops_train.process()

@@ -20,10 +20,10 @@ IN_VAL_IMG = f"{INRIA_PATH}/val/images"
 IN_VAL_GT = f"{INRIA_PATH}/val/gt"
 
 TRAIN_IMAGES_OUT = "./_inria_train_images"
-OUT_TRAIN_IMG = f"./_inria_train_images/{CROP_HEIGHT}_2/train/img"
-OUT_TRAIN_GT = f"./_inria_train_images/{CROP_HEIGHT}_2/train/gt"
-OUT_VAL_IMG = f"./_inria_train_images/{CROP_HEIGHT}_2/val/img"
-OUT_VAL_GT = f"./_inria_train_images/{CROP_HEIGHT}_2/val/gt"
+OUT_TRAIN_IMG = f"./_inria_train_images/{CROP_HEIGHT}_3/train/img"
+OUT_TRAIN_GT = f"./_inria_train_images/{CROP_HEIGHT}_3/train/gt"
+OUT_VAL_IMG = f"./_inria_train_images/{CROP_HEIGHT}_3/val/img"
+OUT_VAL_GT = f"./_inria_train_images/{CROP_HEIGHT}_3/val/gt"
 
 OUT_DIRS = [
     TRAIN_IMAGES_OUT,
@@ -116,6 +116,7 @@ class CropsInria:
         return img, gt
 
     def save_img_gt(self, img, gt, name):
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         cv2.imwrite(f"{self.out_img}/{name}.png", img)
         cv2.imwrite(f"{self.out_gt}/{name}.png", gt)
 
