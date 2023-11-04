@@ -1,7 +1,7 @@
 import cv2
 import os
 import numpy as np
-
+from crops_inria import OUT_TRAIN_IMG, OUT_TRAIN_GT, OUT_VAL_IMG, OUT_VAL_GT
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
@@ -12,10 +12,6 @@ CROP_WIDTH = 512
 IMG_EXT = "png"
 GT_EXT = "png"
 
-OUT_TRAIN_IMG = "./_inria_train_images/572_388/train/img"
-OUT_TRAIN_GT = "./_inria_train_images/572_388/train/gt"
-OUT_VAL_IMG = "./_inria_train_images/572_388/val/img"
-OUT_VAL_GT = "./_inria_train_images/572_388/val/gt"
 
 class CleanCropsInria:
     def __init__(self, out_img: str, out_neg_gt: str) -> None:
@@ -35,13 +31,12 @@ class CleanCropsInria:
             name = img.split('.')[0]
             img_path = os.path.join(self.img_dir, img)
             gt_path = os.path.join(self.gt_dir, gt)
-            img, gt = self.read_img_gt(img_path, gt_path)
+            gt = self.read_gt(gt_path)
             is_positive = self.is_positive_sample(gt)
             if not is_positive:
                 removed += 1
                 os.remove(img_path)
                 os.remove(gt_path)
-                self.save_img_gt(img, gt, name)
                 print(removed)
 
     def is_positive_sample(self, gt):
@@ -52,21 +47,18 @@ class CleanCropsInria:
             return False
         return True
 
-    def read_img_gt(self, img_path, gt_path):
-        img = cv2.imread(img_path)
-        gt = cv2.imread(gt_path)
-        return img, gt
-
-    def save_img_gt(self, img, gt, name):
-        if not self.out_neg_gt or not self.out_neg_img:
-            return
-        cv2.imwrite(f"{self.out_neg_img}/{name}.png", img)
-        cv2.imwrite(f"{self.out_neg_gt}/{name}.png", gt)
+    def read_gt(self, gt_path):
+        gt = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE)
+        return gt
 
 
 if __name__ == "__main__":
-    crops_train = CleanCropsInria(OUT_TRAIN_IMG, OUT_TRAIN_GT)
-    crops_train.process()
+
+    print(OUT_VAL_IMG, OUT_VAL_GT)
+    print(OUT_TRAIN_IMG, OUT_TRAIN_GT)
 
     crops_val = CleanCropsInria(OUT_VAL_IMG, OUT_VAL_GT)
     crops_val.process()
+
+    crops_train = CleanCropsInria(OUT_TRAIN_IMG, OUT_TRAIN_GT)
+    crops_train.process()

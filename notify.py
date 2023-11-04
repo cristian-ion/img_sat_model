@@ -4,11 +4,9 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from dotenv import load_dotenv
 from os import getenv
-from constants import REPO_DIR
 from inference.inference_inria import LATEST_MODEL_PATH, LATEST_MODEL_NAME, InferenceInria, SAMPLE_PATH
 import cv2
 import numpy as np
-import io
 from os.path import basename
 
 load_dotenv()
