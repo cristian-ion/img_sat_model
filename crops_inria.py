@@ -119,8 +119,8 @@ class CropsInria:
         cv2.imwrite(f"{self.out_gt}/{name}.png", gt)
 
 if __name__ == "__main__":
-    crops_train = CropsInria(IN_TRAIN_IMG, IN_TRAIN_GT, OUT_TRAIN_IMG, OUT_TRAIN_GT)
-    crops_train.process()
-
     crops_val = CropsInria(IN_VAL_IMG, IN_VAL_GT, OUT_VAL_IMG, OUT_VAL_GT)
     crops_val.process()
+
+    crops_train = CropsInria(IN_TRAIN_IMG, IN_TRAIN_GT, OUT_TRAIN_IMG, OUT_TRAIN_GT)
+    crops_train.process()
