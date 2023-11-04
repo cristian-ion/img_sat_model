@@ -287,3 +287,13 @@ def probability_to_black_and_white_uint8(preds):
 
 def gray_nearest_black_and_white_uint8(gray):
     return np.where(gray > 127, 255, 0).astype(np.uint8)
+
+
+def crop(img, y=None, x=None, h=None, w=None, border=None):
+    y = y or 0
+    x = x or 0
+    h = h or img.shape[0]
+    w = w or img.shape[1]
+    border = border or 0
+    img = img[y+border:(y+h-border), x+border:(x+w-border)]
+    return img

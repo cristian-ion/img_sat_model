@@ -4,13 +4,12 @@ import math
 
 from constants import REPO_DIR
 
-
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
-IMG_CROP_HEIGHT = 572
-IMG_CROP_WIDTH = 572
-GT_CROP_HEIGHT = 388
-GT_CROP_WIDTH = 388
+CROP_HEIGHT = 572
+CROP_WIDTH = 572
+STRIDE_Y = 388
+STRIDE_X = 388
 IMG_EXT = "tif"
 GT_EXT = "tif"
 
@@ -21,10 +20,10 @@ IN_VAL_IMG = f"{INRIA_PATH}/val/images"
 IN_VAL_GT = f"{INRIA_PATH}/val/gt"
 
 TRAIN_IMAGES_OUT = "./_inria_train_images"
-OUT_TRAIN_IMG = f"./_inria_train_images/{IMG_CROP_HEIGHT}_{GT_CROP_HEIGHT}/train/img"
-OUT_TRAIN_GT = f"./_inria_train_images/{IMG_CROP_HEIGHT}_{GT_CROP_HEIGHT}/train/gt"
-OUT_VAL_IMG = f"./_inria_train_images/{IMG_CROP_HEIGHT}_{GT_CROP_HEIGHT}/val/img"
-OUT_VAL_GT = f"./_inria_train_images/{IMG_CROP_HEIGHT}_{GT_CROP_HEIGHT}/val/gt"
+OUT_TRAIN_IMG = f"./_inria_train_images/{CROP_HEIGHT}/train/img"
+OUT_TRAIN_GT = f"./_inria_train_images/{CROP_HEIGHT}/train/gt"
+OUT_VAL_IMG = f"./_inria_train_images/{CROP_HEIGHT}/val/img"
+OUT_VAL_GT = f"./_inria_train_images/{CROP_HEIGHT}/val/gt"
 
 OUT_DIRS = [
     TRAIN_IMAGES_OUT,
@@ -41,16 +40,17 @@ def make_out_folders():
             os.makedirs(dir)
 
 
-def padding(img, border_size, value=0):
-    return cv2.copyMakeBorder(img, border_size, border_size, border_size, border_size, cv2.BORDER_CONSTANT, value=value)
+def padding(img, border_size:tuple, value=0):
+    return cv2.copyMakeBorder(img, border_size[0], border_size[1], border_size[2], border_size[3], cv2.BORDER_CONSTANT, value=value)
 
 
-def crop(img, y, x, h, w):
-    assert y + h <= img.shape[0]
-    assert x + w <= img.shape[1], f"{x}, {x+w}, {img.shape[1]}"
-    img = img[y:(y+h), x:(x+w)]
-    assert img.shape[0] == h
-    assert img.shape[1] == w
+def crop(img, y=None, x=None, h=None, w=None, border=None):
+    y = y or 0
+    x = x or 0
+    h = h or img.shape[0]
+    w = w or img.shape[1]
+    border = border or 0
+    img = img[y+border:(y+h-border), x+border:(x+w-border)]
     return img
 
 
@@ -83,21 +83,30 @@ class CropsInria:
         assert img_size == gt_size
 
         height = img.shape[0]
-        gt_border_size = abs(height - (math.ceil(height / GT_CROP_HEIGHT) * GT_CROP_HEIGHT))//2
-        img_border_size = gt_border_size + (IMG_CROP_HEIGHT - GT_CROP_HEIGHT)//2
+        width = img.shape[1]
 
-        gt = padding(gt, border_size=gt_border_size)
-        img = padding(img, border_size=img_border_size)
+        rows = math.ceil(height / STRIDE_Y)
+        cols = math.ceil(height / STRIDE_X)
+        bd_thick_y = (rows * STRIDE_Y - height)//2 + 92
+        bd_thick_x = (cols * STRIDE_X - width)//2 + 92
+        border_size = (bd_thick_y, bd_thick_y, bd_thick_x, bd_thick_x)
+        gt = padding(gt, border_size=border_size)
+        img = padding(img, border_size=border_size)
 
-        h, w, _ = gt.shape
-
+        h, w, _ = img.shape
         count = 0
-        for y in range(0, h, GT_CROP_HEIGHT):
-            for x in range(0, w, GT_CROP_WIDTH):
-                crop_gt = crop(gt, y, x, GT_CROP_HEIGHT, GT_CROP_WIDTH)
-                crop_img = crop(img, y, x, IMG_CROP_HEIGHT, IMG_CROP_WIDTH)
+        for i in range(0, rows, 1):
+            for j in range(0, cols, 1):
+                x = j * STRIDE_X
+                y = i * STRIDE_Y
+                crop_gt = crop(gt, y, x, CROP_HEIGHT, CROP_WIDTH)
+                crop_img = crop(img, y, x, CROP_HEIGHT, CROP_WIDTH)
+                # cropped = crop(crop_gt, border=92)
+                # cv2.imshow(f"gt {crop_gt.shape}", crop_gt)
+                # cv2.imshow(f"crop gt {cropped.shape}", cropped)
                 self.save_img_gt(crop_img, crop_gt, f"{name}_{count:02d}")
                 count += 1
+                # cv2.waitKey()
 
     def read_img_gt(self, img_path, gt_path):
         print(img_path)

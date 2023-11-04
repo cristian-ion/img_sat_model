@@ -5,8 +5,9 @@
 # todo: - Precision as a function of recall - pg. 507, Computer Vision: A modern approach
 
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, join, basename
 import cv2
+import numpy as np
 
 from inference.inference_inria import LATEST_MODEL_NAME
 
@@ -38,36 +39,29 @@ class CompareInria:
         self._fn = 0
 
     def compare_dir(self, filelist_segm, filelist_gt):
-        print(len(filelist_gt), len(filelist_segm))
         assert len(filelist_gt) == len(filelist_segm)
-
-        for gt_file, segm_file in zip(filelist_gt, filelist_segm):
+        print("ind", "gt_file", "segm_file", *self.metric_names, sep='\t')
+        for ind, (gt_file, segm_file) in enumerate(zip(filelist_gt, filelist_segm)):
             self.compare_files(gt_file, segm_file)
+            gt_filename = basename(gt_file)
+            segm_filename = basename(segm_file)
+            print(ind,  gt_filename, segm_filename, *self.metric_row, sep='\t')
 
     def compare_files(self, gt_file: str, segm_file: str):
         gt = cv2.imread(gt_file, flags=cv2.IMREAD_GRAYSCALE)
         segm = cv2.imread(segm_file, flags=cv2.IMREAD_GRAYSCALE)
-        # cv2.imshow("gt", gt)
-        # cv2.imshow("segm", segm)
+        # cv2.imshow(f"gt", gt)
+        # cv2.imshow(f"segm", segm)
         # cv2.waitKey()
         self.compare_gt_segm(gt, segm)
 
     def compare_gt_segm(self, gt, segm):
         assert gt.shape == segm.shape
-        h, w = gt.shape
 
-        for y in range(h):
-            for x in range(w):
-                if (gt[y,x] == POS_VALUE) and (segm[y,x] == POS_VALUE):
-                    self._tp += 1
-                elif (gt[y,x] == NEG_VALUE) and (segm[y,x] == POS_VALUE):
-                    self._fp += 1
-                elif (gt[y,x] == NEG_VALUE) and (segm[y,x] == NEG_VALUE):
-                    self._tn += 1
-                elif (gt[y,x] == POS_VALUE) and (segm[y,x] == NEG_VALUE):
-                    self._fn += 1
-
-        print(self.metric_row)
+        self._tp += np.sum(np.logical_and(gt == POS_VALUE, segm == POS_VALUE))
+        self._fp += np.sum(np.logical_and(gt == NEG_VALUE, segm == POS_VALUE))
+        self._tn += np.sum(np.logical_and(gt == NEG_VALUE, segm == NEG_VALUE))
+        self._fn += np.sum(np.logical_and(gt == POS_VALUE, segm == NEG_VALUE))
 
     @property
     def metric_names(self):
@@ -116,5 +110,8 @@ if __name__ == "__main__":
     fl_gt = create_filelist(DIR_VAL_GT, EXT_TIF)
     compare.compare_dir(fl_out, fl_gt)
 
-    print(compare.metric_names)
-    print(compare.metric_row)
+    # print(compare.metric_names)
+    # print(compare.metric_row)
+    # results = {name: val for name, val in zip(compare.metric_names, compare.metric_row)}
+    # print(results)
+    # print(LATEST_MODEL_NAME)

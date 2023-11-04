@@ -8,7 +8,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 import cv2
 
-from train.image_utils.image_gray import binarize_grayscale
+from train.image_utils.image_gray import binarize_grayscale, crop
 from constants import REPO_DIR
 
 CLASSES = ["building"]
@@ -17,8 +17,6 @@ BATCH_SIZE = 4
 VAL_BATCH_SIZE = 4
 INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1
-IMAGE_HEIGHT = 512
-IMAGE_WIDTH = 512
 ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
 
 # TRAIN_IMG_DIR = (
@@ -34,7 +32,8 @@ ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
 #     "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/gt"
 # )
 
-CROP_SIZE = "572_388"
+CROP_SIZE = 572
+MASK_SIZE = 388
 TRAIN_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/train/img"
 TRAIN_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/train/gt"
 VAL_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}/val/img"
@@ -50,8 +49,6 @@ MASK_EXT = "png"
 #
 TRAIN_TRANSFORMS = A.Compose(
     transforms=[
-        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         # A.ShiftScaleRotate(shift_limit=0.01, scale_limit=0.01, rotate_limit=5, p=0.5),
         # A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.1),
         # A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.5),
@@ -72,8 +69,6 @@ TRAIN_TRANSFORMS = A.Compose(
 
 VAL_TRANSFORMS = A.Compose(
     transforms=[
-        # A.RandomCrop(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        # A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
         A.Normalize(
             mean=(0, 0, 0),
             std=(1, 1, 1),
@@ -111,6 +106,7 @@ class InriaDataset(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
         mask = binarize_grayscale(mask)
+        mask = crop(mask, border=92) # 92 = (572-388)//2
 
         if self.transform:
             augmentations = self.transform(image=image, mask=mask)

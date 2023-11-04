@@ -62,18 +62,20 @@ class UpConv(nn.Module):
         decoder_layer = self.upsample(decoder_layer)
         # print(decoder_layer.size())
         # input is CHW
-        # gresit!!
-        diffY = encoder_layer.size()[2] - decoder_layer.size()[2]
-        diffX = encoder_layer.size()[3] - decoder_layer.size()[3]
+
+        diffY = (encoder_layer.size()[2] - decoder_layer.size()[2]) // 2
+        diffX = (encoder_layer.size()[3] - decoder_layer.size()[3]) // 2
+
+        # # gresit!!
         # decoder_layer = F.pad(decoder_layer, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
         # if you have padding issues, see
         # https://github.com/HaiyongJiang/U-Net-Pytorch-Unstructured-Buggy/commit/0e854509c2cea854e247a9c615f175f76fbb2e3a
         # https://github.com/xiaopeng-liao/Pytorch-UNet/commit/8ebac70e633bac59fc22bb5195e513d5832fb3bd
 
         # print(f"diff : {diffY}, {diffX}")
-        # crop encoder layer
+        # crop center encoder layer
         # print(encoder_layer.size())
-        encoder_layer = encoder_layer[:,:,:-diffY,:-diffX]
+        encoder_layer = encoder_layer[:,:, diffY:-diffY, diffX:-diffX]
         # print(encoder_layer.size())
         x = torch.cat([encoder_layer, decoder_layer], dim=1)
         return self.conv(x)
