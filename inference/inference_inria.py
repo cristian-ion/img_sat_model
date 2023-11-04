@@ -19,19 +19,22 @@ from constants import REPO_DIR
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
 
 MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt"
+MODEL_1_0_5_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_5.pt"
 MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
 MODEL_1_0_3_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_3.pt"
 
 INRIA_MODEL_1_0_6_NAME = "inria_model_1_0_6"
+INRIA_MODEL_1_0_5_NAME = "inria_model_1_0_5"
 INRIA_MODEL_1_0_4_NAME = "inria_model_1_0_4"
 INRIA_MODEL_1_0_3_NAME = "inria_model_1_0_3"
 
 MODELS = {
     INRIA_MODEL_1_0_6_NAME: MODEL_1_0_6_PATH,
+    INRIA_MODEL_1_0_5_NAME: MODEL_1_0_5_PATH,
     INRIA_MODEL_1_0_4_NAME: MODEL_1_0_4_PATH,
     INRIA_MODEL_1_0_3_NAME: MODEL_1_0_3_PATH,
 }
-LATEST_MODEL_NAME = INRIA_MODEL_1_0_6_NAME
+LATEST_MODEL_NAME = INRIA_MODEL_1_0_5_NAME
 LATEST_MODEL_PATH = MODELS[LATEST_MODEL_NAME]
 
 COLOR_MEAN = [math.ceil(0.485 * 255), math.ceil(0.456 * 255), math.ceil(0.406 * 255)]
@@ -93,13 +96,15 @@ class InferenceInria:
 
     def infer_file(self, filepath):
         image = cv2.imread(filepath)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if self._debug:
             image_show(image)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         if self.model_name == INRIA_MODEL_1_0_4_NAME:
             segm = self.image_segment_v2(image)
         if self.model_name == INRIA_MODEL_1_0_6_NAME:
+            segm = self.image_segment_v3(image)
+        else:
             segm = self.image_segment_v3(image)
 
         if self._save_out:
@@ -269,6 +274,8 @@ class InferenceInria:
         border_size = (bd_thick_y, bd_thick_y, bd_thick_x, bd_thick_x)
         print(border_size)
         img = padding(img, border_size=border_size, value=COLOR_MEAN)
+        if self._debug:
+            image_show(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), "img padding")
         out = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8) + 127
         count = 0
         for i in range(0, rows, 1):
@@ -297,5 +304,5 @@ class InferenceInria:
 
 
 if __name__ == "__main__":
-    inference = InferenceInria(debug=False, save_out=True)
+    inference = InferenceInria(debug=True, save_out=True)
     inference.infer_file(SAMPLE_PATH)
