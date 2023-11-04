@@ -72,8 +72,10 @@ TRAIN_TRANSFORMS = A.Compose(
 VAL_TRANSFORMS = A.Compose(
     transforms=[
         A.Normalize(
-            mean=(0, 0, 0),
-            std=(1, 1, 1),
+             # mean=(0, 0, 0),
+            mean=(0.485, 0.456, 0.406),
+            # std=(1, 1, 1),
+            std=(0.229, 0.224, 0.225),
             max_pixel_value=255.0,
             always_apply=True,
         ),
