@@ -18,3 +18,9 @@ Detection:
 - Window method
 - DOTAv2 dataset
 - Dior dataset
+
+# On windows:
+.venv\\Scripts\\activate
+
+# On Linux / MAC
+source .venv/bin/activate
