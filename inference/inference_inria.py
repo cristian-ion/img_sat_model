@@ -18,7 +18,7 @@ from constants import REPO_DIR
 
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
 
-MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt"
+MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6_latest.pt"
 MODEL_1_0_5_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_5.pt"
 MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
 MODEL_1_0_3_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_3.pt"

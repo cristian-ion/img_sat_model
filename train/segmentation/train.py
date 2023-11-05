@@ -110,6 +110,7 @@ class Train:
 
         self.val_file_path = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
         self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
+        self.model_file_latest = os.path.join(self.out_dir, f"{self.model_id}_latest.pt")
         self.model_checkpoint_file = os.path.join(self.out_dir, f"{self.model_id}.cp")
 
     def _create_val_file(self):
@@ -125,7 +126,7 @@ class Train:
         print("Train start.")
         self.model.to(self.device)
         self._create_val_file()
-        self._save_min_val_error_rate(epoch=0, train_loss=None, val_loss=None)
+        self._save_latest()
 
         for epoch in range(1, self.num_epochs + 1):
             print(f"Epoch {epoch}\n-------------------------------")
@@ -163,6 +164,10 @@ class Train:
 
             loss = self.backprop(X, y)
             train_loss += loss.item()
+
+            if batch_index % 500 == 0:
+                self._save_latest()
+
             te = time() - ts
             print(f"{batch_index} / {num_batches}, duration: {te}s")
 
@@ -273,6 +278,9 @@ class Train:
                     f"{self.out_dir}/{folder}/mask_{batch_index}.jpg",
                 )
             break
+
+    def _save_latest(self):
+        torch.save(self.model, self.model_file_latest)
 
     def _save_min_val_error_rate(self, epoch, train_loss, val_loss):
         if self.min_val_loss is None or val_loss < self.min_val_loss:

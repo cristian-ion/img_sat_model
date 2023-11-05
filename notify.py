@@ -7,7 +7,7 @@ from os import getenv
 from inference.inference_inria import LATEST_MODEL_PATH, LATEST_MODEL_NAME, InferenceInria, SAMPLE_PATH
 import cv2
 import numpy as np
-from os.path import basename
+from os.path import basename, isfile
 
 load_dotenv()
 
@@ -23,8 +23,12 @@ SUBJECT = f"[Train] results {LATEST_MODEL_NAME}"
 MODEL_VAL = LATEST_MODEL_PATH[:-3] + "_val.tsv"
 BODY = f"Model: {LATEST_MODEL_NAME}, Sample: {basename(SAMPLE_PATH)}\n"
 
-with open(MODEL_VAL, "r") as f:
-    BODY += f.read()
+
+if isfile(MODEL_VAL):
+    with open(MODEL_VAL, "r") as f:
+        BODY += f.read()
+else:
+    BODY += "Val file not added."
 
 
 class Notifier():
