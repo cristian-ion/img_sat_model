@@ -176,4 +176,5 @@ class InriaTrainConfig:
 
     @property
     def checkpoint(self):
-        return None
+        # return None
+        return "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_7.cp"

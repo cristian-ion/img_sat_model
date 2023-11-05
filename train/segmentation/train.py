@@ -51,9 +51,16 @@ class Train:
         self.device = self._get_device()
         self.dataset_namecode = dataset_namecode
         train_config = train_config_by_namecode(dataset_namecode)
-
         self.criterion = train_config.criterion
         self.num_epochs = train_config.num_epochs or DEFAULT_NUM_EPOCHS
+        self.out_dir = f"models/{dataset_namecode}"
+        if not os.path.isdir(self.out_dir):
+            os.mkdir(self.out_dir)
+        self.model_id = gen_model_id(
+            train_config.namecode,
+            major_version=train_config.major_version,
+            out_dir=self.out_dir,
+        )
 
         self.train_loader = DataLoader(
             train_config.trainset,
@@ -70,10 +77,14 @@ class Train:
 
         if not train_config.checkpoint:
             print("No checkpoint")
+        else:
+            state = torch.load(train_config.checkpoint)
+
 
         self.model = UNetValid(
             in_channels=3, n_classes=train_config.num_classes, bilinear=True
         )
+
         # optimizer settings
         self.optimizer = SGD(
             params=self.model.parameters(),
@@ -85,31 +96,36 @@ class Train:
 
         # activation unit
         self.sigmoid_op = nn.Sigmoid()
-        self.out_dir = f"models/{dataset_namecode}"
-        if not os.path.isdir(self.out_dir):
-            os.mkdir(self.out_dir)
-        self.model_id = gen_model_id(
-            train_config.namecode,
-            major_version=train_config.major_version,
-            out_dir=self.out_dir,
-        )
-        self.val_file_path = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
-        self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
-        self.model_checkpoint_file = os.path.join(self.out_dir, f"{self.model_id}.cp")
+
         self.min_val_loss = None
         self.val_file_handle = None
 
+        if train_config.checkpoint:
+            self.model.load_state_dict(state["model"])
+            self.scheduler.load_state_dict(state["scheduler"])
+            self.early_stopper.load_state_dict(state["early_stopper"])
+            self.min_val_loss = state["min_val_loss"]
+            self.model_id = state["model_id"]
+            # self.num_epochs = state["num_epochs"]
+
+        self.val_file_path = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
+        self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
+        self.model_checkpoint_file = os.path.join(self.out_dir, f"{self.model_id}.cp")
+
+    def _create_val_file(self):
+        if not os.path.isfile(self.val_file_path):
+            self.val_file_handle = open(self.val_file_path, "w")
+            val_file_header = "\t".join(VALIDATION_COLUMNS)
+            self.val_file_handle.write(f"{val_file_header}\n")
+            self.val_file_handle.flush()
+        else:
+            self.val_file_handle = open(self.val_file_path, "a")
+
     def train(self):
         print("Train start.")
-
         self.model.to(self.device)
-
-        self.val_file_handle = open(self.val_file_path, "w")
-        val_file_header = "\t".join(VALIDATION_COLUMNS)
-        self.val_file_handle.write(f"{val_file_header}\n")
-        self.val_file_handle.flush()
-
-        # self.validate_epoch(epoch=0, train_loss=1.0)
+        self._create_val_file()
+        self._save_min_val_error_rate(epoch=0, train_loss=None, val_loss=None)
 
         for epoch in range(1, self.num_epochs + 1):
             print(f"Epoch {epoch}\n-------------------------------")
@@ -262,9 +278,13 @@ class Train:
         if self.min_val_loss is None or val_loss < self.min_val_loss:
             self.min_val_loss = val_loss
             state = {
+                'model_id': self.model_id,
                 'epoch': epoch,
                 'train_loss': train_loss,
                 'val_loss': val_loss,
+                "min_val_loss": self.min_val_loss,
+                'num_epochs': self.num_epochs,
+                'val_file_path': self.val_file_path,
                 'model': self.model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
                 'early_stopper': self.early_stopper.state_dict(),
