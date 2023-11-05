@@ -96,7 +96,7 @@ class Train:
         self.val_file_path = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
         self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
         self.model_checkpoint_file = os.path.join(self.out_dir, f"{self.model_id}.cp")
-        self.min_error_rate = 1.0
+        self.min_val_loss = None
         self.val_file_handle = None
 
     def train(self):
@@ -259,8 +259,8 @@ class Train:
             break
 
     def _save_min_val_error_rate(self, epoch, train_loss, val_loss):
-        if val_loss < self.min_error_rate:
-            self.min_error_rate = val_loss
+        if self.min_val_loss is None or val_loss < self.min_val_loss:
+            self.min_val_loss = val_loss
             state = {
                 'epoch': epoch,
                 'train_loss': train_loss,

@@ -137,7 +137,9 @@ class InriaTrainConfig:
             transform=self.val_transform,
         )
 
-        self._criterion = torch.nn.BCEWithLogitsLoss()
+        self._criterion = torch.nn.BCEWithLogitsLoss(
+            pos_weight=torch.tensor(1.2),
+        )
         self.num_epochs = 100
 
     @property
