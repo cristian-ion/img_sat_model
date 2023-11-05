@@ -47,7 +47,7 @@ class Train:
     This class will later replace the classification class, so we will do classification also here.
     """
 
-    def __init__(self, dataset_namecode: str, checkpoint=None) -> None:
+    def __init__(self, dataset_namecode: str) -> None:
         self.device = self._get_device()
         self.dataset_namecode = dataset_namecode
         train_config = train_config_by_namecode(dataset_namecode)
@@ -68,7 +68,7 @@ class Train:
             shuffle=False,
         )
 
-        if not checkpoint:
+        if not train_config.checkpoint:
             print("No checkpoint")
 
         self.model = UNetValid(

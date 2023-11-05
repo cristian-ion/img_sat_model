@@ -173,3 +173,7 @@ class InriaTrainConfig:
     @property
     def major_version(self):
         return MAJOR_VERSION
+
+    @property
+    def checkpoint(self):
+        return None
