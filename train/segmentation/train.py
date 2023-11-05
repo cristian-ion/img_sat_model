@@ -47,7 +47,7 @@ class Train:
     This class will later replace the classification class, so we will do classification also here.
     """
 
-    def __init__(self, dataset_namecode: str) -> None:
+    def __init__(self, dataset_namecode: str, checkpoint=None) -> None:
         self.device = self._get_device()
         self.dataset_namecode = dataset_namecode
         train_config = train_config_by_namecode(dataset_namecode)
@@ -67,10 +67,13 @@ class Train:
             batch_size=train_config.val_batch_size,
             shuffle=False,
         )
+
+        if not checkpoint:
+            print("No checkpoint")
+
         self.model = UNetValid(
             in_channels=3, n_classes=train_config.num_classes, bilinear=True
         )
-
         # optimizer settings
         self.optimizer = SGD(
             params=self.model.parameters(),
@@ -82,11 +85,9 @@ class Train:
 
         # activation unit
         self.sigmoid_op = nn.Sigmoid()
-
         self.out_dir = f"models/{dataset_namecode}"
         if not os.path.isdir(self.out_dir):
             os.mkdir(self.out_dir)
-
         self.model_id = gen_model_id(
             train_config.namecode,
             major_version=train_config.major_version,
@@ -94,6 +95,7 @@ class Train:
         )
         self.val_file_path = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
         self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
+        self.model_checkpoint_file = os.path.join(self.out_dir, f"{self.model_id}.cp")
         self.min_error_rate = 1.0
         self.val_file_handle = None
 
@@ -113,6 +115,11 @@ class Train:
             print(f"Epoch {epoch}\n-------------------------------")
             train_loss = self.train_epoch(epoch=epoch)
             val_loss = self.validate_epoch(epoch=epoch, train_loss=train_loss)
+            self._save_min_val_error_rate(
+                epoch=epoch,
+                train_loss=train_loss,
+                val_loss=val_loss,
+            )
             self.scheduler.step(val_loss)
             if self.early_stopper.step(val_loss):
                 break
@@ -251,9 +258,23 @@ class Train:
                 )
             break
 
-    def _save_min_val_error_rate(self, val_error_rate):
-        if val_error_rate < self.min_error_rate:
-            self.min_error_rate = val_error_rate
+    def _save_min_val_error_rate(self, epoch, train_loss, val_loss):
+        if val_loss < self.min_error_rate:
+            self.min_error_rate = val_loss
+            state = {
+                'epoch': epoch,
+                'train_loss': train_loss,
+                'val_loss': val_loss,
+                'model': self.model.state_dict(),
+                'optimizer': self.optimizer.state_dict(),
+                'early_stopper': self.early_stopper.state_dict(),
+                'scheduler': self.scheduler.state_dict(),
+            }
+
+            # checkpoint
+            torch.save(state, self.model_checkpoint_file)
+
+            # full model
             torch.save(self.model, self.model_file)
 
     def validate_epoch(self, epoch: int, train_loss: float = None):
@@ -269,8 +290,6 @@ class Train:
             train_error_rate = "nan"
         val_error_rate, val_loss = self._validate_on_dataset("val", self.val_loader)
         print("Ended epoch validation.")
-
-        self._save_min_val_error_rate(val_error_rate=val_error_rate)
 
         val_row = "\t".join(
             map(

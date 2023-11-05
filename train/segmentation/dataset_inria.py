@@ -49,9 +49,9 @@ MASK_EXT = "png"
 #
 TRAIN_TRANSFORMS = A.Compose(
     transforms=[
-        # A.ShiftScaleRotate(shift_limit=0.01, scale_limit=0.01, rotate_limit=5, p=0.5),
+        A.ShiftScaleRotate(shift_limit=0.01, scale_limit=0.01, rotate_limit=10, p=0.5),
         # A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.1),
-        # A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.5),
+        A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.5),
         A.Transpose(p=0.2),
         A.RandomRotate90(p=0.2),
         A.VerticalFlip(p=0.2),
@@ -72,7 +72,7 @@ TRAIN_TRANSFORMS = A.Compose(
 VAL_TRANSFORMS = A.Compose(
     transforms=[
         A.Normalize(
-             # mean=(0, 0, 0),
+            # mean=(0, 0, 0),
             mean=(0.485, 0.456, 0.406),
             # std=(1, 1, 1),
             std=(0.229, 0.224, 0.225),
