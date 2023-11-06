@@ -47,11 +47,18 @@ class Notifier():
         image_part_2 = MIMEImage(data_encode.tobytes())
         image_part_2.add_header('Content-Disposition', f"attachment; filename={basename(SAMPLE_PATH)}.pxcls.png")
 
-        px_prob = cv2.resize(px_prob, (512, 512), cv2.INTER_LINEAR)
+        px_prob = cv2.resize(px_prob, (527, 527), cv2.INTER_LINEAR)
         buffer = cv2.imencode(".png", px_prob)[1]
         data_encode = np.array(buffer)
         image_part_1 = MIMEImage(data_encode.tobytes())
         image_part_1.add_header('Content-Disposition', f"attachment; filename={basename(SAMPLE_PATH)}.pxprob.png")
+
+        img = cv2.imread(SAMPLE_PATH)
+        img = cv2.resize(img, (527, 527), cv2.INTER_LINEAR)
+        buffer = cv2.imencode(".png", img)[1]
+        data_encode = np.array(buffer)
+        image_part_3 = MIMEImage(data_encode.tobytes())
+        image_part_3.add_header('Content-Disposition', f"attachment; filename={basename(SAMPLE_PATH)}.pxprob.png")
 
         message = MIMEMultipart()
         message['Subject'] = SUBJECT
@@ -61,6 +68,7 @@ class Notifier():
         message.attach(html_part)
         message.attach(image_part_1)
         message.attach(image_part_2)
+        message.attach(image_part_3)
 
         smtp = smtplib.SMTP(SERVER_ADDRESS, port=PORT)
         smtp.set_debuglevel(1)
