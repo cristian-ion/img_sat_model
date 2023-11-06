@@ -9,6 +9,21 @@ CONV_PAD = 'valid' # was 1
 BIAS = False
 
 
+class SingleConv1x1(nn.Module):
+    """(convolution 1x1 => [BN] => ReLU)"""
+
+    def __init__(self, in_channels, out_channels):
+        super().__init__()
+        self.single_conv = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=1, padding=0, bias=BIAS),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+        )
+
+    def forward(self, x):
+        return self.single_conv(x)
+
+
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
 
@@ -51,7 +66,7 @@ class UpConv(nn.Module):
         # if bilinear, use the normal convolutions to reduce the number of channels
         if bilinear:
             self.upsample = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
-            self.conv0 = nn.Conv2d(in_channels, in_channels // 2, kernel_size=1, padding=0, bias=BIAS)
+            self.conv0 = SingleConv1x1(in_channels, in_channels // 2)
         else:
             self.upsample = nn.ConvTranspose2d(
                 in_channels, in_channels // 2, kernel_size=2, stride=2
