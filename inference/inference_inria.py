@@ -16,24 +16,26 @@ from constants import REPO_DIR
 
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
 
-MODEL_1_0_6_PATH_LATEST = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt.latest"
+MODEL_1_0_7_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_7.pt"
 MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt"
 MODEL_1_0_5_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_5.pt"
 MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
 MODEL_1_0_3_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_3.pt"
 
+INRIA_MODEL_1_0_7_NAME = "inria_model_1_0_7"
 INRIA_MODEL_1_0_6_NAME = "inria_model_1_0_6"
 INRIA_MODEL_1_0_5_NAME = "inria_model_1_0_5"
 INRIA_MODEL_1_0_4_NAME = "inria_model_1_0_4"
 INRIA_MODEL_1_0_3_NAME = "inria_model_1_0_3"
 
 MODELS = {
+    INRIA_MODEL_1_0_7_NAME: MODEL_1_0_7_PATH,
     INRIA_MODEL_1_0_6_NAME: MODEL_1_0_6_PATH,
     INRIA_MODEL_1_0_5_NAME: MODEL_1_0_5_PATH,
     INRIA_MODEL_1_0_4_NAME: MODEL_1_0_4_PATH,
     INRIA_MODEL_1_0_3_NAME: MODEL_1_0_3_PATH,
 }
-LATEST_MODEL_NAME = INRIA_MODEL_1_0_6_NAME
+LATEST_MODEL_NAME = INRIA_MODEL_1_0_7_NAME
 LATEST_MODEL_PATH = MODELS[LATEST_MODEL_NAME]
 
 RGB_MEAN = (math.ceil(0.485 * 255), math.ceil(0.456 * 255), math.ceil(0.406 * 255))
