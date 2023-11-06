@@ -13,8 +13,8 @@ from constants import REPO_DIR
 
 CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
-BATCH_SIZE = 4
-VAL_BATCH_SIZE = 4
+BATCH_SIZE = 2
+VAL_BATCH_SIZE = 2
 INRIA_NAMECODE = "inria"
 MAJOR_VERSION = 1
 ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
@@ -101,23 +101,23 @@ class InriaDataset(Dataset):
 
     def __getitem__(self, index):
         image = None
-        mask = None
+        px_gt = None
         image_path = os.path.join(self.image_dir, self.images[index])
         mask_path = os.path.join(self.mask_dir, self.images[index])
 
         # image = np.array(Image.open(image_path).convert("RGB"))
         image = cv2.imread(image_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-        mask = binarize_grayscale(mask)
-        mask = crop(mask, border=(CROP_SIZE-STRIDE_SIZE)//2) # 92 = (572-388)//2
+        px_gt = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+        px_gt = binarize_grayscale(px_gt)
+        px_gt = crop(px_gt, border=(CROP_SIZE-STRIDE_SIZE)//2) # 92 = (572-388)//2
 
         if self.transform:
-            augmentations = self.transform(image=image, mask=mask)
+            augmentations = self.transform(image=image, mask=px_gt)
             image = augmentations["image"]
-            mask = augmentations["mask"]
+            px_gt = augmentations["mask"]
 
-        return image, mask
+        return image, px_gt
 
 
 class InriaTrainConfig:

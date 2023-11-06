@@ -19,8 +19,9 @@ from train.segmentation import (
     train_config_by_namecode,
 )
 from train.segmentation.convnet.unet import UNet
-from train.segmentation.convnet.unet_valid import UNetValid
+from train.segmentation.convnet.unet_valid_2 import UNetValid2
 from train.helpers.early_stopper import EarlyStopper
+
 
 DEFAULT_NUM_EPOCHS = 25
 VALIDATION_COLUMNS = [
@@ -79,7 +80,7 @@ class Train:
             state = torch.load(train_config.checkpoint)
 
 
-        self.model = UNetValid(
+        self.model = UNetValid2(
             in_channels=3, n_classes=train_config.num_classes, bilinear=True
         )
 
