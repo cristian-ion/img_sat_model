@@ -24,3 +24,10 @@ Detection:
 
 # On Linux / MAC
 source .venv/bin/activate
+
+
+# Run inference:
+`python`\
+`>>> from inference.inference_inria import InferenceInria`\
+`>>> inference = InferenceInria(debug=False, save_out=True)`\
+`>>> inference.infer_file("/Users/cristianion/Desktop/img_sat_model/inria/sample_color.jpg")`
