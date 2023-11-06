@@ -18,7 +18,7 @@ from constants import REPO_DIR
 
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
 
-MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6_latest.pt"
+MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt.latest"
 MODEL_1_0_5_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_5.pt"
 MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
 MODEL_1_0_3_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_3.pt"
@@ -53,13 +53,7 @@ def get_device():
     return device
 
 
-def padding(img, border_size:tuple, value=0):
-    print(img.shape)
-    print(border_size)
-    return cv2.copyMakeBorder(img, border_size[0], border_size[1], border_size[2], border_size[3], cv2.BORDER_CONSTANT, value=value)
-
-
-def crop(img, y=None, x=None, h=None, w=None, border=None):
+def crop_img(img, y=None, x=None, h=None, w=None, border=None):
     y = y or 0
     x = x or 0
     h = h or img.shape[0]
@@ -71,7 +65,7 @@ def crop(img, y=None, x=None, h=None, w=None, border=None):
 
 class InferenceInria:
     """Segment buildings"""
-    def __init__(self, model_name=LATEST_MODEL_NAME, debug=False, save_out=False, dir_out=None) -> None:
+    def __init__(self, model_name=LATEST_MODEL_NAME, debug=False, save_out=False, dir_out=None, include_px_prob=False) -> None:
         """
         dir_out: is usefull when scanning a directory.
         save_out: saves the output in out.png file.
@@ -84,6 +78,7 @@ class InferenceInria:
         self._debug = debug
         self._save_out = save_out
         self._dir_out = dir_out
+        self.include_px_prob = include_px_prob
 
     def _load_model(self, model_path):
         assert self.model is None
@@ -100,22 +95,22 @@ class InferenceInria:
             image_show(image)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        if self.model_name == INRIA_MODEL_1_0_4_NAME:
-            segm = self.image_segment_v2(image)
-        if self.model_name == INRIA_MODEL_1_0_6_NAME:
-            segm = self.image_segment_v3(image)
-        else:
-            segm = self.image_segment_v3(image)
+        # if self.model_name == INRIA_MODEL_1_0_4_NAME:
+        #     px_cls = self.image_segment_v2(image)
+
+        px_cls, px_prob = self.image_segment_v3(image)
 
         if self._save_out:
             if self._dir_out:
                 name = basename(filepath)
-                image_save(join(self._dir_out, f"{name}.out.png"), segm)
+                image_save(join(self._dir_out, f"{name}.out.png"), px_cls)
             else:
-                image_save(f"{filepath}.out.png", segm)
+                image_save(f"{filepath}.out.png", px_cls)
+
         if self._debug:
-            image_show(segm, "segm")
-        return segm
+            image_show(px_cls, "px_cls")
+            image_show(px_prob, "px_prob")
+        return px_cls, px_prob
 
     def _infer(self, img):
         img = VAL_TRANSFORMS(image=img)["image"]
@@ -123,18 +118,14 @@ class InferenceInria:
         img = img.to(get_device())
 
         with torch.no_grad():
-            prob = self.model(img)
-            prob = self.nn_sigmoid(prob)
+            px_prob = self.model(img)
+            px_prob = self.nn_sigmoid(px_prob)
 
-        # print(prob.shape)
-        prob = prob.to("cpu")
-        prob = np.array(prob)[0][0]
-        # print(prob.shape)
-        return prob
+        px_prob = px_prob.to("cpu")
+        px_prob = np.array(px_prob)[0][0]
+        return px_prob
 
     def image_segment(self, image):
-        # print(image.shape)
-
         h, w, _ = image.shape
         CROP_HEIGHT = 1024
         CROP_WIDTH = 1024
@@ -202,7 +193,7 @@ class InferenceInria:
         print(gt_border_size_x)
         print(img_border_size_x)
 
-        image = self._padding(image, border_size_y=img_border_size_y, border_size_x=img_border_size_x)
+        image = self._padding(image, border_y=img_border_size_y, border_x=img_border_size_x)
         # image_show(image, "padding")
         print(image.shape)
         out = self._infer(image)
@@ -229,7 +220,7 @@ class InferenceInria:
         # print(gt_border_size_x)
         # print(img_border_size_x)
 
-        image = self._padding(image, border_size_y=img_border_size_y, border_size_x=img_border_size_x)
+        image = self._padding(image, border_y=img_border_size_y, border_x=img_border_size_x)
         # print(image.shape)
 
         height = image.shape[0]
@@ -264,45 +255,67 @@ class InferenceInria:
         STRIDE_X = 388
         CROP_HEIGHT = 572
         CROP_WIDTH = 572
-
-        print(height, width)
+        DIFF = (CROP_HEIGHT - STRIDE_Y)//2
 
         rows = math.ceil(height / STRIDE_Y)
         cols = math.ceil(width / STRIDE_X)
-        bd_thick_y = (rows * STRIDE_Y - height)//2 + 92
-        bd_thick_x = (cols * STRIDE_X - width)//2 + 92
-        border_size = (bd_thick_y, bd_thick_y, bd_thick_x, bd_thick_x)
-        print(border_size)
-        img = padding(img, border_size=border_size, value=COLOR_MEAN)
+        border_y = (rows * STRIDE_Y - height)//2 + DIFF
+        border_x = (cols * STRIDE_X - width)//2 + DIFF
+        img = self._padding(img, border_y, border_x, value=COLOR_MEAN)
         if self._debug:
             image_show(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), "img padding")
-        out = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8) + 127
+        px_cls = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8) + 127
+        px_prob = np.zeros((img.shape[0], img.shape[1]), dtype=np.float32)
+
         count = 0
         for i in range(0, rows, 1):
             for j in range(0, cols, 1):
                 x = j * STRIDE_X
                 y = i * STRIDE_Y
-                crop_img = crop(img, y, x, CROP_HEIGHT, CROP_WIDTH)
-                pred = self._infer(crop_img)
-                pred = np.where(pred > 0.5, 255, 0).astype(np.uint8)
-                out[y+92:(y+CROP_HEIGHT-92),x+92:(x+CROP_HEIGHT-92)] = pred
+                cropped_img = crop_img(img, y, x, CROP_HEIGHT, CROP_WIDTH)
+                if self._debug:
+                    image_show(cropped_img, "img_crop")
+                crop_px_prob = self._infer(cropped_img)
+                crop_px_cls = self._threshold(crop_px_prob)
+                if self._debug:
+                    image_show(cropped_img, "img_crop")
+                    image_show(self._transform_px_prob(crop_px_prob), "px_prob")
+                    image_show(self._transform_px_cls(crop_px_cls), "px_cls")
+                px_cls[y+DIFF:(y+CROP_HEIGHT-DIFF),x+DIFF:(x+CROP_HEIGHT-DIFF)] = crop_px_cls
+                px_prob[y+DIFF:(y+CROP_HEIGHT-DIFF),x+DIFF:(x+CROP_HEIGHT-DIFF)] = crop_px_prob
                 count += 1
-        out = out[bd_thick_y:-bd_thick_y,bd_thick_x:-bd_thick_x]
-        return out
+
+        px_prob = self._crop_border(px_prob, border_y, border_x)
+        px_prob = self._transform_px_prob(px_prob)
+
+        px_cls = self._crop_border(px_cls, border_y, border_x)
+        px_cls = self._transform_px_cls(px_cls)
+        return px_cls, px_prob
+
+    def _crop_border(self, img, border_y: int, border_x: int):
+        return img[border_x:-border_y,border_x:-border_x]
+
+    def _transform_px_cls(self, px_cls):
+        px_cls = cv2.applyColorMap(px_cls, cv2.COLORMAP_JET)
+        return px_cls
+
+    def _transform_px_prob(self, px_prob):
+        px_prob = (1.0 - 2*np.abs(0.5 - px_prob))
+        px_prob = np.clip(px_prob, a_min=0, a_max=1.0) * 255.0
+        px_prob = np.round(px_prob).astype(np.uint8)
+        px_prob = cv2.applyColorMap(px_prob, cv2.COLORMAP_JET)
+        return px_prob
+
+    def _threshold(self, px_prob):
+        return np.where(px_prob > 0.5, 255, 0).astype(np.uint8)
 
     def _resize(self, mask, new_w, new_h):
         return grayscale_resize_nearest_uint8(mask, new_w=new_w, new_h=new_h)
 
-    def _threshold(self, pred):
-        return probability_to_black_and_white_uint8(pred)
-
-    def _threshold_2(self, pred):
-        return gray_nearest_black_and_white_uint8(pred)
-
-    def _padding(self, img, border_size_y, border_size_x, value=0):
-        return cv2.copyMakeBorder(img, border_size_y, border_size_y, border_size_x, border_size_x, cv2.BORDER_CONSTANT, value=value)
+    def _padding(self, img, border_y, border_x, value=0):
+        return cv2.copyMakeBorder(img, border_y, border_y, border_x, border_x, cv2.BORDER_CONSTANT, value=value)
 
 
 if __name__ == "__main__":
-    inference = InferenceInria(debug=True, save_out=True)
+    inference = InferenceInria(debug=True, save_out=False)
     inference.infer_file(SAMPLE_PATH)

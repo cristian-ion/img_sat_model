@@ -66,8 +66,6 @@ class Train:
             train_config.trainset,
             batch_size=train_config.batch_size,
             shuffle=True,
-            prefetch_factor=1,
-            num_workers=1,
         )
         self.val_loader = DataLoader(
             train_config.valset,
@@ -110,7 +108,7 @@ class Train:
 
         self.val_file_path = os.path.join(self.out_dir, f"{self.model_id}_val.tsv")
         self.model_file = os.path.join(self.out_dir, f"{self.model_id}.pt")
-        self.model_file_latest = os.path.join(self.out_dir, f"{self.model_id}_latest.pt")
+        self.model_file_latest = os.path.join(self.out_dir, f"{self.model_id}.pt.latest")
         self.model_checkpoint_file = os.path.join(self.out_dir, f"{self.model_id}.cp")
 
     def _create_val_file(self):

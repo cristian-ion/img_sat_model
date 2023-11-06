@@ -8,10 +8,11 @@ CLASSES = ["building"]
 NUM_CLASSES = len(CLASSES)
 CROP_HEIGHT = 572
 CROP_WIDTH = 572
-STRIDE_Y = 388
-STRIDE_X = 388
+STRIDE_Y = 564
+STRIDE_X = 564
 IMG_EXT = "tif"
 GT_EXT = "tif"
+DIFF = (CROP_HEIGHT - STRIDE_Y)//2
 
 INRIA_PATH = f"{REPO_DIR}/inria/AerialImageDataset"
 IN_TRAIN_IMG = f"{INRIA_PATH}/train/images"
@@ -20,10 +21,10 @@ IN_VAL_IMG = f"{INRIA_PATH}/val/images"
 IN_VAL_GT = f"{INRIA_PATH}/val/gt"
 
 TRAIN_IMAGES_OUT = "./_inria_train_images"
-OUT_TRAIN_IMG = f"./_inria_train_images/{CROP_HEIGHT}_3/train/img"
-OUT_TRAIN_GT = f"./_inria_train_images/{CROP_HEIGHT}_3/train/gt"
-OUT_VAL_IMG = f"./_inria_train_images/{CROP_HEIGHT}_3/val/img"
-OUT_VAL_GT = f"./_inria_train_images/{CROP_HEIGHT}_3/val/gt"
+OUT_TRAIN_IMG = f"./_inria_train_images/{CROP_HEIGHT}_{STRIDE_Y}/train/img"
+OUT_TRAIN_GT = f"./_inria_train_images/{CROP_HEIGHT}_{STRIDE_Y}/train/gt"
+OUT_VAL_IMG = f"./_inria_train_images/{CROP_HEIGHT}_{STRIDE_Y}/val/img"
+OUT_VAL_GT = f"./_inria_train_images/{CROP_HEIGHT}_{STRIDE_Y}/val/gt"
 
 OUT_DIRS = [
     TRAIN_IMAGES_OUT,
@@ -88,8 +89,8 @@ class CropsInria:
 
         rows = math.ceil(height / STRIDE_Y)
         cols = math.ceil(width / STRIDE_X)
-        bd_thick_y = (rows * STRIDE_Y - height)//2 + 92
-        bd_thick_x = (cols * STRIDE_X - width)//2 + 92
+        bd_thick_y = (rows * STRIDE_Y - height)//2 + DIFF
+        bd_thick_x = (cols * STRIDE_X - width)//2 + DIFF
         border_size = (bd_thick_y, bd_thick_y, bd_thick_x, bd_thick_x)
         gt = padding(gt, border_size=border_size, value=0)
         img = padding(img, border_size=border_size, value=COLOR_MEAN)
@@ -101,7 +102,7 @@ class CropsInria:
                 y = i * STRIDE_Y
                 crop_gt = crop(gt, y, x, CROP_HEIGHT, CROP_WIDTH)
                 crop_img = crop(img, y, x, CROP_HEIGHT, CROP_WIDTH)
-                # cropped = crop(crop_gt, border=92)
+                # cropped = crop(crop_gt, border=DIFF)
                 # cv2.imshow(f"gt {crop_gt.shape}", crop_gt)
                 # cv2.imshow(f"crop gt {cropped.shape}", cropped)
                 self.save_img_gt(crop_img, crop_gt, f"{name}_{count:02d}")

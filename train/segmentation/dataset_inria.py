@@ -33,7 +33,7 @@ ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
 # )
 
 CROP_SIZE = 572
-MASK_SIZE = 388
+STRIDE_SIZE = 564
 TRAIN_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_3/train/img"
 TRAIN_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_3/train/gt"
 VAL_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_3/val/img"
@@ -110,7 +110,7 @@ class InriaDataset(Dataset):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
         mask = binarize_grayscale(mask)
-        mask = crop(mask, border=92) # 92 = (572-388)//2
+        mask = crop(mask, border=(CROP_SIZE-STRIDE_SIZE)//2) # 92 = (572-388)//2
 
         if self.transform:
             augmentations = self.transform(image=image, mask=mask)
@@ -177,4 +177,3 @@ class InriaTrainConfig:
     @property
     def checkpoint(self):
         return None
-        # return "/Users/cristianion/Desktop/img_sat_model/models/inria/inria_model_1_0_7.cp"
