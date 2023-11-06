@@ -38,11 +38,16 @@ class Notifier():
     def notify(self):
         # with open(SAMPLE_PATH, 'rb') as f:
         #     image_part_1 = MIMEImage(f.read())
-        segm = self.infer.infer_file(SAMPLE_PATH)
-        buffer = cv2.imencode(".png", segm)[1]
+        px_cls, px_prob = self.infer.infer_file(SAMPLE_PATH)
+        buffer = cv2.imencode(".png", px_cls)[1]
         data_encode = np.array(buffer)
         image_part_2 = MIMEImage(data_encode.tobytes())
-        image_part_2.add_header('Content-Disposition', f"attachment; filename={basename(SAMPLE_PATH)}.out.png")
+        image_part_2.add_header('Content-Disposition', f"attachment; filename={basename(SAMPLE_PATH)}.pxcls.png")
+
+        buffer = cv2.imencode(".png", px_prob)[1]
+        data_encode = np.array(buffer)
+        image_part_1 = MIMEImage(data_encode.tobytes())
+        image_part_1.add_header('Content-Disposition', f"attachment; filename={basename(SAMPLE_PATH)}.pxprob.png")
 
         message = MIMEMultipart()
         message['Subject'] = SUBJECT
@@ -50,7 +55,7 @@ class Notifier():
         message['To'] = RECIPIENT_EMAIL
         html_part = MIMEText(BODY)
         message.attach(html_part)
-        # message.attach(image_part_1)
+        message.attach(image_part_1)
         message.attach(image_part_2)
 
         smtp = smtplib.SMTP(SERVER_ADDRESS, port=PORT)

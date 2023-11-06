@@ -34,10 +34,10 @@ ROOT_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset"
 
 CROP_SIZE = 572
 STRIDE_SIZE = 564
-TRAIN_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_3/train/img"
-TRAIN_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_3/train/gt"
-VAL_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_3/val/img"
-VAL_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_3/val/gt"
+TRAIN_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_{STRIDE_SIZE}/train/img"
+TRAIN_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_{STRIDE_SIZE}/train/gt"
+VAL_IMG_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_{STRIDE_SIZE}/val/img"
+VAL_MASK_DIR = f"{REPO_DIR}/_inria_train_images/{CROP_SIZE}_{STRIDE_SIZE}/val/gt"
 
 IMG_EXT = "png"
 MASK_EXT = "png"

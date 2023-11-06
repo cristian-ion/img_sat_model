@@ -8,10 +8,8 @@ import math
 
 from train.image_utils.image_gray import (
     grayscale_resize_nearest_uint8,
-    probability_to_black_and_white_uint8,
-    gray_nearest_black_and_white_uint8,
 )
-from train.image_utils.image_io import image_read, image_show, image_save
+from train.image_utils.image_io import image_show, image_save
 from train.segmentation.dataset_inria import VAL_TRANSFORMS
 from constants import REPO_DIR
 
@@ -91,8 +89,8 @@ class InferenceInria:
 
     def infer_file(self, filepath):
         image = cv2.imread(filepath)
-        if self._debug:
-            image_show(image)
+        # if self._debug:
+        #     image_show(image)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         # if self.model_name == INRIA_MODEL_1_0_4_NAME:
@@ -251,8 +249,8 @@ class InferenceInria:
         height = img.shape[0]
         width = img.shape[1]
 
-        STRIDE_Y = 388
-        STRIDE_X = 388
+        STRIDE_Y = 564
+        STRIDE_X = 564
         CROP_HEIGHT = 572
         CROP_WIDTH = 572
         DIFF = (CROP_HEIGHT - STRIDE_Y)//2
@@ -262,8 +260,8 @@ class InferenceInria:
         border_y = (rows * STRIDE_Y - height)//2 + DIFF
         border_x = (cols * STRIDE_X - width)//2 + DIFF
         img = self._padding(img, border_y, border_x, value=COLOR_MEAN)
-        if self._debug:
-            image_show(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), "img padding")
+        # if self._debug:
+        #     image_show(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), "img padding")
         px_cls = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8) + 127
         px_prob = np.zeros((img.shape[0], img.shape[1]), dtype=np.float32)
 
@@ -278,7 +276,6 @@ class InferenceInria:
                 crop_px_prob = self._infer(cropped_img)
                 crop_px_cls = self._threshold(crop_px_prob)
                 if self._debug:
-                    image_show(cropped_img, "img_crop")
                     image_show(self._transform_px_prob(crop_px_prob), "px_prob")
                     image_show(self._transform_px_cls(crop_px_cls), "px_cls")
                 px_cls[y+DIFF:(y+CROP_HEIGHT-DIFF),x+DIFF:(x+CROP_HEIGHT-DIFF)] = crop_px_cls

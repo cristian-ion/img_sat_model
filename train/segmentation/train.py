@@ -163,7 +163,7 @@ class Train:
             loss = self.backprop(X, y)
             train_loss += loss.item()
 
-            if batch_index % 500 == 0:
+            if batch_index % 100 == 0:
                 self._save_latest()
 
             te = time() - ts
