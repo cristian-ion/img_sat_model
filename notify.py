@@ -12,6 +12,8 @@ from os.path import basename, isfile
 load_dotenv()
 
 
+SAMPLE_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/test/images/bellingham18.tif"
+
 SERVER_ADDRESS = getenv("SERVER_ADDRESS")
 PORT = int(getenv("PORT"))
 SENDER_EMAIL = getenv("SENDER_EMAIL")
@@ -21,7 +23,8 @@ RECIPIENT_EMAIL = getenv("RECIPIENT_EMAIL")
 SUBJECT = f"[Train] results {LATEST_MODEL_NAME}"
 
 MODEL_VAL = LATEST_MODEL_PATH[:-3] + "_val.tsv"
-BODY = f"Model: {LATEST_MODEL_NAME}, Sample: {basename(SAMPLE_PATH)}\n"
+MODEL_PATH = LATEST_MODEL_PATH[:-3] + ".pt.latest"
+BODY = f"Model: {LATEST_MODEL_NAME}, {MODEL_PATH}, Sample: {basename(SAMPLE_PATH)}\n"
 
 
 if isfile(MODEL_VAL):
@@ -33,7 +36,7 @@ else:
 
 class Notifier():
     def __init__(self) -> None:
-        self.infer = InferenceInria(LATEST_MODEL_NAME, debug=False, save_out=False)
+        self.infer = InferenceInria(LATEST_MODEL_NAME, debug=False, save_out=False, model_path=MODEL_PATH)
 
     def notify(self):
         # with open(SAMPLE_PATH, 'rb') as f:
@@ -44,6 +47,7 @@ class Notifier():
         image_part_2 = MIMEImage(data_encode.tobytes())
         image_part_2.add_header('Content-Disposition', f"attachment; filename={basename(SAMPLE_PATH)}.pxcls.png")
 
+        px_prob = cv2.resize(px_prob, (512, 512), cv2.INTER_LINEAR)
         buffer = cv2.imencode(".png", px_prob)[1]
         data_encode = np.array(buffer)
         image_part_1 = MIMEImage(data_encode.tobytes())

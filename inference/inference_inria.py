@@ -10,13 +10,14 @@ from train.image_utils.image_gray import (
     grayscale_resize_nearest_uint8,
 )
 from train.image_utils.image_io import image_show, image_save
-from train.segmentation.dataset_inria import VAL_TRANSFORMS
+from train.segmentation.dataset_inria import A, ToTensorV2, VAL_TRANSFORMS
 from constants import REPO_DIR
 
 
 SAMPLE_PATH = f"{REPO_DIR}/inria/sample_color.jpg"
 
-MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt.latest"
+MODEL_1_0_6_PATH_LATEST = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt.latest"
+MODEL_1_0_6_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_6.pt"
 MODEL_1_0_5_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_5.pt"
 MODEL_1_0_4_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_4.pt"
 MODEL_1_0_3_PATH = f"{REPO_DIR}/models/inria/inria_model_1_0_3.pt"
@@ -35,7 +36,24 @@ MODELS = {
 LATEST_MODEL_NAME = INRIA_MODEL_1_0_6_NAME
 LATEST_MODEL_PATH = MODELS[LATEST_MODEL_NAME]
 
-COLOR_MEAN = [math.ceil(0.485 * 255), math.ceil(0.456 * 255), math.ceil(0.406 * 255)]
+RGB_MEAN = (math.ceil(0.485 * 255), math.ceil(0.456 * 255), math.ceil(0.406 * 255))
+NORM_MEAN = (0.485, 0.456, 0.406)
+NORM_STDDEV = (0.229, 0.224, 0.225)
+# NORM_STDDEV = (1, 1, 1)
+
+
+IMAGE_TRANSFORMS = A.Compose(
+    transforms=[
+        A.Normalize(
+            mean=NORM_MEAN,
+            std=NORM_STDDEV,
+            max_pixel_value=255.0,
+            always_apply=True,
+        ),
+        ToTensorV2(),
+    ],
+    is_check_shapes=False,
+)
 
 
 def get_device():
@@ -63,7 +81,7 @@ def crop_img(img, y=None, x=None, h=None, w=None, border=None):
 
 class InferenceInria:
     """Segment buildings"""
-    def __init__(self, model_name=LATEST_MODEL_NAME, debug=False, save_out=False, dir_out=None, include_px_prob=False) -> None:
+    def __init__(self, model_name=LATEST_MODEL_NAME, debug=False, save_out=False, dir_out=None, include_px_prob=False, model_path=None) -> None:
         """
         dir_out: is usefull when scanning a directory.
         save_out: saves the output in out.png file.
@@ -71,7 +89,9 @@ class InferenceInria:
         self.model = None
         self.nn_sigmoid = nn.Sigmoid()
         self.model_name = model_name
-        model_path = MODELS[model_name]
+        if not model_path:
+            model_path = MODELS[model_name]
+        print(model_path)
         self._load_model(model_path)
         self._debug = debug
         self._save_out = save_out
@@ -93,10 +113,10 @@ class InferenceInria:
         #     image_show(image)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # if self.model_name == INRIA_MODEL_1_0_4_NAME:
-        #     px_cls = self.image_segment_v2(image)
-
-        px_cls, px_prob = self.image_segment_v3(image)
+        if self.model_name == INRIA_MODEL_1_0_4_NAME:
+            px_cls, px_prob = self.image_segment_v2(image)
+        else:
+            px_cls, px_prob = self.image_segment_v3(image)
 
         if self._save_out:
             if self._dir_out:
@@ -111,7 +131,7 @@ class InferenceInria:
         return px_cls, px_prob
 
     def _infer(self, img):
-        img = VAL_TRANSFORMS(image=img)["image"]
+        img = IMAGE_TRANSFORMS(image=img)["image"]
         img = img[None, :]
         img = img.to(get_device())
 
@@ -199,7 +219,7 @@ class InferenceInria:
         out[:, :] = np.clip(out, a_min=0, a_max=255)
         out = out[gt_border_size_y:-gt_border_size_y, gt_border_size_x:-gt_border_size_x]
         print(out.shape)
-        return out.astype(np.uint8)
+        return out.astype(np.uint8), out.astype(np.uint8)
 
     def image_segment_v2(self, image):
         # print(image.shape)
@@ -243,14 +263,14 @@ class InferenceInria:
         out[:, :] = np.clip(out, a_min=0, a_max=255)
         print(out.shape)
         out = out[img_border_size_y:-img_border_size_y, img_border_size_x:-img_border_size_x]
-        return out.astype(np.uint8)
+        return out.astype(np.uint8), out.astype(np.uint8)
 
     def image_segment_v3(self, img):
         height = img.shape[0]
         width = img.shape[1]
 
-        STRIDE_Y = 564
-        STRIDE_X = 564
+        STRIDE_Y = 388
+        STRIDE_X = 388
         CROP_HEIGHT = 572
         CROP_WIDTH = 572
         DIFF = (CROP_HEIGHT - STRIDE_Y)//2
@@ -259,10 +279,10 @@ class InferenceInria:
         cols = math.ceil(width / STRIDE_X)
         border_y = (rows * STRIDE_Y - height)//2 + DIFF
         border_x = (cols * STRIDE_X - width)//2 + DIFF
-        img = self._padding(img, border_y, border_x, value=COLOR_MEAN)
+        img = self._padding(img, border_y, border_x, value=RGB_MEAN)
         # if self._debug:
         #     image_show(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), "img padding")
-        px_cls = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8) + 127
+        px_cls = np.zeros((img.shape[0], img.shape[1]), dtype=np.float32)
         px_prob = np.zeros((img.shape[0], img.shape[1]), dtype=np.float32)
 
         count = 0
@@ -275,11 +295,22 @@ class InferenceInria:
                     image_show(cropped_img, "img_crop")
                 crop_px_prob = self._infer(cropped_img)
                 crop_px_cls = self._threshold(crop_px_prob)
+
+                CROP_DIFF = abs(STRIDE_Y - crop_px_cls.shape[0]) // 2
+                if CROP_DIFF > 0:
+                    print(CROP_DIFF)
+                    print(crop_px_cls.shape)
+                    print(crop_px_prob.shape)
+                    crop_px_cls = crop_px_cls[CROP_DIFF:-CROP_DIFF, CROP_DIFF:-CROP_DIFF]
+                    crop_px_prob = crop_px_prob[CROP_DIFF:-CROP_DIFF, CROP_DIFF:-CROP_DIFF]
+                    print(crop_px_cls.shape)
+                    print(crop_px_prob.shape)
                 if self._debug:
-                    image_show(self._transform_px_prob(crop_px_prob), "px_prob")
                     image_show(self._transform_px_cls(crop_px_cls), "px_cls")
-                px_cls[y+DIFF:(y+CROP_HEIGHT-DIFF),x+DIFF:(x+CROP_HEIGHT-DIFF)] = crop_px_cls
-                px_prob[y+DIFF:(y+CROP_HEIGHT-DIFF),x+DIFF:(x+CROP_HEIGHT-DIFF)] = crop_px_prob
+                    image_show(self._transform_px_prob(crop_px_prob), "px_prob")
+                print(np.max(crop_px_cls))
+                px_cls[y+DIFF:(y+CROP_HEIGHT-DIFF),x+DIFF:(x+CROP_WIDTH-DIFF)] = crop_px_cls
+                px_prob[y+DIFF:(y+CROP_HEIGHT-DIFF),x+DIFF:(x+CROP_WIDTH-DIFF)] = crop_px_prob
                 count += 1
 
         px_prob = self._crop_border(px_prob, border_y, border_x)
@@ -290,21 +321,25 @@ class InferenceInria:
         return px_cls, px_prob
 
     def _crop_border(self, img, border_y: int, border_x: int):
-        return img[border_x:-border_y,border_x:-border_x]
+        return img[border_y:-border_y, border_x:-border_x]
 
     def _transform_px_cls(self, px_cls):
-        px_cls = cv2.applyColorMap(px_cls, cv2.COLORMAP_JET)
-        return px_cls
+        # px_cls = px_cls / np.max(px_cls)
+        print(np.max(px_cls))
+        px_cls = np.clip(px_cls, a_min=0, a_max=1)
+        px_cls = np.where(px_cls > 0.5, 255, 0)
+        # px_cls = cv2.applyColorMap(px_cls, cv2.COLORMAP_JET)
+        return px_cls.astype(np.uint8)
 
     def _transform_px_prob(self, px_prob):
         px_prob = (1.0 - 2*np.abs(0.5 - px_prob))
         px_prob = np.clip(px_prob, a_min=0, a_max=1.0) * 255.0
-        px_prob = np.round(px_prob).astype(np.uint8)
+        px_prob = np.floor(px_prob).astype(np.uint8)
         px_prob = cv2.applyColorMap(px_prob, cv2.COLORMAP_JET)
         return px_prob
 
     def _threshold(self, px_prob):
-        return np.where(px_prob > 0.5, 255, 0).astype(np.uint8)
+        return np.where(px_prob > 0.5, 1.0, 0.0)
 
     def _resize(self, mask, new_w, new_h):
         return grayscale_resize_nearest_uint8(mask, new_w=new_w, new_h=new_h)
@@ -314,5 +349,5 @@ class InferenceInria:
 
 
 if __name__ == "__main__":
-    inference = InferenceInria(debug=True, save_out=False)
+    inference = InferenceInria(debug=True, save_out=False, model_path=MODEL_1_0_6_PATH)
     inference.infer_file(SAMPLE_PATH)
