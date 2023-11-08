@@ -23,7 +23,7 @@ infer_inria:
 	python -m test.infer_inria_val_test
 
 compare_inria:
-	python -m test.compare_inria > models/inria/inria_model_1_0_4_scores.txt
+	python -m test.compare_inria > models/inria/inria_model_1_0_7_scores.txt
 
 crops_inria:
 	python -m crops_inria
