@@ -124,8 +124,10 @@ class InferenceInria:
             if self._dir_out:
                 name = basename(filepath)
                 image_save(join(self._dir_out, f"{name}.out.png"), px_cls)
+                image_save(join(self._dir_out, f"{name}_sigmoid.out.png"), px_prob)
             else:
                 image_save(f"{filepath}.out.png", px_cls)
+                image_save(f"{filepath}_sigmoid.out.png", px_prob)
 
         if self._debug:
             image_show(px_cls, "px_cls")
@@ -351,5 +353,20 @@ class InferenceInria:
 
 
 if __name__ == "__main__":
-    inference = InferenceInria(debug=True, save_out=False, model_path=MODEL_1_0_6_PATH)
-    inference.infer_file(SAMPLE_PATH)
+    inference = InferenceInria(debug=False, save_out=True, dir_out=".")
+
+
+    from time import perf_counter
+
+    start = perf_counter()
+
+    # SAMPLE_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/images/vienna2.tif"
+    SAMPLE_PATH = "/Users/cristianion/Desktop/img_sat_model/inria/AerialImageDataset/val/images/chicago1.tif"
+
+    px_cls, px_prob = inference.infer_file(SAMPLE_PATH)
+
+    end = perf_counter()
+
+    print("Elapsed time:", start, end)
+    print(f"Elapsed time during the whole program in seconds: {end-start}s")
+    print(f"Segm resolution: {px_cls.shape}, Total pixels {(px_cls.shape[0] * px_cls.shape[1]) / 1000000}M")
