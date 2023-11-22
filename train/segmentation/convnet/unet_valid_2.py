@@ -161,5 +161,5 @@ if __name__ == "__main__":
     x = torch.randn((1, 3, 572, 572))
     model = UNetValid2(in_channels=3, n_classes=1, bilinear=True)
     preds = model(x)
-    # print(preds.shape)
-    # print(x.shape)
+    print(preds.shape)
+    print(x.shape)

@@ -322,6 +322,7 @@ class InferenceInria:
 
         px_cls = self._crop_border(px_cls, border_y, border_x)
         px_cls = self._transform_px_cls(px_cls)
+        print(f"NeuralNet run for {count} times.")
         return px_cls, px_prob
 
     def _crop_border(self, img, border_y: int, border_x: int):
