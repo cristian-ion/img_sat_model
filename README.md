@@ -35,3 +35,6 @@ source .venv/bin/activate
 
 Start notify script:
 `while true; do python notify.py; sleep 3600; done`
+
+Models need to be copied to the models folder under this structure: `models/inria/inria_model_1_0_7.pt` in order
+to be availalbe for inference.
